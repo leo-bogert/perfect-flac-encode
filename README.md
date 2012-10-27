@@ -27,3 +27,6 @@ perfect-flac-encode
 
 # Donations:
 	bitcoin:1PZBKLBFnbBA5h1HdKF8PATk3JnAND91yp
+	
+# License:
+	GPLv3
