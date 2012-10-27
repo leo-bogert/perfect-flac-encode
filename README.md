@@ -15,8 +15,11 @@ perfect-flac-encode
 	- It runs flac --test on each singletrack which makes FLAC test the integrity of the file.
 	- It decodes each singletrack to WAV again and compares their checksums with the checksums of the original WAV splitfiles.
 
+# Required tools:
+	- ~/accurateripchecksum compiled from https://github.com/leo-bogert/accuraterip-checksum
+	- TODO: Describe the other tools
 # Syntax:
 	EAC commandline should be (EAC variables taken from http://www.exactaudiocopy.de/en/index.php/support/faq/compression-questions/): 
 	encode.sh "<path where the wav/log/cue are>" "%albumartist% - %albumtitle%"
 
-# Donations: To bitcoin:1PZBKLBFnbBA5h1HdKF8PATk3JnAND91yp
+# Donations: bitcoin:1PZBKLBFnbBA5h1HdKF8PATk3JnAND91yp
