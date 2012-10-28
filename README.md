@@ -20,7 +20,7 @@ perfect-flac-encode
 	encode.sh "<path where the wav/log/cue are>" "%albumartist% - %albumtitle%"
 
 # Author:
-	Leo Bogert
+	Leo Bogert (http://leo.bogert.de)
 
 # Version:
 	BETA1 - NOT for productive use!
