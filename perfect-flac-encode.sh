@@ -66,7 +66,7 @@ check_whether_input_is_accurately_ripped_or_die() {
 	echo "Checking EAC LOG for whether AccurateRip reports a perfect rip..."
 	
 	if ! iconv --from-code utf-16 --to-code utf-8 "$1.log" | grep --quiet "All tracks accurately ripped" ; then
-		echo "AccurateRip reported that the disk was not ripped properly. Go fuck yourself."
+		echo "AccurateRip reported that the disk was not ripped properly - aborting!"
 		exit 1
 	else
 		echo "AccurateRip reports a perfect rip."
