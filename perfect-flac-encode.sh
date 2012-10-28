@@ -2,7 +2,9 @@
 
 # See https://github.com/leo-bogert/perfect-flac-encode/blob/master/README.md for Syntax etc.
 
+#################################################################
 # Configuration:
+#################################################################
 wav_singletrack_subdir="Stage1_WAV_Singletracks_From_WAV_Image"
 wav_jointest_subdir="Stage2_WAV_Image_Joined_From_WAV_Singletracks"
 flac_singletrack_subdir="Stage3_FLAC_Singletracks_Encoded_From_WAV_Singletracks"
@@ -17,8 +19,20 @@ test_damage_to_split_wav_singletracks=0
 test_damage_to_rejoined_wav_image=0
 test_damage_to_flac_singletracks=0
 test_damage_to_decoded_flac_singletracks=0
+#################################################################
+# End of configuration
+#################################################################
 
-# End Of configuration
+
+
+#################################################################
+# Global variables
+#################################################################
+VERSION=BETA2
+#################################################################
+# End of global variables
+#################################################################
+
 
 # parameters: $1 = target working directory
 set_working_directory_or_die() {
@@ -64,13 +78,12 @@ check_whether_input_is_accurately_ripped_or_die() {
 split_wav_image_to_singletracks_or_die() {
 	echo "Splitting WAV image to singletrack WAVs..."
 	
-	# TODO: rename to "*_relative"
-	local outputdir="$wav_singletrack_subdir"
+	local outputdir_relative="$wav_singletrack_subdir"
 	
 	set_working_directory_or_die "$working_dir_absolute"
 	
-	if ! mkdir -p "$outputdir" ; then
-		echo "Making $outputdir subdirectory failed!" >&2
+	if ! mkdir -p "$outputdir_relative" ; then
+		echo "Making $outputdir_relative subdirectory failed!" >&2
 		exit 1
 	fi
 	
@@ -92,13 +105,14 @@ split_wav_image_to_singletracks_or_die() {
 	# - We prefix the filename with the maximal amount of zeroes required to get proper sorting for the maximal possible trackcount on a CD which is 99. We do this because cuetag requires proper sort order of the input files and we just use "*.flac" for finding the input files
 
 	# For making the shntool output more readable we don't use absolute paths but changed the working directory above.
-	if ! shntool split -P dot -d "$outputdir" -f "$1.cue" -n %02d -t "%n - %t" -- "$1.wav" ; then
+	if ! shntool split -P dot -d "$outputdir_relative" -f "$1.cue" -n %02d -t "%n - %t" -- "$1.wav" ; then
 		echo "Splitting WAV image to singletracks failed!" >&2
 		exit 1
 	fi
 	
-	local wav_singletracks=( "$outputdir"/*.wav )
-	set_working_directory_or_die "$outputdi"
+	local outputdir_absolute="$working_dir_absolute/$outputdir_relative"
+	local wav_singletracks=( "$outputdir_absolute"/*.wav )
+	set_working_directory_or_die "$outputdir_absolute"
 	if [ "$test_damage_to_split_wav_singletracks" -eq 1 ]; then 
 		echo "Deliberately damaging a singletrack to test the AccurateRip checksum verification ..."
 		if ! shntool gen -l 1:23 ; then 
@@ -155,10 +169,12 @@ get_tracknumber_of_wav_singletrack() {
 	# TODO: Use bash regexp as soon as the bug in get_accuraterip_checksum_of_singletrack_or_die which prevents direct access on BASH_REMATCH is fixed
 }
 
-get_total_tracks() {
-	local inputdir_wav="$working_dir_absolute/$wav_singletrack_subdir"
+# parameters:
+# $1 = directory which contains the wav singletracks only
+get_total_wav_tracks() {
+	local inputdir_wav="$1"
 	local tracks=( "$inputdir_wav"/*.wav )
-	echo ${#tracks[@]}
+	echo "${#tracks[@]}"
 }
 
 # parameters:
@@ -168,7 +184,7 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 	
 	local inputdir_wav="$working_dir_absolute/$wav_singletrack_subdir"
 	local wav_singletracks=( "$inputdir_wav"/*.wav )
-	local totaltracks=`get_total_tracks`
+	local totaltracks=`get_total_wav_tracks "$inputdir_wav"`
 	
 	for filename in "${wav_singletracks[@]}"; do
 		filename_without_path=`basename "$filename"`
@@ -191,16 +207,15 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 test_checksum_of_rejoined_wav_image_or_die() {
 	echo "Joining singletrack WAV temporarily for comparing their checksum with the original image's checksum..."	
 	
-	# TODO: rename to "*_relative"
-	local inputdir="$wav_singletrack_subdir"
-	local outputdir="$wav_jointest_subdir"
+	local inputdir_relative="$wav_singletrack_subdir"
+	local outputdir_relative="$wav_jointest_subdir"
 	local original_image="$working_dir_absolute/$1.wav"
-	local joined_image="$working_dir_absolute/$outputdir/joined.wav"
+	local joined_image="$working_dir_absolute/$outputdir_relative/joined.wav"
 	
 	set_working_directory_or_die "$working_dir_absolute"
 	
-	if ! mkdir -p "$outputdir" ; then
-		echo "Making $outputdir subdirectory failed!" >&2
+	if ! mkdir -p "$outputdir_relative" ; then
+		echo "Making $outputdir_relative subdirectory failed!" >&2
 		exit 1
 	fi
 	
@@ -213,7 +228,7 @@ test_checksum_of_rejoined_wav_image_or_die() {
 	# Ideas behind parameter decisions:
 	# - We specify a different progress indicator so redirecting the script output to a log file will not result in a bloated file"
 	# - We join into a subdirectory because we don't need the joined file afterwards and we can just delete the subdir to get rid of it
-	if ! shntool join -P dot -d "$outputdir" -- "$inputdir"/*.wav ; then
+	if ! shntool join -P dot -d "$outputdir_relative" -- "$inputdir_relative"/*.wav ; then
 		echo "Joining WAV failed!" >&2
 		exit 1
 	fi
@@ -267,11 +282,10 @@ encode_wav_singletracks_to_flac_or_die() {
 	# --verify	It is always a good idea to validate the output to make sure that it is good.
 	# --replay-gain	Replaygain is generally something you should want. Go read up on it. TODO: We should use EBU-R128 instead, but as of Kubuntu12.04 there seems to be no package which can do it.
 	# --best	Because we do PERFECT rips, we only need to do them once in our life and can just invest the time of maximal compression.
-	# TODO: proof-read option lists with mr.vdw. for example what about --sector-align?
+	# TODO: proof-read option list again
 	
 	set_working_directory_or_die "$inputdir"	# We need input filenames to be relative for --output-prefix to work
-	flac_quality="--best"
-	if ! flac --silent --warnings-as-errors --output-prefix="$outputdir/" --keep-foreign-metadata --verify --replay-gain $flac_quality *.wav ; then
+	if ! flac --silent --warnings-as-errors --output-prefix="$outputdir/" --keep-foreign-metadata --verify --replay-gain --best *.wav ; then
 		echo "Encoding WAV to FLAC singletracks failed!" >&2
 		exit 1
 	fi
@@ -344,7 +358,7 @@ test_checksums_of_decoded_flac_singletracks_or_die() {
 
 
 main() {
-	echo -e "\n\nperfect-flac-encode.sh running ... "
+	echo -e "\n\nperfect-flac-encode.sh Version $VERSION running ... "
 	echo -e "BETA VERSION - NOT for productive use!\n\n"
 	echo "Album: $2"
 	
@@ -368,7 +382,7 @@ main() {
 	test_flac_singletracks_or_die
 	test_checksums_of_decoded_flac_singletracks_or_die
 	
-	# TODO:
+	# TODO: Let the user chose an output directory and move the files there. Sample code:
 	#if ! mv --no-clobber "$inputdir"/*.flac "$outputdir" ; then
 	#	echo "Moving FLAC files to output dir failed!" >&2
 	#	exit 11
