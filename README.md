@@ -11,9 +11,14 @@ perfect-flac-encode
 	- It runs flac --test on each singletrack which makes FLAC test the integrity of the file.
 	- It decodes each singletrack to WAV again and compares their checksums with the checksums of the original WAV splitfiles.
 
-# Required tools:
-	- ~/accurateripchecksum compiled from https://github.com/leo-bogert/accuraterip-checksum
-	- TODO: Describe the other tools
+# Installation:
+	This script was written & tested on Ubuntu 12.04 x86_64. It should work on any Ubuntu or Debian-based distribution.
+	To obtain its dependancies, do the following:
+	- Install these packages:
+		flac
+		shntool
+	- Obtain the "accuraterip-checksum" binary (or compile it on your own): https://github.com/leo-bogert/accuraterip-checksum/downloads
+	  Put the binary into your home directory.
 
 # Syntax:
 	EAC commandline should be (EAC variables taken from http://www.exactaudiocopy.de/en/index.php/support/faq/compression-questions/): 
