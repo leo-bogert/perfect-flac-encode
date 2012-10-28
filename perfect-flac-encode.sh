@@ -122,11 +122,11 @@ get_accuraterip_checksum_of_singletrack_or_die() {
 	tracknumber=`echo "$tracknumber" | sed 's/0*//'`	# remove leading zeros, the EAC LOG does not contain them
 
 	# Difficult solution using grep:
-	#iconv --from-code utf-16 --to-code utf-8 "$filename" | grep -E "Track( {1,2})([[:digit:]]{1,2})( {2})accurately ripped \\(confidence ([[:digit:]]*)\\)  \\[([0-9A-F]*)\\]" | grep -E "Track( {1,2})$tracknumber( {2})" | grep -E -o "\\[([0-9A-F]*)\\]" | grep -E -o "([0-9A-F]*)"
+	#iconv --from-code utf-16 --to-code utf-8 "$filename" | grep -E "Track( {1,2})([[:digit:]]{1,2})( {2})accurately ripped \\(confidence ([[:digit:]]*)\\)  \\[([0-9A-Fa-f]*)\\]" | grep -E "Track( {1,2})$tracknumber( {2})" | grep -E -o "\\[([0-9A-Fa-f]*)\\]" | grep -E -o "([0-9A-Fa-f]*)"
 	
 	# Easy solution using bash:
 	log=`cat "$filename"`
-	regex="Track( {1,2})($tracknumber)( {2})accurately ripped \\(confidence ([[:digit:]]*)\\)  \\[([0-9A-F]*)\\]"
+	regex="Track( {1,2})($tracknumber)( {2})accurately ripped \\(confidence ([[:digit:]]*)\\)  \\[([0-9A-Fa-f]*)\\]"
 	if [[ $log =~ $regex  ]] ; then
 		i=0
 		
@@ -174,7 +174,8 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 		filename_without_path=`basename "$filename"`
 		tracknumber=`get_tracknumber_of_wav_singletrack "$filename_without_path"`
 		expected_checksum=`get_accuraterip_checksum_of_singletrack_or_die "$1" "$tracknumber"`
-		actual_checksum=`~/accurateripchecksum "$filename" "$tracknumber" "$totaltracks"`	#TODO: obtain an ubuntu package for this and use the binary from PATH, not ~
+		expected_checksum=${expected_checksum^^} # convert to uppercase
+		actual_checksum=`~/accuraterip-checksum "$filename" "$tracknumber" "$totaltracks"`	#TODO: obtain an ubuntu package for this and use the binary from PATH, not ~
 	
 		if [ "$actual_checksum" != "$expected_checksum" ]; then
 			echo "AccurateRip shecksum mismatch for track $tracknumber: expected=$expected_checksum; actual=$actual_checksum" >&2
