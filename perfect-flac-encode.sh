@@ -10,7 +10,7 @@ wav_jointest_subdir="Stage2_WAV_Image_Joined_From_WAV_Singletracks"
 flac_singletrack_subdir="Stage3_FLAC_Singletracks_Encoded_From_WAV_Singletracks"
 decoded_wav_singletrack_subdir="Stage4_WAV_Singletracks_Decoded_From_FLAC_Singletracks"
 
-delete_prexisting_output_dirs=( "$wav_singletrack_subdir" "$wav_jointest_subdir" "$flac_singletrack_subdir" "$decoded_wav_singletrack_subdir" )
+temp_dirs_to_delete=( "$wav_singletrack_subdir" "$wav_jointest_subdir" "$flac_singletrack_subdir" "$decoded_wav_singletrack_subdir" )
 
 # "Unit tests": Enabling these will damage the produced output files to test the checksum verification
 # Notice that only enabling one at once makes sense because the script will terminate if ANY checksum verification fails :)
@@ -28,7 +28,7 @@ test_damage_to_decoded_flac_singletracks=0
 #################################################################
 # Global variables
 #################################################################
-VERSION=BETA2
+VERSION=BETA3
 #################################################################
 # End of global variables
 #################################################################
@@ -43,17 +43,32 @@ set_working_directory_or_die() {
 	fi
 }
 
-ask_to_delete_existing_output_or_die() {
+# parameters:
+# $1 = output dir 
+ask_to_delete_existing_output_and_temp_dirs_or_die() {
+	local output_dir_and_temp_dirs=( "${temp_dirs_to_delete[@]}" "$1" )
 	local confirmed=n
 	
-	for existingdir in ${delete_prexisting_output_dirs[@]} ; do
+	for existingdir in "${output_dir_and_temp_dirs[@]}" ; do
 		if [ -d "$working_dir_absolute/$existingdir" ]; then
-			[ "$confirmed" == "y" ] || read -p "The output directories exist already. Delete them and ALL contained files? (y/n)" confirmed
+			[ "$confirmed" == "y" ] || read -p "The output and/or temp directories exist already. Delete them and ALL contained files? (y/n)" confirmed
 		
 			if [ "$confirmed" == "y" ]; then
 				rm --preserve-root -rf "$working_dir_absolute/$existingdir"
 			else
 				echo "Quitting because you want to keep the existing output."
+				exit 1
+			fi
+		fi
+	done
+}
+
+delete_temp_dirs() {
+	echo "Deleting temp directories..."
+	for existingdir in "${temp_dirs_to_delete[@]}" ; do
+		if [ -d "$working_dir_absolute/$existingdir" ]; then
+			if ! rm --preserve-root -rf "$working_dir_absolute/$existingdir" ; then
+				echo "Deleting the temp files failed!"
 				exit 1
 			fi
 		fi
@@ -241,6 +256,9 @@ test_checksum_of_rejoined_wav_image_or_die() {
 	original_sum=( `sha256sum --binary "$original_image"` )	# it will also print the filename so we split the output by spaces to an array and the first slot will be the actual checksum
 	joined_sum=( `sha256sum --binary "$joined_image"` )
 	
+	# TODO: What about the checksum in the EAC-LOG? Is it a plain CRC32 or a magic checksum with some samples excluded?
+	# If it is no plain checksum then we should keep the sha256sum for the user so he can check his restored image
+	
 	echo "Computing checksums..."
 	
 	echo -e "Original checksum: \t\t${original_sum[0]}"
@@ -356,38 +374,73 @@ test_checksums_of_decoded_flac_singletracks_or_die() {
 	set_working_directory_or_die "$working_dir_absolute"
 }
 
+# parameters:
+# $1 = target subdir
+move_output_to_target_dir() {
+	echo "Moving output to output directory..."
+	
+	local inputdir="$working_dir_absolute/$flac_singletrack_subdir"
+	local outputdir="$working_dir_absolute/$1"
+	
+	if ! mkdir -p "$outputdir" ; then
+		echo "Making $outputdir subdirectory failed!" >&2
+		exit 1
+	fi
+	
+	if ! mv --no-clobber "$inputdir"/*.flac "$outputdir" ; then
+		echo "Moving FLAC files to output dir failed!" >&2
+		exit 1
+	fi
+}
+
+# parameters:
+# $1 = filename of CUE/LOG
+# $2 = target subdirectory
+copy_cue_log_to_target_dir() {
+	echo "Copying CUE and LOG to output directory..."
+	
+	local inputdir="$working_dir_absolute"
+	local outputdir="$working_dir_absolute/$2"
+	
+	if ! cp --archive --no-clobber "$inputdir/$1.cue" "$inputdir/$1.log" "$outputdir" ; then
+		"Copying CUE/LOG failed!" >&2
+		exit 1;
+	fi
+}
+
 
 main() {
 	echo -e "\n\nperfect-flac-encode.sh Version $VERSION running ... "
 	echo -e "BETA VERSION - NOT for productive use!\n\n"
-	echo "Album: $2"
-	
+
 	# parameters
 	local rip_dir_absolute="$1"
-	local album_name="$2"
+	local input_wav_log_cue_filename="$2"
+	local output_dir="$input_wav_log_cue_filename"
+	
+	echo "Album: $input_wav_log_cue_filename"
 	
 	# globals
-	working_dir_absolute="$rip_dir_absolute/$album_name"
+	working_dir_absolute="$rip_dir_absolute"
 
 	set_working_directory_or_die "$working_dir_absolute"
 	
-	ask_to_delete_existing_output_or_die
-	check_whether_input_is_accurately_ripped_or_die "$album_name"
+	ask_to_delete_existing_output_and_temp_dirs_or_die "$output_dir"
+	check_whether_input_is_accurately_ripped_or_die "$input_wav_log_cue_filename"
 	
 	#compress_image_wav_to_image_flac_or_die "$@"	
-	split_wav_image_to_singletracks_or_die "$album_name"
-	test_accuraterip_checksums_of_split_wav_singletracks_or_die "$album_name"
-	test_checksum_of_rejoined_wav_image_or_die "$album_name"
+	split_wav_image_to_singletracks_or_die "$input_wav_log_cue_filename"
+	test_accuraterip_checksums_of_split_wav_singletracks_or_die "$input_wav_log_cue_filename"
+	test_checksum_of_rejoined_wav_image_or_die "$input_wav_log_cue_filename"
 	encode_wav_singletracks_to_flac_or_die
 	test_flac_singletracks_or_die
 	test_checksums_of_decoded_flac_singletracks_or_die
+	move_output_to_target_dir "$output_dir"
+	copy_cue_log_to_target_dir "$input_wav_log_cue_filename" "$output_dir"
+	# TODO: Copy cue/log/(sha256 as soon as th TODO for generating it is resolved) to the output dir
+	delete_temp_dirs
 	
-	# TODO: Let the user chose an output directory and move the files there. Sample code:
-	#if ! mv --no-clobber "$inputdir"/*.flac "$outputdir" ; then
-	#	echo "Moving FLAC files to output dir failed!" >&2
-	#	exit 11
-	#fi
-
+	echo "SUCCESS. Your FLACs are in directory \"$input_wav_log_cue_filename\""
 	exit 0 # SUCCESS
 }
 
