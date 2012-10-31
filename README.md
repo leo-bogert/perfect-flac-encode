@@ -31,11 +31,25 @@ To obtain its dependancies, do the following:
 # Syntax:
 EAC commandline should be
 
-    encode.sh "<path where the wav/log/cue are>" "%albumartist% - %albumtitle%"
+    perfect-flac-encode.sh "<path where the wav/log/cue are>" "%albumartist% - %albumtitle%"
 
 The WAV / CUE / LOG files must have the name "%albumartist% - %albumtitle%.[wav/cue/log]".
-	
+The output of the script will be in a subdirectory whose name is equal to "%albumartist% - %albumtitle%".
+
+# Return value:
+The script will exit with exit code 0 upon success and exit code > 0 upon failure.
+
 # Output:
+As you know from the syntax, parameter 1 is the "working directory", and parameter 2 the filename of wav/cue/log.
+Upon success, the script will:
+
+* create a subdirectory in the working directory which has the name equal to parameter 2 - the output directory.
+* move the FLACs into the output directory
+* copy the LOG/CUE into the output directory
+
+Upon failure, neither the temporary files nor the output is deleted. If you run the script again, it will detect the existence of temp/output directories and ask you whether it should deleted them.
+
+# Temporary Output (deleted upon success):
     Stage1_WAV_Singletracks_From_WAV_Image
 These splitfiles are created using shntool from the CUE. They are the input to FLAC
 	
@@ -54,7 +68,7 @@ The checksums are compared to the checksums of Stage1.
 [Leo Bogert](http://leo.bogert.de)
 
 # Version:
-BETA2 - NOT for productive use!
+BETA3 - NOT for productive use!
 
 # Donations:
 [bitcoin:1PZBKLBFnbBA5h1HdKF8PATk3JnAND91yp](bitcoin:1PZBKLBFnbBA5h1HdKF8PATk3JnAND91yp)
