@@ -256,8 +256,7 @@ test_checksum_of_rejoined_wav_image_or_die() {
 	original_sum=( `sha256sum --binary "$original_image"` )	# it will also print the filename so we split the output by spaces to an array and the first slot will be the actual checksum
 	joined_sum=( `sha256sum --binary "$joined_image"` )
 	
-	# TODO: What about the checksum in the EAC-LOG? Is it a plain CRC32 or a magic checksum with some samples excluded?
-	# If it is no plain checksum then we should keep the sha256sum for the user so he can check his restored image
+	# TODO: What about the checksum in the EAC-LOG? Is it a plain CRC32 or a magic checksum with some samples excluded? If it is no plain checksum then we should keep the sha256sum as a file in the output dir for the user so he can check the sum in case he ever re-joins the FLACs to a WAV image.
 	
 	echo "Computing checksums..."
 	
