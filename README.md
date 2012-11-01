@@ -4,7 +4,7 @@ perfect-flac-encode
 # Description:
 This is an encoder script for EAC "Test & copy image" mode.
 It splits the WAV image to WAV singletracks according to the EAC CUE and encodes them to FLACs.
-Its goal is to produce perfect FLAC files by verifying checksums in all steps and being totally paranoid.
+Its primary goal is to produce perfect FLAC files by verifying checksums in all steps and being totally paranoid.
 For guaranteeing this, it does the following checks and aborts if any of them fails:
 
 * It checks the EAC LOG to make sure that AccurateRip reported a flawless rip.
@@ -13,6 +13,12 @@ For guaranteeing this, it does the following checks and aborts if any of them fa
 * It encodes the singletracks to FLAC with very carefully chosen settings. The full manpage of FLAC was read by me when chosing the settings.
 * It runs flac --test on each singletrack which makes FLAC test the integrity of the file.
 * It decodes each singletrack to WAV again and compares the checksums with the checksums of the original WAV splitfiles.
+
+The secondary goal is providing a perfect backup of the original disc. For serving this purpose, it is ensured that it is technically possible to burn a disc of which every bit is identical to the original one. This is guaranteed by:
+
+* Copying the original CUE/LOG to the output directory. The CUE is needed for burning the disc. The LOG serves as a proof of quality.
+* A .sha256 file is generated which contains the SHA256-checksum of the original WAV image. For being able to burn a bit-identical CD, the user will have to decode the FLACs to WAVs and re-join the WAVs to an image. For making sure that this produced an image which is identical to the original one, the SHA256-checksum can be used. Notice that the CRC from the EAC LOG is not suitable for this because it is a "custom" CRC which is not computed upon the full WAV file. The EAC CRC does guarantee integrity of the audio data but is not easy to verify with standard tools.
+* (NOT IMPLEMENTED YET) A "REAMDE.txt" which contains all steps necessary to restore the original WAV image is written to the output directory.
 
 Additional features are:
 
@@ -31,23 +37,27 @@ To obtain its dependancies, do the following:
 # Syntax:
 EAC commandline should be
 
-    perfect-flac-encode.sh "<path where the wav/log/cue are>" "%albumartist% - %albumtitle%"
+    perfect-flac-encode.sh "(path where the wav/log/cue are)" "%albumartist% - %albumtitle%"
 
-The WAV / CUE / LOG files must have the name "%albumartist% - %albumtitle%.[wav/cue/log]".
+The WAV / CUE / LOG files must have the name "%albumartist% - %albumtitle%.(wav/cue/log)".
 The output of the script will be in a subdirectory whose name is equal to "%albumartist% - %albumtitle%".
 
 # Return value:
 The script will exit with exit code 0 upon success and exit code > 0 upon failure.
 
 # Output:
-As you know from the syntax, parameter 1 is the "working directory", and parameter 2 the filename of wav/cue/log.
-Upon success, the script will:
+As you know from the syntax, parameter 1 is the "working directory".
+Parameter 2 is the filename of wav/cue/log and called "album name".
 
-* create a subdirectory in the working directory which has the name equal to parameter 2 - the output directory.
-* move the FLACs into the output directory
-* copy the LOG/CUE into the output directory
+Upon success, the script will create a subdirectory in the working directory which is named with the album name - the output directory.
+The output directory will contain:
 
-Upon failure, neither the temporary files nor the output is deleted. If you run the script again, it will detect the existence of temp/output directories and ask you whether it should deleted them.
+* Per-track FLACs called "(tracknumber) - (track title).flac"
+* A copy of the origianl "(album name).log" and "(album name).cue" (with timestamps, permissions, etc. preserved)
+* A file "(album name).sha256" with the checksum of the original input WAV image (see the "Description" section for the purpose of this)
+
+Upon success, all temporary directories will be deleted, so the output directory will be the only output.
+Upon failure, neither the temporary files nor the output is deleted. If you run the script again, it will detect the existence of temp/output directories and ask you whether it should delete them.
 
 # Temporary Output (deleted upon success):
     Stage1_WAV_Singletracks_From_WAV_Image
@@ -68,7 +78,7 @@ The checksums are compared to the checksums of Stage1.
 [Leo Bogert](http://leo.bogert.de)
 
 # Version:
-BETA3 - NOT for productive use!
+BETA4 - NOT for productive use!
 
 # Donations:
 [bitcoin:1PZBKLBFnbBA5h1HdKF8PATk3JnAND91yp](bitcoin:1PZBKLBFnbBA5h1HdKF8PATk3JnAND91yp)
