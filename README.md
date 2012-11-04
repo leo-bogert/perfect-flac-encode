@@ -81,7 +81,7 @@ The checksums are compared to the checksums of Stage1.
 [Leo Bogert](http://leo.bogert.de)
 
 # Version:
-BETA5 - NOT for productive use!
+BETA6 - NOT for productive use!
 
 # Donations:
 [bitcoin:1PZBKLBFnbBA5h1HdKF8PATk3JnAND91yp](bitcoin:1PZBKLBFnbBA5h1HdKF8PATk3JnAND91yp)
