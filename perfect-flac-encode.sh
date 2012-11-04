@@ -153,7 +153,7 @@ test_eac_crc_or_die() {
 	fi
 	
 	echo "Computing CRC of WAV image..."
-	local actual_crc=`~/eac-crc.sh "$input_wav_image"` # TODO: as soon as a packaged version is available, use the binary from the package
+	local actual_crc=`~/eac-crc "$input_wav_image"` # TODO: as soon as a packaged version is available, use the binary from the package
 	echo "Expected EAC CRC: $expected_crc"
 	echo "Actual CRC: $actual_crc"
 	
