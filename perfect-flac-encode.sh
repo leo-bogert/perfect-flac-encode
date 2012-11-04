@@ -12,9 +12,10 @@ decoded_wav_singletrack_subdir="Stage4_WAV_Singletracks_Decoded_From_FLAC_Single
 
 temp_dirs_to_delete=( "$wav_singletrack_subdir" "$wav_jointest_subdir" "$flac_singletrack_subdir" "$decoded_wav_singletrack_subdir" )
 
-# "Unit tests": Enabling these will damage the produced output files to test the checksum verification
+# "Unit tests": Enabling these will damage the said files to test the checksum verification
 # Notice that only enabling one at once makes sense because the script will terminate if ANY checksum verification fails :)
 # Set to 1 to enable
+test_damage_to_input_wav_image=0
 test_damage_to_split_wav_singletracks=0
 test_damage_to_rejoined_wav_image=0
 test_damage_to_flac_singletracks=0
@@ -28,7 +29,7 @@ test_damage_to_decoded_flac_singletracks=0
 #################################################################
 # Global variables
 #################################################################
-VERSION=BETA4
+VERSION=BETA5
 #################################################################
 # End of global variables
 #################################################################
@@ -86,6 +87,82 @@ check_whether_input_is_accurately_ripped_or_die() {
 	else
 		echo "AccurateRip reports a perfect rip."
 	fi
+}
+
+# parameters:
+# $1 = filename of cue/wav/log
+# $2 = "test" or "copy" = which crc to get, EAC provides 2
+get_eac_crc_or_die() {
+	local filename="$working_dir_absolute/$1.log"
+	local log=`cat "$filename"`
+
+	if [ "$2" = "test" ] ; then
+		local regex="(Test CRC )([0-9A-F]*)"
+	else
+		local regex="(Copy CRC )([0-9A-F]*)"
+	fi
+	
+	if [[ $log =~ $regex ]] ; then
+		local crc="${BASH_REMATCH[2]}"
+	else
+		echo "Regexp for getting the EAC CRC failed!" >&2
+		exit 1
+	fi
+
+	echo "$crc"
+	return 0
+}
+
+# parameters:
+# $1 = filename of cue/wav/log
+test_whether_the_two_eac_crcs_match() {
+	test_crc=`get_eac_crc_or_die "$1" "test"`
+	copy_crc=`get_eac_crc_or_die "$1" "copy"`
+	
+	echo "Checking whether EAC Test CRC matches EAC Copy CRC..."
+	if [ "$test_crc" != "$copy_crc" ] ; then
+		echo "EAC Test CRC does not match EAC Copy CRC!" >&2
+		exit 1
+	fi
+	echo "Test and Copy CRC match."
+}
+
+# parameters:
+# $1 = filename of cue/wav/log
+test_eac_crc_or_die() {
+	echo "Comparing EAC CRC from EAC LOG to CRC of the input WAV image..."
+	
+	local input_dir_absolute="$working_dir_absolute"
+	local input_wav_image="$input_dir_absolute/$1.wav"
+	local expected_crc=`get_eac_crc_or_die "$1" "copy"`
+	
+	if [ "$test_damage_to_input_wav_image" -eq 1 ]; then 
+		echo "Deliberately damaging the input WAV image (original is renamed to *.original) to test the EAC checksum verification ..."
+		
+		if ! mv --no-clobber "$input_wav_image" "$input_wav_image.original" ; then
+			echo "Renaming the original WAV image failed!" >&2
+			exit 1
+		fi
+		
+		set_working_directory_or_die "$input_dir_absolute"
+		# We replace it with a silent WAV so we don't have to damage the original input image
+		if ! shntool gen -l 1:23 -a "$1"; then 
+			echo "Generating silent WAV file failed!"
+			exit 1
+		fi
+	fi
+	
+	echo "Computing CRC of WAV image..."
+	local actual_crc=`~/eac-crc.sh "$input_wav_image"` # TODO: as soon as a packaged version is available, use the binary from the package
+	echo "Expected EAC CRC: $expected_crc"
+	echo "Actual CRC: $actual_crc"
+	
+	if [ "$actual_crc" != "$expected_crc" ] ; then
+		echo "EAC CRC mismatch!" >&2
+		exit 1
+	fi
+	
+	echo "EAC CRC of input WAV image is OK."
 }
 
 # parameters:
@@ -461,13 +538,12 @@ main() {
 	
 	# globals
 	working_dir_absolute="$rip_dir_absolute"
-
 	set_working_directory_or_die "$working_dir_absolute"
 	
-	ask_to_delete_existing_output_and_temp_dirs_or_die "$output_dir"
+	ask_to_delete_existing_output_and_temp_dirs_or_die "$output_dir"	
 	check_whether_input_is_accurately_ripped_or_die "$input_wav_log_cue_filename"
-	# TODO: Maybe we should also validate the EAC checksum of the original image?
-	
+	test_whether_the_two_eac_crcs_match "$input_wav_log_cue_filename"
+	test_eac_crc_or_die "$input_wav_log_cue_filename"
 	#compress_image_wav_to_image_flac_or_die "$@"	
 	split_wav_image_to_singletracks_or_die "$input_wav_log_cue_filename"
 	test_accuraterip_checksums_of_split_wav_singletracks_or_die "$input_wav_log_cue_filename"
