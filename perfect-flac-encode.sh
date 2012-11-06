@@ -29,7 +29,7 @@ test_damage_to_decoded_flac_singletracks=0
 #################################################################
 # Global variables
 #################################################################
-VERSION=BETA6
+VERSION=BETA7
 #################################################################
 # End of global variables
 #################################################################
@@ -94,23 +94,24 @@ check_whether_input_is_accurately_ripped_or_die() {
 # $2 = "test" or "copy" = which crc to get, EAC provides 2
 get_eac_crc_or_die() {
 	local filename="$working_dir_absolute/$1.log"
-	local log=`cat "$filename"`
 
-	if [ "$2" = "test" ] ; then
-		local regex="(Test CRC )([0-9A-F]*)"
-	else
-		local regex="(Copy CRC )([0-9A-F]*)"
-	fi
+	case $2 in
+		test)
+			local mode="Test" ;;
+		copy)
+			local mode="Copy" ;;
+		*)
+			echo "Invalid mode: $2"
+			exit 1
+	esac
 	
-	if [[ $log =~ $regex ]] ; then
-		local crc="${BASH_REMATCH[2]}"
-	else
+	local regex="^([[:space:]]*)($mode CRC )([0-9A-F]*)([[:space:]]*)\$"
+	iconv --from-code utf-16 --to-code utf-8 "$filename" | grep -E "$regex" | sed -r s/"$regex"/\\3/
+	
+	if  [[ ! $? -eq 0  ]]; then
 		echo "Regexp for getting the EAC CRC failed!" >&2
 		exit 1
 	fi
-
-	echo "$crc"
-	return 0
 }
 
 # parameters:
@@ -185,10 +186,12 @@ split_wav_image_to_singletracks_or_die() {
 	# -d dir Specify output directory 
 	# -o str Specify output file format extension, encoder and/or arguments.  Format is:  "fmt [ext=abc] [encoder [arg1 ... argN (%f = filename)]]"
 	# -f file Specifies a file from which to read split point data.  If not given, then split points are read from the terminal.
-    # TODO: we can replace special characters in filenames generated from cuesheets with "-m". is this needed or does EAC already do it properly?
+    # TODO: we can replace special characters in filenames generated from cuesheets with "-m".  Replace Windows/Mac reserved filename characters in filenames.
 	# -n fmt Specifies the file count output format.  The default is %02d, which gives two‐digit zero‐padded numbers (01, 02, 03, ...).
 	# -t fmt Name output files in user‐specified format based on CUE sheet fields. %t Track title, %n Track number
 	# -- = indicates that everything following it is a filename
+	
+	# TODO: shntool generates a "00 - pregap.wav" for HTOA. Decide what to do about this and check MusicBrainz for what they prefer. Options are: Keep as track 0? Merge with track 1? Shift all tracks by 1?
 	
 	# Ideas behind parameter decisions:
 	# - We specify a different progress indicator so redirecting the script output to a log file will not result in a bloated file"
@@ -225,51 +228,37 @@ split_wav_image_to_singletracks_or_die() {
 # parameters:
 # $1 = filename of cue/wav/logs
 # $2 = tracknumber
+# $3 = accuraterip version, 1 or 2
 get_accuraterip_checksum_of_singletrack_or_die() {
 	local filename="$working_dir_absolute/$1.log"
 	local tracknumber="$2"
-	tracknumber=`echo "$tracknumber" | sed 's/0*//'`	# remove leading zeros, the EAC LOG does not contain them
-
-	# Difficult solution using grep:
-	#iconv --from-code utf-16 --to-code utf-8 "$filename" | grep -E "Track( {1,2})([[:digit:]]{1,2})( {2})accurately ripped \\(confidence ([[:digit:]]*)\\)  \\[([0-9A-Fa-f]*)\\]" | grep -E "Track( {1,2})$tracknumber( {2})" | grep -E -o "\\[([0-9A-Fa-f]*)\\]" | grep -E -o "([0-9A-Fa-f]*)"
+	local accuraterip_version="$3"
+	tracknumber=`echo "$tracknumber" | sed 's/^[0]//'`	# remove leading zero (we use 2-digit tracknumbers)
 	
-	# Easy solution using bash:
-	log=`cat "$filename"`
-	regex="Track( {1,2})($tracknumber)( {2})accurately ripped \\(confidence ([[:digit:]]*)\\)  \\[([0-9A-Fa-f]*)\\]"
-	if [[ $log =~ $regex  ]] ; then
-		i=0
-		
-		# TODO: why doesn't this work?
-		# echo "${BASH_REMATCH[9]}"
-		
-		# because the above doesn't work we have to loop over the array:
-		for group in ${BASH_REMATCH[@]} ; do
-			if [[ i -eq 9 ]]; then
-				echo "$group"
-				return 0
-			fi
-			let i++
-		done
-	else
-		echo "Regexp for getting the AccurateRip checksum failed!" >&2
+	if [ "$accuraterip_version" != "1" -a "$accuraterip_version" != "2" ] ; then
+		echo "Invalid AccurateRip version: $accuraterip_version!" >&2
 		exit 1
 	fi
+	
+	local regex="^Track( {1,2})($tracknumber)( {2})accurately ripped \\(confidence ([[:digit:]]+)\\)  \\[([0-9A-Fa-f]+)\\]  \\(AR v$accuraterip_version\\)(.*)\$"
+	
+	iconv --from-code utf-16 --to-code utf-8 "$filename" | grep -E "$regex" | sed -r s/"$regex"/\\5/
 }
 
 # parameters:
-# $1 = full filename
-get_tracknumber_of_wav_singletrack() {
+# $1 = filename with extension
+get_tracknumber_of_singletrack() {
 	filename="$1"
-	echo "$filename" | grep -E -o "^([[:digit:]]{2}) -" | grep -E -o "([[:digit:]]{2})"
-	# TODO: Use bash regexp as soon as the bug in get_accuraterip_checksum_of_singletrack_or_die which prevents direct access on BASH_REMATCH is fixed
+	regex='^([[:digit:]]{2}) - (.+)([.])(.+)$'
+	
+	echo "$filename" | grep -E "$regex" | sed -r s/"$regex"/\\1/
 }
 
+
 # parameters:
-# $1 = directory which contains the wav singletracks only
-get_total_wav_tracks() {
-	local inputdir_wav="$1"
-	local tracks=( "$inputdir_wav"/*.wav )
-	echo "${#tracks[@]}"
+# $1 = full path of cuesheet
+get_total_wav_tracks_without_hiddentrack() {
+	cueprint -d '%N' "$1"
 }
 
 # parameters:
@@ -277,24 +266,58 @@ get_total_wav_tracks() {
 test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 	echo "Comparing AccurateRip checksums of split WAV singletracks to AccurateRip checksums from EAC LOG..."
 	
+	local log_cue_filename="$1"
 	local inputdir_wav="$working_dir_absolute/$wav_singletrack_subdir"
 	local wav_singletracks=( "$inputdir_wav"/*.wav )
-	local totaltracks=`get_total_wav_tracks "$inputdir_wav"`
+	local hidden_track="$inputdir_wav/00 - pregap.wav"
+	local totaltracks=`get_total_wav_tracks_without_hiddentrack "$working_dir_absolute/$log_cue_filename.cue"`
 	
+	if [ -f "$hidden_track" ] ; then
+		echo "Hidden track one audio found."
+		local hidden_track_excluded_message=" (excluding hidden track)"
+	else
+		echo "Hidden track one audio not found."
+	fi
+	
+	echo "Total tracks$hidden_track_excluded_message: $totaltracks"
 	for filename in "${wav_singletracks[@]}"; do
-		filename_without_path=`basename "$filename"`
-		tracknumber=`get_tracknumber_of_wav_singletrack "$filename_without_path"`
-		expected_checksum=`get_accuraterip_checksum_of_singletrack_or_die "$1" "$tracknumber"`
-		expected_checksum=${expected_checksum^^} # convert to uppercase
-		actual_checksum=`~/accuraterip-checksum "$filename" "$tracknumber" "$totaltracks"`	#TODO: obtain an ubuntu package for this and use the binary from PATH, not ~
+		local filename_without_path=`basename "$filename"`
+		local tracknumber=`get_tracknumber_of_singletrack "$filename_without_path"`
+		
+		if  [ "$tracknumber" = "00" ] ; then
+			echo "Skipping tracknumber 0 as this is a hidden track, EAC won't list AccurateRip checksums of hidden track one audio"
+			continue
+ 		fi
+		
+		local expected_checksums[1]=`get_accuraterip_checksum_of_singletrack_or_die "$log_cue_filename" "$tracknumber" "1"`
+		local expected_checksums[2]=`get_accuraterip_checksum_of_singletrack_or_die "$log_cue_filename" "$tracknumber" "2"`
+		
+		if [ "${expected_checksums[2]}" != "" ] ; then
+			local accuraterip_version="2"
+		else
+			if [ "${expected_checksums[1]}" != "" ] ; then
+				local accuraterip_version="1"
+			else
+				echo "AccurateRip checksum not found in LOG!" >&2
+				exit 1
+			fi
+		fi
+		
+		local expected_checksum="${expected_checksums[$accuraterip_version]^^}" # ^^ = convert to uppercase
+		local actual_checksum=`~/accuraterip-checksum --version$accuraterip_version "$filename" "$tracknumber" "$totaltracks"`	#TODO: obtain an ubuntu package for this and use the binary from PATH, not ~
 	
 		if [ "$actual_checksum" != "$expected_checksum" ]; then
-			echo "AccurateRip shecksum mismatch for track $tracknumber: expected=$expected_checksum; actual=$actual_checksum" >&2
-			exit 1
+			echo "AccurateRip checksum mismatch for track $tracknumber: expected='$expected_checksum'; actual='$actual_checksum'" >&2
+			local do_exit=1	# Don't exit right now so we get an overview of all checksums so we have a better chance of finding out what's wrong
 		else
 			echo "AccurateRip checksum of track $tracknumber: $actual_checksum, expected $expected_checksum. OK."
 		fi
 	done
+	
+	if [ "$do_exit" = "1" ] ; then
+		echo "AccurateRip checksum mismatch for at least one track!" >&2
+		exit 1
+	fi
 }
 
 # This genrates a .sha256 file with the SHA256-checksum of the original WAV image. We do not use the EAC CRC from the log because it is non-standard and does not cover the full WAV.
@@ -390,7 +413,7 @@ encode_wav_singletracks_to_flac_or_die() {
 	# --silent	Silent mode (do not write runtime encode/decode statistics to stderr)
 	# --warnings-as-errors	Treat all warnings as errors (which cause flac to terminate with a non-zero exit code).
 	# --output-prefix=string	Prefix  each output file name with the given string.  This can be useful for encoding or decoding files to a different directory. 
-	# --keep-foreign-metadata	If  encoding,  save  WAVE  or  AIFF non-audio chunks in FLAC metadata. If decoding, restore any saved non-audio chunks from FLAC metadata when writing the decoded file. 
+	# TODO: do we need this => --keep-foreign-metadata	If  encoding,  save  WAVE  or  AIFF non-audio chunks in FLAC metadata. If decoding, restore any saved non-audio chunks from FLAC metadata when writing the decoded file. 
 	# --verify	Verify a correct encoding by decoding the output in parallel and comparing to the original
 	# --replay-gain Calculate ReplayGain values and store them as FLAC tags, similar to vorbisgain.  Title gains/peaks will be computed for each input file, and an album gain/peak will be computed for all files. 
 	# --best    Highest compression.
@@ -406,7 +429,7 @@ encode_wav_singletracks_to_flac_or_die() {
 	# TODO: proof-read option list again
 	
 	set_working_directory_or_die "$inputdir"	# We need input filenames to be relative for --output-prefix to work
-	if ! flac --silent --warnings-as-errors --output-prefix="$outputdir/" --keep-foreign-metadata --verify --replay-gain --best *.wav ; then
+	if ! flac --silent --warnings-as-errors --output-prefix="$outputdir/" --verify --replay-gain --best *.wav ; then
 		echo "Encoding WAV to FLAC singletracks failed!" >&2
 		exit 1
 	fi
@@ -445,7 +468,8 @@ test_checksums_of_decoded_flac_singletracks_or_die() {
 	fi
 	
 	set_working_directory_or_die "$inputdir_flac"	# We need input filenames to be relative for --output-prefix to work
-	if ! flac --decode --silent --warnings-as-errors --output-prefix="$outputdir/" --keep-foreign-metadata *.flac ; then
+	# TODO: do we need this => --keep-foreign-metadata	If  encoding,  save  WAVE  or  AIFF non-audio chunks in FLAC metadata. If decoding, restore any saved non-audio chunks from FLAC metadata when writing the decoded file. 
+	if ! flac --decode --silent --warnings-as-errors --output-prefix="$outputdir/"  *.flac ; then
 		echo "Decoding FLAC singletracks failed!" >&2
 		exit 1
 	fi
@@ -505,6 +529,8 @@ copy_cue_log_sha256_to_target_dir_or_die() {
 	local input_files=( "$working_dir_absolute/$1.cue" "$working_dir_absolute/$1.log" "$wav_jointest_subdir/$1.sha256" )
 	local outputdir="$working_dir_absolute/$2"
 	
+	# TODO: maybe use different filenames for cue/log?
+	
 	if ! cp --archive --no-clobber "${input_files[@]}" "$outputdir" ; then
 		"Copying CUE, LOG and SHA256 to output directory failed!" >&2
 		exit 1;
@@ -542,6 +568,7 @@ main() {
 	
 	ask_to_delete_existing_output_and_temp_dirs_or_die "$output_dir"	
 	check_whether_input_is_accurately_ripped_or_die "$input_wav_log_cue_filename"
+	# TODO: maybe do "shntool len" and check the "problems" column
 	test_whether_the_two_eac_crcs_match "$input_wav_log_cue_filename"
 	test_eac_crc_or_die "$input_wav_log_cue_filename"
 	#compress_image_wav_to_image_flac_or_die "$@"	
@@ -550,11 +577,13 @@ main() {
 	generate_checksum_of_original_wav_image_or_die "$input_wav_log_cue_filename"
 	test_checksum_of_rejoined_wav_image_or_die "$input_wav_log_cue_filename"
 	encode_wav_singletracks_to_flac_or_die
+	# TODO: tag FLAC with eac-cue-flac-musicbrainz-pretag
 	test_flac_singletracks_or_die
 	test_checksums_of_decoded_flac_singletracks_or_die
 	move_output_to_target_dir_or_die "$output_dir"
 	copy_cue_log_sha256_to_target_dir_or_die "$input_wav_log_cue_filename" "$output_dir"
 	# write_readme_txt_to_target_dir_or_die "$input_wav_log_cue_filename" "$output_dir"  # TODO: Enable once it is implemented
+	# TODO: produce a perfect-flac-encode logfile and copy to output
 	delete_temp_dirs
 	
 	echo "SUCCESS. Your FLACs are in directory \"$input_wav_log_cue_filename\""
