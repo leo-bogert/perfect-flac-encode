@@ -31,6 +31,7 @@ This script was written & tested on Ubuntu 12.04 x86_64. It should work on any U
 To obtain its dependancies, do the following:
 
 * Install these packages:
+	* cuetools
 	* flac
 	* shntool
 * Obtain the ["accuraterip-checksum" binary](https://github.com/leo-bogert/accuraterip-checksum/downloads) (or compile it on your own) and put it into your home directory.
