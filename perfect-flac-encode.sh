@@ -29,7 +29,8 @@ test_damage_to_decoded_flac_singletracks=0
 #################################################################
 # Global variables
 #################################################################
-VERSION=BETA7
+VERSION=BETA8
+# TODO: list all! or even better: get rid of globals
 #################################################################
 # End of global variables
 #################################################################
@@ -257,7 +258,7 @@ get_tracknumber_of_singletrack() {
 
 # parameters:
 # $1 = full path of cuesheet
-get_total_wav_tracks_without_hiddentrack() {
+get_total_tracks_without_hiddentrack() {
 	cueprint -d '%N' "$1"
 }
 
@@ -270,11 +271,15 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 	local inputdir_wav="$working_dir_absolute/$wav_singletrack_subdir"
 	local wav_singletracks=( "$inputdir_wav"/*.wav )
 	local hidden_track="$inputdir_wav/00 - pregap.wav"
-	local totaltracks=`get_total_wav_tracks_without_hiddentrack "$working_dir_absolute/$log_cue_filename.cue"`
+	local totaltracks=`get_total_tracks_without_hiddentrack "$working_dir_absolute/$log_cue_filename.cue"`
 	
 	if [ -f "$hidden_track" ] ; then
 		echo "Hidden track one audio found."
 		local hidden_track_excluded_message=" (excluding hidden track)"
+		
+		# TODO: evaluate what musicbrainz says about joined hidden track vs hidden track as track0
+		#shntool join "$inputdir_wav/00 - pregap.wav" "$inputdir_wav/01"*.wav
+		#mv "joined.wav" "$inputdir_wav/01"*.wav
 	else
 		echo "Hidden track one audio not found."
 	fi
@@ -442,6 +447,131 @@ encode_wav_singletracks_to_flac_or_die() {
 	fi
 }
 
+# Because cuetools is bugged and won't print the catalog number we read it on our own
+#
+# parameters:
+# $1: path of cue
+cue_get_catalog() {
+	local regexp="^(CATALOG )(.+)\$"
+	# The tr will convert CRLF to LF and prevend trainling CR on the output catalog value
+	cat "$1" | tr -d '\r' | grep -E "$regexp" | sed -r s/"$regexp"/\\2/
+}
+
+# This function was inspired by the cuetag script of cuetools, taken from https://github.com/svend/cuetools
+# It's license is GPL so this function is GPL as well. 
+#
+# parameters:
+# $1 = full path of CUE file
+# $2 = full path of FLAC file
+# $3 = track number of FLAC file
+pretag_singletrack_flac_from_cue()
+{
+	local cue_file="$1"
+	local flac_file="$2"
+	local trackno="$3"
+
+	# REASONS OF THE DECISIONS OF MAPPING CUE TAGS TO FLAC TAGS:
+	#
+	# Mapping CUE tag names to FLAC tag names is diffcult:
+	# - CUE is not standardized. The tags it provides are insufficient to represent all tags of common types of music.Their meaning is not well-defined due to lag of standardization. Therefore, we only use the CUE fields which are physically stored on the CD.
+	# - FLAC does provide a standard list of tags but it is as well insufficient. (http://www.xiph.org/vorbis/doc/v-comment.html) Therefore, we needed a different one
+	#
+	# Because we recommend MusicBrainz for tagging AND they are so kind to provide a complex list of standard tag names for each common audio file format including FLAC, we decided to use the MusicBrainz FLAC tag names. 
+	# The "pre" means that tagging from a CUE is NEVER sufficient. CUE does not provide enough tags!
+	#
+	# Conclusion:
+	# - The semantics of the CUE fields which EAC uses is taken from <TODO>
+	# - The mapping between CUE tag names and cueprint fields is taken from the manpage of cueprint and by checking with an EAC CUE which uses ALL tags EAC will ever use (TODO: find one and actually do this)
+	# - The target FLAC tag names are taken from http://musicbrainz.org/doc/MusicBrainz_Picard/Tags/Mapping
+	#
+	
+	## From cueprint manpage:
+	##   Character   Conversion         Character   Conversion
+	##   ────────────────────────────────────────────────────────────────
+	##   A           album arranger     a           track arranger
+	##   C           album composer     c           track composer
+	##   G           album genre        g           track genre
+	##                                  i           track ISRC
+	##   M           album message      m           track message
+	##   N           number of tracks   n           track number
+	##   P           album performer    p           track performer
+	##   S           album songwriter
+	##   T           album title        t           track title
+	##   U           album UPC/EAN      u           track ISRC (CD-TEXT)
+
+	# The following are the mappings from CUEPRINT to FLAC tags. The list was created by reading each entry of the above cueprint manpage and trying to find a tag which fits it in the musicbrainz tag mapping table http://musicbrainz.org/doc/MusicBrainz_Picard/Tags/Mapping
+	# bash variable name == FLAC tag names
+	# sorting of the variables is equal to cueprint manpage
+	# TODO: find out the exact list of CUE-tags which cueprint CANNOT read and decide what to do about them
+	# TODO: do a reverse check of the mapping list: read the musicbrainz tag mapping table and try to find a proper CUE-tag for each musicbrainz tag. ideally, as the CUE-tag-table, do not use the cueprint manpage but a list of all CUE tags which EAC will ever generate
+	# TODO: when no per-track information is available, it might be a good idea to fallback to the album information. check whether cueprint does this. if not, do it manually maybe. think about possible side effects of falling back.
+
+	# We only use the fields which are actually stored on the disc.
+	# TODO: find out whether this is actually everything which is stored on a CD
+	
+	local -A fields	# declare associative array
+	# disc tags
+	fields["CATALOGNUMBER"]=`cue_get_catalog "$cue_file"`						# album UPC/EAN. Debbuging showed that cueprint's %U is broken so we use our function.
+	fields["ENCODEDBY"]="perfect-flac-encode $VERSION with `flac --version`"	# own version :)
+	fields["TRACKTOTAL"]='%N'													# number of tracks
+	fields["TOTALTRACKS"]="${fields['TRACKTOTAL']}"								# musicbrainz lists both TRACKTOAL and TOTALTRACKS and for track count.
+
+	# track tags
+	fields["ISRC"]='%i'			# track ISRC
+	fields["COMMENT"]='%m'		# track message. TODO: is this stored on the CD?
+	fields["TRACKNUMBER"]='%n'	# %n = track number
+	
+	# We use our own homebrew regexp for obtaining the CATALOG from the CUE so we should be careful
+	if [ "${fields['CATALOGNUMBER']}" = "" ]; then
+		echo "Obtaining CATALOG failed!" >&2
+		exit 1
+	fi
+	
+	for field in "${!fields[@]}"; do
+		# remove pre-existing tags. we do not use --remove-all-tags because it would remove the replaygain info. and besides it is also cleaner to only remove stuff we know about
+		if ! metaflac --remove-tag="$field" "$flac_file" ; then
+			echo "Removing existing tag $field failed!" >&2
+			exit 1
+		fi
+		
+		local conversion="${fields[$field]}"
+		local value=`cueprint -n $trackno -t "$conversion\n" "$cue_file"`
+		
+		if [ -z "$value" ] ; then
+			continue	# Skip empty field
+		fi
+		
+		if ! echo "$field=$value" | metaflac --import-tags-from=- "$flac_file" ; then
+			echo "Setting tag $field=$value failed!" >&2
+			exit 1
+		fi
+	done
+}
+
+# This function was inspired by the cuetag script of cuetools, taken from https://github.com/svend/cuetools
+# It's license is GPL so this function is GPL as well. 
+#
+# parameters:
+# $1 = filename of cue/wav/log
+pretag_singletrack_flacs_from_cue()
+{
+	echo "Pre-tagging the singletrack FLACs with information from the CUE which is physically stored on the CD. Please use MusicBrainz Picard for the rest of the tags..."
+	
+	local cue_file="$working_dir_absolute/$1.cue"
+	local inputdir_flac="$working_dir_absolute/$flac_singletrack_subdir"
+	local flac_files=( "$inputdir_flac/"*.flac )
+	
+	for file in "${flac_files[@]}"; do
+		local filename_without_path=`basename "$file"`
+		local tracknumber=`get_tracknumber_of_singletrack "$filename_without_path"`
+
+		if ! pretag_singletrack_flac_from_cue "$cue_file" "$file" "$tracknumber" ; then
+			echo "Tagging $file failed!" >&2
+			exit 1
+		fi
+	done
+}
+
 test_flac_singletracks_or_die() {
 	echo "Running flac --test on singletrack FLACs..."
 	local inputdir_flac="$working_dir_absolute/$flac_singletrack_subdir"
@@ -577,7 +707,7 @@ main() {
 	generate_checksum_of_original_wav_image_or_die "$input_wav_log_cue_filename"
 	test_checksum_of_rejoined_wav_image_or_die "$input_wav_log_cue_filename"
 	encode_wav_singletracks_to_flac_or_die
-	# TODO: tag FLAC with eac-cue-flac-musicbrainz-pretag
+	pretag_singletrack_flacs_from_cue "$input_wav_log_cue_filename"
 	test_flac_singletracks_or_die
 	test_checksums_of_decoded_flac_singletracks_or_die
 	move_output_to_target_dir_or_die "$output_dir"

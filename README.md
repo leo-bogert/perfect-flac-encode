@@ -24,7 +24,9 @@ The secondary goal is providing a perfect backup of the original disc. For servi
 
 Additional features are:
 
+* The following tags are added to the FLACs: TRACKTOTAL CATALOGNUMBER ISRC ENCODEDBY TRACKNUMBER COMMENT TOTALTRACKS. Except for "ENCODEDBY" they are all taken from the CUE. No further tags are added because those are the only ones which are actually physically stored on audio CDs and EAC is not good at retrieving the rest of the tags from the Internet. We strongly recommend MusicBrainz Picard for tagging the FLACs, it a perfect tagging software for being combined with perfect-flac-encode: Their website states their goal as "MusicBrainz aims to be: The ultimate source of music information by allowing anyone to contribute and releasing the data under open licenses.  [...] The universal lingua franca for music by providing a reliable and unambiguous form of music identification [...]". Seriously, give it a try, it really lives up to its promises!
 * The script has 5 stages of checksum verification: EAC Copy CRC vs. input WAV image CRC; AccurateRip checksums vs split singletracks' checksums; original WAV input image sha256 vs. rejoined image from singletracks sha256; sha256 of WAV singletracks vs. sha256 of decoded singletracks from FLAC singletracks. There are 5 config variables which can be used to make the script deliberately cause damage to any of the 5 stages. This can be used for making very sure that the checksum validation actually detects corruption.
+
 
 # Installation:
 This script was written & tested on Ubuntu 12.04 x86_64. It should work on any Ubuntu or Debian-based distribution.
@@ -82,7 +84,7 @@ The checksums are compared to the checksums of Stage1.
 [Leo Bogert](http://leo.bogert.de)
 
 # Version:
-BETA7 - NOT for productive use!
+BETA8 - NOT for productive use!
 
 # Donations:
 [bitcoin:1PZBKLBFnbBA5h1HdKF8PATk3JnAND91yp](bitcoin:1PZBKLBFnbBA5h1HdKF8PATk3JnAND91yp)
