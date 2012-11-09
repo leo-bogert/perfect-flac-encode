@@ -9,9 +9,9 @@
 WAV_SINGLETRACK_SUBDIR="Stage1_WAV_Singletracks_From_WAV_Image"
 wav_jointest_subdir="Stage2_WAV_Image_Joined_From_WAV_Singletracks"
 flac_singletrack_subdir="Stage3_FLAC_Singletracks_Encoded_From_WAV_Singletracks"
-decoded_WAV_SINGLETRACK_SUBDIR="Stage4_WAV_Singletracks_Decoded_From_FLAC_Singletracks"
+DECODED_WAV_SINGLETRACK_SUBDIR="Stage4_WAV_Singletracks_Decoded_From_FLAC_Singletracks"
 
-temp_dirs_to_delete=( "$WAV_SINGLETRACK_SUBDIR" "$wav_jointest_subdir" "$flac_singletrack_subdir" "$decoded_WAV_SINGLETRACK_SUBDIR" )
+temp_dirs_to_delete=( "$WAV_SINGLETRACK_SUBDIR" "$wav_jointest_subdir" "$flac_singletrack_subdir" "$DECODED_WAV_SINGLETRACK_SUBDIR" )
 
 # "Unit tests": Enabling these will damage the said files to test the checksum verification
 # Notice that only enabling one at once makes sense because the script will terminate if ANY checksum verification fails :)
@@ -591,7 +591,7 @@ test_checksums_of_decoded_flac_singletracks_or_die() {
 	
 	local inputdir_wav="$WORKING_DIR_ABSOLUTE/$WAV_SINGLETRACK_SUBDIR"
 	local inputdir_flac="$WORKING_DIR_ABSOLUTE/$flac_singletrack_subdir"
-	local outputdir="$WORKING_DIR_ABSOLUTE/$decoded_WAV_SINGLETRACK_SUBDIR"
+	local outputdir="$WORKING_DIR_ABSOLUTE/$DECODED_WAV_SINGLETRACK_SUBDIR"
 	
 	if ! mkdir -p "$outputdir" ; then
 		echo "Making $outputdir subdirectory failed!" >&2
