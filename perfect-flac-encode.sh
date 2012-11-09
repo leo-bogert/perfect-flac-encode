@@ -440,7 +440,6 @@ encode_wav_singletracks_to_flac_or_die() {
 	# --silent	Silent mode (do not write runtime encode/decode statistics to stderr)
 	# --warnings-as-errors	Treat all warnings as errors (which cause flac to terminate with a non-zero exit code).
 	# --output-prefix=string	Prefix  each output file name with the given string.  This can be useful for encoding or decoding files to a different directory. 
-	# TODO: do we need this => --keep-foreign-metadata	If  encoding,  save  WAVE  or  AIFF non-audio chunks in FLAC metadata. If decoding, restore any saved non-audio chunks from FLAC metadata when writing the decoded file. 
 	# --verify	Verify a correct encoding by decoding the output in parallel and comparing to the original
 	# --replay-gain Calculate ReplayGain values and store them as FLAC tags, similar to vorbisgain.  Title gains/peaks will be computed for each input file, and an album gain/peak will be computed for all files. 
 	# --best    Highest compression.
@@ -449,7 +448,6 @@ encode_wav_singletracks_to_flac_or_die() {
 	# --silent Without silent, it will print each percent-value from 0 to 100 which would bloat logfiles.
 	# --warnings-as-errors	This is clear - we want perfect output.
 	# --output-prefix	We use it to put files into a subdirectory. We put them into a subdirectory so we can just use "*.flac" in further processing wtihout the risk of colliding with an eventually generated FLAC image or other files.
-	# --keep-foreign-metadata	We assume that it is necessary for being able to decode to bitidentical WAV files. TODO: Validate this.
 	# --verify	It is always a good idea to validate the output to make sure that it is good.
 	# --replay-gain	Replaygain is generally something you should want. Go read up on it. TODO: We should use EBU-R128 instead, but as of Kubuntu12.04 there seems to be no package which can do it.
 	# --best	Because we do PERFECT rips, we only need to do them once in our life and can just invest the time of maximal compression.
@@ -620,7 +618,6 @@ test_checksums_of_decoded_flac_singletracks_or_die() {
 	fi
 	
 	set_working_directory_or_die "$inputdir_flac"	# We need input filenames to be relative for --output-prefix to work
-	# TODO: do we need this => --keep-foreign-metadata	If  encoding,  save  WAVE  or  AIFF non-audio chunks in FLAC metadata. If decoding, restore any saved non-audio chunks from FLAC metadata when writing the decoded file. 
 	if ! flac --decode --silent --warnings-as-errors --output-prefix="$outputdir/"  *.flac ; then
 		echo "Decoding FLAC singletracks failed!" >&2
 		exit 1
