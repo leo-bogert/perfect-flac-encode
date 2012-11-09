@@ -30,7 +30,7 @@ test_damage_to_decoded_flac_singletracks=0
 #################################################################
 # Global variables (naming convention: all globals are uppercase)
 #################################################################
-VERSION="BETA9"
+VERSION="BETA10"
 WORKING_DIR_ABSOLUTE=""
 #################################################################
 # End of global variables
@@ -715,9 +715,14 @@ print_readme_or_die() {
 # $2 = release name
 write_readme_txt_to_target_dir_or_die() {
 	echo "Generating README.txt ..."
-	# We use Windows linebreaks since they will work on any plattform. Unix linebreaks would not wrap the line with many Windows editors.
+
 	# We wrap at 80 characters so the full file will fit into a standard Windows Notepad window. TODO: Find out the actual line width of default Notepad. I don't have Windows at hand right now
-	if ! print_readme_or_die "$2" | fold --spaces --width=80 | tr "\n" "\r\n" > "$WORKING_DIR_ABSOLUTE/$1/README.txt" ; then
+	# We use Windows linebreaks since they will work on any plattform. Unix linebreaks would not wrap the line with many Windows editors.
+	if ! print_readme_or_die "$2" |
+		fold --spaces --width=80 | 	
+		( while read line; do echo -n -e "$line\r\n"; done ) \
+		> "$WORKING_DIR_ABSOLUTE/$1/README.txt"	
+	then
 		echo "Generating README.txt failed!"
 		exit 1
 	fi
