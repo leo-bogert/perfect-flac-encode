@@ -208,7 +208,7 @@ split_wav_image_to_singletracks_or_die() {
 	# -d dir Specify output directory 
 	# -o str Specify output file format extension, encoder and/or arguments.  Format is:  "fmt [ext=abc] [encoder [arg1 ... argN (%f = filename)]]"
 	# -f file Specifies a file from which to read split point data.  If not given, then split points are read from the terminal.
-    # -m str Specifies  a  character  manipulation  string for filenames generated from CUE sheets.  
+	# -m str Specifies  a  character  manipulation  string for filenames generated from CUE sheets.  
 	# -n fmt Specifies the file count output format.  The default is %02d, which gives two‐digit zero‐padded numbers (01, 02, 03, ...).
 	# -t fmt Name output files in user‐specified format based on CUE sheet fields. %t Track title, %n Track number
 	# -- = indicates that everything following it is a filename
@@ -399,7 +399,7 @@ test_checksum_of_rejoined_wav_image_or_die() {
 	# Ideas behind parameter decisions:
 	# - We specify a different progress indicator so redirecting the script output to a log file will not result in a bloated file"
 	# - We join into a subdirectory because we don't need the joined file afterwards and we can just delete the subdir to get rid of it
-	if ! shntool join -P dot -d "$outputdir_relative" -- "$inputdir_relative"/*.wav ; then # TODO: Store the shntool commandline in a variable and write a README to the script's output directory which tells the user that he can re-create the original image using the shntool commandline
+	if ! shntool join -P dot -d "$outputdir_relative" -- "$inputdir_relative"/*.wav ; then 
 		echo "Joining WAV failed!" >&2
 		exit 1
 	fi
