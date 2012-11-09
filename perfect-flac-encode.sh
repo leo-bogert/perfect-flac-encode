@@ -5,7 +5,6 @@
 #################################################################
 # Configuration:
 #################################################################
-# TODO: capitalize all those global variables.
 WAV_SINGLETRACK_SUBDIR="Stage1_WAV_Singletracks_From_WAV_Image"
 WAV_JOINTEST_SUBDIR="Stage2_WAV_Image_Joined_From_WAV_Singletracks"
 FLAC_SINGLETRACK_SUBDIR="Stage3_FLAC_Singletracks_Encoded_From_WAV_Singletracks"
@@ -16,11 +15,11 @@ TEMP_DIRS_TO_DELETE=( "$WAV_SINGLETRACK_SUBDIR" "$WAV_JOINTEST_SUBDIR" "$FLAC_SI
 # "Unit tests": Enabling these will damage the said files to test the checksum verification
 # Notice that only enabling one at once makes sense because the script will terminate if ANY checksum verification fails :)
 # Set to 1 to enable
-test_damage_to_input_wav_image=0
-test_damage_to_split_wav_singletracks=0
-test_damage_to_rejoined_wav_image=0
-test_damage_to_flac_singletracks=0
-test_damage_to_decoded_flac_singletracks=0
+TEST_DAMAGE_TO_INPUT_WAV_IMAGE=0
+TEST_DAMAGE_TO_SPLIT_WAV_SINGLETRACKS=0
+TEST_DAMAGE_TO_REJOINED_WAV_IMAGE=0
+TEST_DAMAGE_TO_FLAC_SINGLETRACKS=0
+TEST_DAMAGE_TO_DECODED_FLAC_SINGLETRACKS=0
 #################################################################
 # End of configuration
 #################################################################
@@ -139,7 +138,7 @@ test_eac_crc_or_die() {
 	local input_wav_image="$input_dir_absolute/$1.wav"
 	local expected_crc=`get_eac_crc_or_die "$1" "copy"`
 	
-	if [ "$test_damage_to_input_wav_image" -eq 1 ]; then 
+	if [ "$TEST_DAMAGE_TO_INPUT_WAV_IMAGE" -eq 1 ]; then 
 		echo "Deliberately damaging the input WAV image (original is renamed to *.original) to test the EAC checksum verification ..."
 		
 		if ! mv --no-clobber "$input_wav_image" "$input_wav_image.original" ; then
@@ -210,7 +209,7 @@ split_wav_image_to_singletracks_or_die() {
 	local outputdir_absolute="$WORKING_DIR_ABSOLUTE/$outputdir_relative"
 	local wav_singletracks=( "$outputdir_absolute"/*.wav )
 	set_working_directory_or_die "$outputdir_absolute"
-	if [ "$test_damage_to_split_wav_singletracks" -eq 1 ]; then 
+	if [ "$TEST_DAMAGE_TO_SPLIT_WAV_SINGLETRACKS" -eq 1 ]; then 
 		echo "Deliberately damaging a singletrack to test the AccurateRip checksum verification ..."
 		
 		# accurateripchecksum will ignore trailing garbage in a WAV file and adding leading garbage would make it an invalid WAV which would cause the checksum computation to not even happen
@@ -383,7 +382,7 @@ test_checksum_of_rejoined_wav_image_or_die() {
 		exit 1
 	fi
 	
-	if [ "$test_damage_to_rejoined_wav_image" -eq 1 ]; then 
+	if [ "$TEST_DAMAGE_TO_REJOINED_WAV_IMAGE" -eq 1 ]; then 
 		echo "Deliberately damaging the joined image to test the checksum verification ..."
 		echo "FAIL" >> "$joined_image"
 	fi
@@ -442,7 +441,7 @@ encode_wav_singletracks_to_flac_or_die() {
 	set_working_directory_or_die "$WORKING_DIR_ABSOLUTE"
 	
 	local flac_files=( "$outputdir/"*.flac )
-	if [ "$test_damage_to_flac_singletracks" -eq 1 ]; then 
+	if [ "$TEST_DAMAGE_TO_FLAC_SINGLETRACKS" -eq 1 ]; then 
 		echo "Deliberately damaging a FLAC singletrack to test flac --test verification..."
 		echo "FAIL" > "${flac_files[0]}" # TODO: We overwrite the whole file because FLAC won't detect trailing garbage. File a bug report
 	fi
@@ -607,7 +606,7 @@ test_checksums_of_decoded_flac_singletracks_or_die() {
 	set_working_directory_or_die "$WORKING_DIR_ABSOLUTE"
 	
 	local wav_files=( "$outputdir/"*.wav )
-	if [ "$test_damage_to_decoded_flac_singletracks" -eq 1 ]; then 
+	if [ "$TEST_DAMAGE_TO_DECODED_FLAC_SINGLETRACKS" -eq 1 ]; then 
 		echo "Deliberately damaging a decoded WAV singletrack to test checksum verification..."
 		echo "FAIL" >> "${wav_files[0]}"
 	fi
