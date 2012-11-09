@@ -11,7 +11,7 @@ WAV_JOINTEST_SUBDIR="Stage2_WAV_Image_Joined_From_WAV_Singletracks"
 FLAC_SINGLETRACK_SUBDIR="Stage3_FLAC_Singletracks_Encoded_From_WAV_Singletracks"
 DECODED_WAV_SINGLETRACK_SUBDIR="Stage4_WAV_Singletracks_Decoded_From_FLAC_Singletracks"
 
-temp_dirs_to_delete=( "$WAV_SINGLETRACK_SUBDIR" "$WAV_JOINTEST_SUBDIR" "$FLAC_SINGLETRACK_SUBDIR" "$DECODED_WAV_SINGLETRACK_SUBDIR" )
+TEMP_DIRS_TO_DELETE=( "$WAV_SINGLETRACK_SUBDIR" "$WAV_JOINTEST_SUBDIR" "$FLAC_SINGLETRACK_SUBDIR" "$DECODED_WAV_SINGLETRACK_SUBDIR" )
 
 # "Unit tests": Enabling these will damage the said files to test the checksum verification
 # Notice that only enabling one at once makes sense because the script will terminate if ANY checksum verification fails :)
@@ -49,7 +49,7 @@ set_working_directory_or_die() {
 # parameters:
 # $1 = output dir 
 ask_to_delete_existing_output_and_temp_dirs_or_die() {
-	local output_dir_and_temp_dirs=( "${temp_dirs_to_delete[@]}" "$1" )
+	local output_dir_and_temp_dirs=( "${TEMP_DIRS_TO_DELETE[@]}" "$1" )
 	local confirmed=n
 	
 	for existingdir in "${output_dir_and_temp_dirs[@]}" ; do
@@ -68,7 +68,7 @@ ask_to_delete_existing_output_and_temp_dirs_or_die() {
 
 delete_temp_dirs() {
 	echo "Deleting temp directories..."
-	for existingdir in "${temp_dirs_to_delete[@]}" ; do
+	for existingdir in "${TEMP_DIRS_TO_DELETE[@]}" ; do
 		if [ -d "$WORKING_DIR_ABSOLUTE/$existingdir" ]; then
 			if ! rm --preserve-root -rf "$WORKING_DIR_ABSOLUTE/$existingdir" ; then
 				echo "Deleting the temp files failed!"
