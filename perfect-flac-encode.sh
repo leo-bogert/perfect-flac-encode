@@ -7,11 +7,11 @@
 #################################################################
 # TODO: capitalize all those global variables.
 WAV_SINGLETRACK_SUBDIR="Stage1_WAV_Singletracks_From_WAV_Image"
-wav_jointest_subdir="Stage2_WAV_Image_Joined_From_WAV_Singletracks"
+WAV_JOINTEST_SUBDIR="Stage2_WAV_Image_Joined_From_WAV_Singletracks"
 flac_singletrack_subdir="Stage3_FLAC_Singletracks_Encoded_From_WAV_Singletracks"
 DECODED_WAV_SINGLETRACK_SUBDIR="Stage4_WAV_Singletracks_Decoded_From_FLAC_Singletracks"
 
-temp_dirs_to_delete=( "$WAV_SINGLETRACK_SUBDIR" "$wav_jointest_subdir" "$flac_singletrack_subdir" "$DECODED_WAV_SINGLETRACK_SUBDIR" )
+temp_dirs_to_delete=( "$WAV_SINGLETRACK_SUBDIR" "$WAV_JOINTEST_SUBDIR" "$flac_singletrack_subdir" "$DECODED_WAV_SINGLETRACK_SUBDIR" )
 
 # "Unit tests": Enabling these will damage the said files to test the checksum verification
 # Notice that only enabling one at once makes sense because the script will terminate if ANY checksum verification fails :)
@@ -328,13 +328,13 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 
 # This genrates a .sha256 file with the SHA256-checksum of the original WAV image. We do not use the EAC CRC from the log because it is non-standard and does not cover the full WAV.
 # $1 = filename of wav image (without extension)
-# The SHA256 file will be placed in the $wav_jointest_subdir so it can be used for checking the checksum of the joined file
+# The SHA256 file will be placed in the $WAV_JOINTEST_SUBDIR so it can be used for checking the checksum of the joined file
 generate_checksum_of_original_wav_image_or_die() {
 	echo "Generating checksum of original WAV image ..."
 	
 	local inputdir_absolute="$WORKING_DIR_ABSOLUTE"
 	local original_image_filename="$1.wav"
-	local outputdir="$WORKING_DIR_ABSOLUTE/$wav_jointest_subdir"
+	local outputdir="$WORKING_DIR_ABSOLUTE/$WAV_JOINTEST_SUBDIR"
 	local output_sha256="$outputdir/$1.sha256" # TODO: make a global variable or pass this through since we also need it in test_checksum_of_rejoined_wav_image_or_die
 	
 	if ! mkdir -p "$outputdir" ; then
@@ -356,7 +356,7 @@ test_checksum_of_rejoined_wav_image_or_die() {
 	echo "Joining singletrack WAV temporarily for comparing their checksum with the original image's checksum..."	
 	
 	local inputdir_relative="$WAV_SINGLETRACK_SUBDIR"
-	local outputdir_relative="$wav_jointest_subdir"
+	local outputdir_relative="$WAV_JOINTEST_SUBDIR"
 	local original_image="$WORKING_DIR_ABSOLUTE/$1.wav"
 	local original_image_checksum_file="$WORKING_DIR_ABSOLUTE/$outputdir_relative/$1.sha256"
 	local joined_image="$WORKING_DIR_ABSOLUTE/$outputdir_relative/joined.wav"
@@ -657,7 +657,7 @@ move_output_to_target_dir_or_die() {
 copy_cue_log_sha256_to_target_dir_or_die() {
 	echo "Copying CUE, LOG and SHA256 to output directory..."
 	
-	local input_files=( "$WORKING_DIR_ABSOLUTE/$1.cue" "$WORKING_DIR_ABSOLUTE/$1.log" "$wav_jointest_subdir/$1.sha256" )
+	local input_files=( "$WORKING_DIR_ABSOLUTE/$1.cue" "$WORKING_DIR_ABSOLUTE/$1.log" "$WAV_JOINTEST_SUBDIR/$1.sha256" )
 	local outputdir="$WORKING_DIR_ABSOLUTE/$2"
 	
 	# TODO: maybe use different filenames for cue/log? also update the REAMDE if we do so
