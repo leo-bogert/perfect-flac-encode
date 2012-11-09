@@ -208,7 +208,7 @@ split_wav_image_to_singletracks_or_die() {
 	# -d dir Specify output directory 
 	# -o str Specify output file format extension, encoder and/or arguments.  Format is:  "fmt [ext=abc] [encoder [arg1 ... argN (%f = filename)]]"
 	# -f file Specifies a file from which to read split point data.  If not given, then split points are read from the terminal.
-    # TODO: we can replace special characters in filenames generated from cuesheets with "-m".  Replace Windows/Mac reserved filename characters in filenames.
+    # -m str Specifies  a  character  manipulation  string for filenames generated from CUE sheets.  
 	# -n fmt Specifies the file count output format.  The default is %02d, which gives two‐digit zero‐padded numbers (01, 02, 03, ...).
 	# -t fmt Name output files in user‐specified format based on CUE sheet fields. %t Track title, %n Track number
 	# -- = indicates that everything following it is a filename
@@ -219,10 +219,11 @@ split_wav_image_to_singletracks_or_die() {
 	# - We specify a different progress indicator so redirecting the script output to a log file will not result in a bloated file"
 	# - We do NOT let shntool encode the FLAC files on its own. While testing it has shown that the error messages of FLAC are not printed. Further, because we want this script to be robust, we only use the core features of each tool and not use fancy stuff which they were not primarily designed for.
 	# - We split the tracks into a subdirectory so when encoding the files we can just encode "*.wav", we don't need any mechanism for excluding the image WAV
+	# - We replace Windows' reserved filename characters with "_". We do this because we recommend MusicBrainz Picard for tagging and it does the same. List of reserved characters was taken from http://msdn.microsoft.com/en-us/library/windows/desktop/aa365247%28v=vs.85%29.aspx
 	# - We prefix the filename with the maximal amount of zeroes required to get proper sorting for the maximal possible trackcount on a CD which is 99. We do this because cuetag requires proper sort order of the input files and we just use "*.flac" for finding the input files
 
 	# For making the shntool output more readable we don't use absolute paths but changed the working directory above.
-	if ! shntool split -P dot -d "$outputdir_relative" -f "$1.cue" -n %02d -t "%n - %t" -- "$1.wav" ; then
+	if ! shntool split -P dot -d "$outputdir_relative" -f "$1.cue" -m '<_>_:_"_/_\_|_?_*_' -n %02d -t "%n - %t" -- "$1.wav" ; then
 		echo "Splitting WAV image to singletracks failed!" >&2
 		exit 1
 	fi
