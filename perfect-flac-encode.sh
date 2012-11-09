@@ -1,10 +1,31 @@
 #!/bin/bash
 
-# See https://github.com/leo-bogert/perfect-flac-encode/blob/master/README.md for Syntax etc.
+################################################################################
+# NAME: perfect-flac-encode
+# WEBSITE: http://leo.bogert.de/perfect-flac-encode
+# MANUAL: See Website.
+#
+# AUTHOR: Leo Bogert (http://leo.bogert.de)
+# DONATIONS: bitcoin:1PZBKLBFnbBA5h1HdKF8PATk3JnAND91yp
+# LICENSE:
+#     This program is free software: you can redistribute it and/or modify
+#     it under the terms of the GNU General Public License as published by
+#     the Free Software Foundation, either version 3 of the License, or
+#     (at your option) any later version.
+# 
+#     This program is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU General Public License for more details.
+# 
+#     You should have received a copy of the GNU General Public License
+#     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+################################################################################
 
-#################################################################
+
+################################################################################
 # Configuration:
-#################################################################
+################################################################################
 WAV_SINGLETRACK_SUBDIR="Stage1_WAV_Singletracks_From_WAV_Image"
 WAV_JOINTEST_SUBDIR="Stage2_WAV_Image_Joined_From_WAV_Singletracks"
 FLAC_SINGLETRACK_SUBDIR="Stage3_FLAC_Singletracks_Encoded_From_WAV_Singletracks"
@@ -20,20 +41,20 @@ TEST_DAMAGE_TO_SPLIT_WAV_SINGLETRACKS=0
 TEST_DAMAGE_TO_REJOINED_WAV_IMAGE=0
 TEST_DAMAGE_TO_FLAC_SINGLETRACKS=0
 TEST_DAMAGE_TO_DECODED_FLAC_SINGLETRACKS=0
-#################################################################
+################################################################################
 # End of configuration
-#################################################################
+################################################################################
 
 
 
-#################################################################
+################################################################################
 # Global variables (naming convention: all globals are uppercase)
-#################################################################
+################################################################################
 VERSION="BETA10"
 WORKING_DIR_ABSOLUTE=""
-#################################################################
+################################################################################
 # End of global variables
-#################################################################
+################################################################################
 
 
 # parameters: $1 = target working directory
