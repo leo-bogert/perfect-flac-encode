@@ -5,6 +5,7 @@
 #################################################################
 # Configuration:
 #################################################################
+# TODO: capitalize all those global variables.
 wav_singletrack_subdir="Stage1_WAV_Singletracks_From_WAV_Image"
 wav_jointest_subdir="Stage2_WAV_Image_Joined_From_WAV_Singletracks"
 flac_singletrack_subdir="Stage3_FLAC_Singletracks_Encoded_From_WAV_Singletracks"
@@ -27,10 +28,10 @@ test_damage_to_decoded_flac_singletracks=0
 
 
 #################################################################
-# Global variables
+# Global variables (naming convention: all globals are uppercase)
 #################################################################
-VERSION=BETA8
-# TODO: list all! or even better: get rid of globals
+VERSION="BETA9"
+WORKING_DIR_ABSOLUTE=""
 #################################################################
 # End of global variables
 #################################################################
@@ -52,11 +53,11 @@ ask_to_delete_existing_output_and_temp_dirs_or_die() {
 	local confirmed=n
 	
 	for existingdir in "${output_dir_and_temp_dirs[@]}" ; do
-		if [ -d "$working_dir_absolute/$existingdir" ]; then
+		if [ -d "$WORKING_DIR_ABSOLUTE/$existingdir" ]; then
 			[ "$confirmed" == "y" ] || read -p "The output and/or temp directories exist already. Delete them and ALL contained files? (y/n)" confirmed
 		
 			if [ "$confirmed" == "y" ]; then
-				rm --preserve-root -rf "$working_dir_absolute/$existingdir"
+				rm --preserve-root -rf "$WORKING_DIR_ABSOLUTE/$existingdir"
 			else
 				echo "Quitting because you want to keep the existing output."
 				exit 1
@@ -68,8 +69,8 @@ ask_to_delete_existing_output_and_temp_dirs_or_die() {
 delete_temp_dirs() {
 	echo "Deleting temp directories..."
 	for existingdir in "${temp_dirs_to_delete[@]}" ; do
-		if [ -d "$working_dir_absolute/$existingdir" ]; then
-			if ! rm --preserve-root -rf "$working_dir_absolute/$existingdir" ; then
+		if [ -d "$WORKING_DIR_ABSOLUTE/$existingdir" ]; then
+			if ! rm --preserve-root -rf "$WORKING_DIR_ABSOLUTE/$existingdir" ; then
 				echo "Deleting the temp files failed!"
 				exit 1
 			fi
@@ -94,7 +95,7 @@ check_whether_input_is_accurately_ripped_or_die() {
 # $1 = filename of cue/wav/log
 # $2 = "test" or "copy" = which crc to get, EAC provides 2
 get_eac_crc_or_die() {
-	local filename="$working_dir_absolute/$1.log"
+	local filename="$WORKING_DIR_ABSOLUTE/$1.log"
 
 	case $2 in
 		test)
@@ -118,8 +119,8 @@ get_eac_crc_or_die() {
 # parameters:
 # $1 = filename of cue/wav/log
 test_whether_the_two_eac_crcs_match() {
-	test_crc=`get_eac_crc_or_die "$1" "test"`
-	copy_crc=`get_eac_crc_or_die "$1" "copy"`
+	local test_crc=`get_eac_crc_or_die "$1" "test"`
+	local copy_crc=`get_eac_crc_or_die "$1" "copy"`
 	
 	echo "Checking whether EAC Test CRC matches EAC Copy CRC..."
 	if [ "$test_crc" != "$copy_crc" ] ; then
@@ -134,7 +135,7 @@ test_whether_the_two_eac_crcs_match() {
 test_eac_crc_or_die() {
 	echo "Comparing EAC CRC from EAC LOG to CRC of the input WAV image..."
 	
-	local input_dir_absolute="$working_dir_absolute"
+	local input_dir_absolute="$WORKING_DIR_ABSOLUTE"
 	local input_wav_image="$input_dir_absolute/$1.wav"
 	local expected_crc=`get_eac_crc_or_die "$1" "copy"`
 	
@@ -174,7 +175,7 @@ split_wav_image_to_singletracks_or_die() {
 	
 	local outputdir_relative="$wav_singletrack_subdir"
 	
-	set_working_directory_or_die "$working_dir_absolute"
+	set_working_directory_or_die "$WORKING_DIR_ABSOLUTE"
 	
 	if ! mkdir -p "$outputdir_relative" ; then
 		echo "Making $outputdir_relative subdirectory failed!" >&2
@@ -206,7 +207,7 @@ split_wav_image_to_singletracks_or_die() {
 		exit 1
 	fi
 	
-	local outputdir_absolute="$working_dir_absolute/$outputdir_relative"
+	local outputdir_absolute="$WORKING_DIR_ABSOLUTE/$outputdir_relative"
 	local wav_singletracks=( "$outputdir_absolute"/*.wav )
 	set_working_directory_or_die "$outputdir_absolute"
 	if [ "$test_damage_to_split_wav_singletracks" -eq 1 ]; then 
@@ -223,7 +224,7 @@ split_wav_image_to_singletracks_or_die() {
 			exit 1
 		fi
 	fi
-	set_working_directory_or_die "$working_dir_absolute"
+	set_working_directory_or_die "$WORKING_DIR_ABSOLUTE"
 }
 
 # parameters:
@@ -231,7 +232,7 @@ split_wav_image_to_singletracks_or_die() {
 # $2 = tracknumber
 # $3 = accuraterip version, 1 or 2
 get_accuraterip_checksum_of_singletrack_or_die() {
-	local filename="$working_dir_absolute/$1.log"
+	local filename="$WORKING_DIR_ABSOLUTE/$1.log"
 	local tracknumber="$2"
 	local accuraterip_version="$3"
 	tracknumber=`echo "$tracknumber" | sed 's/^[0]//'`	# remove leading zero (we use 2-digit tracknumbers)
@@ -249,8 +250,8 @@ get_accuraterip_checksum_of_singletrack_or_die() {
 # parameters:
 # $1 = filename with extension
 get_tracknumber_of_singletrack() {
-	filename="$1"
-	regex='^([[:digit:]]{2}) - (.+)([.])(.+)$'
+	local filename="$1"
+	local regex='^([[:digit:]]{2}) - (.+)([.])(.+)$'
 	
 	echo "$filename" | grep -E "$regex" | sed -r s/"$regex"/\\1/
 }
@@ -268,10 +269,10 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 	echo "Comparing AccurateRip checksums of split WAV singletracks to AccurateRip checksums from EAC LOG..."
 	
 	local log_cue_filename="$1"
-	local inputdir_wav="$working_dir_absolute/$wav_singletrack_subdir"
+	local inputdir_wav="$WORKING_DIR_ABSOLUTE/$wav_singletrack_subdir"
 	local wav_singletracks=( "$inputdir_wav"/*.wav )
 	local hidden_track="$inputdir_wav/00 - pregap.wav"
-	local totaltracks=`get_total_tracks_without_hiddentrack "$working_dir_absolute/$log_cue_filename.cue"`
+	local totaltracks=`get_total_tracks_without_hiddentrack "$WORKING_DIR_ABSOLUTE/$log_cue_filename.cue"`
 	
 	if [ -f "$hidden_track" ] ; then
 		echo "Hidden track one audio found."
@@ -331,9 +332,9 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 generate_checksum_of_original_wav_image_or_die() {
 	echo "Generating checksum of original WAV image ..."
 	
-	local inputdir_absolute="$working_dir_absolute"
+	local inputdir_absolute="$WORKING_DIR_ABSOLUTE"
 	local original_image_filename="$1.wav"
-	local outputdir="$working_dir_absolute/$wav_jointest_subdir"
+	local outputdir="$WORKING_DIR_ABSOLUTE/$wav_jointest_subdir"
 	local output_sha256="$outputdir/$1.sha256" # TODO: make a global variable or pass this through since we also need it in test_checksum_of_rejoined_wav_image_or_die
 	
 	if ! mkdir -p "$outputdir" ; then
@@ -346,7 +347,7 @@ generate_checksum_of_original_wav_image_or_die() {
 		echo "Generating checksum of original WAV image failed!" >&2
 		exit 1
 	fi
-	set_working_directory_or_die "$working_dir_absolute"
+	set_working_directory_or_die "$WORKING_DIR_ABSOLUTE"
 }
 
 # parameters:
@@ -356,11 +357,11 @@ test_checksum_of_rejoined_wav_image_or_die() {
 	
 	local inputdir_relative="$wav_singletrack_subdir"
 	local outputdir_relative="$wav_jointest_subdir"
-	local original_image="$working_dir_absolute/$1.wav"
-	local original_image_checksum_file="$working_dir_absolute/$outputdir_relative/$1.sha256"
-	local joined_image="$working_dir_absolute/$outputdir_relative/joined.wav"
+	local original_image="$WORKING_DIR_ABSOLUTE/$1.wav"
+	local original_image_checksum_file="$WORKING_DIR_ABSOLUTE/$outputdir_relative/$1.sha256"
+	local joined_image="$WORKING_DIR_ABSOLUTE/$outputdir_relative/joined.wav"
 	
-	set_working_directory_or_die "$working_dir_absolute"
+	set_working_directory_or_die "$WORKING_DIR_ABSOLUTE"
 	
 	# This is not needed: It is generated in generate_checksum_of_original_wav_image_or_die already
 	#if ! mkdir -p "$outputdir_relative" ; then
@@ -387,10 +388,10 @@ test_checksum_of_rejoined_wav_image_or_die() {
 		echo "FAIL" >> "$joined_image"
 	fi
 	
-	original_sum=( `cat "$original_image_checksum_file"` )	# it will also print the filename so we split the output by spaces to an array and the first slot will be the actual checksum
+	local original_sum=( `cat "$original_image_checksum_file"` )	# it will also print the filename so we split the output by spaces to an array and the first slot will be the actual checksum
 	
 	echo "Computing checksum of joined WAV image..."
-	joined_sum=( `sha256sum --binary "$joined_image"` ) # it will also print the filename so we split the output by spaces to an array and the first slot will be the actual checksum
+	local joined_sum=( `sha256sum --binary "$joined_image"` ) # it will also print the filename so we split the output by spaces to an array and the first slot will be the actual checksum
 	
 	echo -e "Original checksum: \t\t${original_sum[0]}"
 	echo -e "Checksum of joined image:\t${joined_sum[0]}"
@@ -406,8 +407,8 @@ test_checksum_of_rejoined_wav_image_or_die() {
 encode_wav_singletracks_to_flac_or_die() {
 	echo "Encoding singletrack WAVs to FLAC ..."
 	
-	local inputdir="$working_dir_absolute/$wav_singletrack_subdir"
-	local outputdir="$working_dir_absolute/$flac_singletrack_subdir"
+	local inputdir="$WORKING_DIR_ABSOLUTE/$wav_singletrack_subdir"
+	local outputdir="$WORKING_DIR_ABSOLUTE/$flac_singletrack_subdir"
 	
 	if ! mkdir -p "$outputdir" ; then
 		echo "Making $outputdir subdirectory failed!" >&2
@@ -438,7 +439,7 @@ encode_wav_singletracks_to_flac_or_die() {
 		echo "Encoding WAV to FLAC singletracks failed!" >&2
 		exit 1
 	fi
-	set_working_directory_or_die "$working_dir_absolute"
+	set_working_directory_or_die "$WORKING_DIR_ABSOLUTE"
 	
 	local flac_files=( "$outputdir/"*.flac )
 	if [ "$test_damage_to_flac_singletracks" -eq 1 ]; then 
@@ -557,8 +558,8 @@ pretag_singletrack_flacs_from_cue()
 {
 	echo "Pre-tagging the singletrack FLACs with information from the CUE which is physically stored on the CD. Please use MusicBrainz Picard for the rest of the tags..."
 	
-	local cue_file="$working_dir_absolute/$1.cue"
-	local inputdir_flac="$working_dir_absolute/$flac_singletrack_subdir"
+	local cue_file="$WORKING_DIR_ABSOLUTE/$1.cue"
+	local inputdir_flac="$WORKING_DIR_ABSOLUTE/$flac_singletrack_subdir"
 	local flac_files=( "$inputdir_flac/"*.flac )
 	
 	for file in "${flac_files[@]}"; do
@@ -574,7 +575,7 @@ pretag_singletrack_flacs_from_cue()
 
 test_flac_singletracks_or_die() {
 	echo "Running flac --test on singletrack FLACs..."
-	local inputdir_flac="$working_dir_absolute/$flac_singletrack_subdir"
+	local inputdir_flac="$WORKING_DIR_ABSOLUTE/$flac_singletrack_subdir"
 	
 	set_working_directory_or_die "$inputdir_flac"	# We need input filenames to be relative for --output-prefix to work
 	local flac_files=( *.flac )
@@ -588,9 +589,9 @@ test_flac_singletracks_or_die() {
 test_checksums_of_decoded_flac_singletracks_or_die() {
 	echo "Decoding singletrack FLACs to WAVs to validate checksums ..."
 	
-	local inputdir_wav="$working_dir_absolute/$wav_singletrack_subdir"
-	local inputdir_flac="$working_dir_absolute/$flac_singletrack_subdir"
-	local outputdir="$working_dir_absolute/$decoded_wav_singletrack_subdir"
+	local inputdir_wav="$WORKING_DIR_ABSOLUTE/$wav_singletrack_subdir"
+	local inputdir_flac="$WORKING_DIR_ABSOLUTE/$flac_singletrack_subdir"
+	local outputdir="$WORKING_DIR_ABSOLUTE/$decoded_wav_singletrack_subdir"
 	
 	if ! mkdir -p "$outputdir" ; then
 		echo "Making $outputdir subdirectory failed!" >&2
@@ -603,7 +604,7 @@ test_checksums_of_decoded_flac_singletracks_or_die() {
 		echo "Decoding FLAC singletracks failed!" >&2
 		exit 1
 	fi
-	set_working_directory_or_die "$working_dir_absolute"
+	set_working_directory_or_die "$WORKING_DIR_ABSOLUTE"
 	
 	local wav_files=( "$outputdir/"*.wav )
 	if [ "$test_damage_to_decoded_flac_singletracks" -eq 1 ]; then 
@@ -628,7 +629,7 @@ test_checksums_of_decoded_flac_singletracks_or_die() {
 	else
 		echo "All checksums OK."
 	fi
-	set_working_directory_or_die "$working_dir_absolute"
+	set_working_directory_or_die "$WORKING_DIR_ABSOLUTE"
 }
 
 # parameters:
@@ -636,8 +637,8 @@ test_checksums_of_decoded_flac_singletracks_or_die() {
 move_output_to_target_dir_or_die() {
 	echo "Moving output to output directory..."
 	
-	local inputdir="$working_dir_absolute/$flac_singletrack_subdir"
-	local outputdir="$working_dir_absolute/$1"
+	local inputdir="$WORKING_DIR_ABSOLUTE/$flac_singletrack_subdir"
+	local outputdir="$WORKING_DIR_ABSOLUTE/$1"
 	
 	if ! mkdir -p "$outputdir" ; then
 		echo "Making $outputdir subdirectory failed!" >&2
@@ -656,10 +657,10 @@ move_output_to_target_dir_or_die() {
 copy_cue_log_sha256_to_target_dir_or_die() {
 	echo "Copying CUE, LOG and SHA256 to output directory..."
 	
-	local input_files=( "$working_dir_absolute/$1.cue" "$working_dir_absolute/$1.log" "$wav_jointest_subdir/$1.sha256" )
-	local outputdir="$working_dir_absolute/$2"
+	local input_files=( "$WORKING_DIR_ABSOLUTE/$1.cue" "$WORKING_DIR_ABSOLUTE/$1.log" "$wav_jointest_subdir/$1.sha256" )
+	local outputdir="$WORKING_DIR_ABSOLUTE/$2"
 	
-	# TODO: maybe use different filenames for cue/log?
+	# TODO: maybe use different filenames for cue/log? also update the REAMDE if we do so
 	
 	if ! cp --archive --no-clobber "${input_files[@]}" "$outputdir" ; then
 		"Copying CUE, LOG and SHA256 to output directory failed!" >&2
@@ -667,19 +668,60 @@ copy_cue_log_sha256_to_target_dir_or_die() {
 	fi
 }
 
-# parameters:
-# $1 = filename of CUE/LOG/SHA256
-# $2 = target subdirectory
-write_readme_txt_to_target_dir_or_die() {
-	# TODO: implement
-	# Contents should be:
-	# - "Encoded with perfect-flac-encode version $VERSION"
-	# - Instructions how to re-join the original WAV image, including the exact same FLAC / shntool commandlines which we use when testing the re-joining the image. (TODO: Maybe write a perfect-flac-decode tool for this?)
-	# - A statement which explains why this is a perfect rip.
+# Prints the README to stdout.
+# parameters: $1 : release name
+print_readme_or_die() {
+	local release_name="$1"
+	local e="echo"
 	
-	exit 1
+	# TODO: Maybe Wrap lines to fit default Notepad window size
+	
+	$e "About the quality of this CD copy:" &&
+	$e "----------------------------------" &&
+	$e "These audio files were produced with perfect-flac-encode version $VERSION, using `flac --version`."  &&
+	$e "They are stored in \"FLAC\" format, which is lossless. This means that they can have the same quality as an audio CD." &&
+	$e "This is much better than MP3 for example: MP3 leaves out some tones because some people cannot hear them." &&
+	$e "" &&
+	$e "The used prefect-flac-encode is a program which converts good Exact Audio Copy CD copies to FLAC audio files." &&
+	$e "The goal of perfect-flac-encode is to produce CD copies with the best quality possible." &&
+	$e "This is NOT only about the quality of the audio: It also means that the files can be used as a perfect backup of your CDs. The author of the software even trusts them for digital preservation for ever." &&
+	$e "For allowing this, the set of files which you received were designed to make it possible to burn a disc which is absolutely identical to the original one in case your original disc is destroyed." &&
+	$e "Therefore, please do not delete any of the contained files!" &&
+	$e "For instructions on how to restore the original disc, please visit the website of perfect-flac-decode. You can find the address below." &&
+	$e "" &&
+	$e "" &&
+	$e "Explanation of the purpose of the files you got:" &&
+	$e "------------------------------------------------" &&
+	$e "\"$release_name.cue\"" &&
+	$e "This file contains the layout of the original disc. It will be the file which you load with your CD burning software if you want to burn a backup of the disc. Please remember: Before burning it you have to decompress the audio with perfect-flac-decode. If you don't do this, burning the 'cue' will not work." &&
+	$e "" &&
+	$e "\"$release_name.sha56\"" &&
+	$e "This contains a so-called checksum of the original, uncompressed disc image. If you want to burn the disc to a CD, you will have to decompress the FLAC files to a WAV image with perfect-flac-decode. The checksum file allows perfect-flac-decode to validate that the decompression did not produce any errors." &&
+	$e "" &&
+	$e "\"$release_name.log\"" &&
+	$e "This file is a 'proof of quality'. It contains the output of Exact Audio Copy and perfect-flac-encode as well as their versions. It allows you to see the conditions of the copying. You can check it to see that there were no errors. Further, if someone finds bugs in the future in certain versions of the involved software you will be able to check whether your audio files are affected." &&
+	$e "" &&
+	$e "" &&
+	$e "Websites:" &&
+	$e "---------" &&
+	$e "perfect-flac-encode: http://leo.bogert.de/perfect-flac-encode" &&
+	$e "perfect-flac-decode: http://leo.bogert.de/perfect-flac-decode" &&
+	$e "FLAC: http://flac.sourceforge.net/" &&
+	$e "Exact Audio Copy: http://www.exactaudiocopy.de/"
 }
 
+# parameters:
+# $1 = target subdirectory
+# $2 = release name
+write_readme_txt_to_target_dir_or_die() {
+	echo "Generating README.txt ..."
+	# We use Windows linebreaks since they will work on any plattform. Unix linebreaks would not wrap the line with many Windows editors.
+	# We wrap at 80 characters so the full file will fit into a standard Windows Notepad window. TODO: Find out the actual line width of default Notepad. I don't have Windows at hand right now
+	if ! print_readme_or_die "$2" | fold --spaces --width=80 | tr "\n" "\r\n" > "$WORKING_DIR_ABSOLUTE/$1/README.txt" ; then
+		echo "Generating README.txt failed!"
+		exit 1
+	fi
+}
 
 main() {
 	echo -e "\n\nperfect-flac-encode.sh Version $VERSION running ... "
@@ -693,15 +735,14 @@ main() {
 	echo "Album: $input_wav_log_cue_filename"
 	
 	# globals
-	working_dir_absolute="$rip_dir_absolute"
-	set_working_directory_or_die "$working_dir_absolute"
+	WORKING_DIR_ABSOLUTE="$rip_dir_absolute"
+	set_working_directory_or_die "$WORKING_DIR_ABSOLUTE"
 	
 	ask_to_delete_existing_output_and_temp_dirs_or_die "$output_dir"	
 	check_whether_input_is_accurately_ripped_or_die "$input_wav_log_cue_filename"
 	# TODO: maybe do "shntool len" and check the "problems" column
 	test_whether_the_two_eac_crcs_match "$input_wav_log_cue_filename"
 	test_eac_crc_or_die "$input_wav_log_cue_filename"
-	#compress_image_wav_to_image_flac_or_die "$@"	
 	split_wav_image_to_singletracks_or_die "$input_wav_log_cue_filename"
 	test_accuraterip_checksums_of_split_wav_singletracks_or_die "$input_wav_log_cue_filename"
 	generate_checksum_of_original_wav_image_or_die "$input_wav_log_cue_filename"
@@ -712,8 +753,8 @@ main() {
 	test_checksums_of_decoded_flac_singletracks_or_die
 	move_output_to_target_dir_or_die "$output_dir"
 	copy_cue_log_sha256_to_target_dir_or_die "$input_wav_log_cue_filename" "$output_dir"
-	# write_readme_txt_to_target_dir_or_die "$input_wav_log_cue_filename" "$output_dir"  # TODO: Enable once it is implemented
-	# TODO: produce a perfect-flac-encode logfile and copy to output
+	write_readme_txt_to_target_dir_or_die "$output_dir" "$input_wav_log_cue_filename"
+	# TODO: Check whether we can safely append the perfect-flac encode log to the EAC log and do so if we can. EAC adds a checksum to the end of its log, We should check whether the checksum validation tools allow us to add content to the file. If they don't, maybe we should just add another checksum to the end. If we do NOT implement merging of the log files, write our log to a separate file and upate the code which produces the README to reflect that change.
 	delete_temp_dirs
 	
 	echo "SUCCESS. Your FLACs are in directory \"$input_wav_log_cue_filename\""
