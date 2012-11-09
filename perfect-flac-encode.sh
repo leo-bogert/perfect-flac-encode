@@ -8,10 +8,10 @@
 # TODO: capitalize all those global variables.
 WAV_SINGLETRACK_SUBDIR="Stage1_WAV_Singletracks_From_WAV_Image"
 WAV_JOINTEST_SUBDIR="Stage2_WAV_Image_Joined_From_WAV_Singletracks"
-flac_singletrack_subdir="Stage3_FLAC_Singletracks_Encoded_From_WAV_Singletracks"
+FLAC_SINGLETRACK_SUBDIR="Stage3_FLAC_Singletracks_Encoded_From_WAV_Singletracks"
 DECODED_WAV_SINGLETRACK_SUBDIR="Stage4_WAV_Singletracks_Decoded_From_FLAC_Singletracks"
 
-temp_dirs_to_delete=( "$WAV_SINGLETRACK_SUBDIR" "$WAV_JOINTEST_SUBDIR" "$flac_singletrack_subdir" "$DECODED_WAV_SINGLETRACK_SUBDIR" )
+temp_dirs_to_delete=( "$WAV_SINGLETRACK_SUBDIR" "$WAV_JOINTEST_SUBDIR" "$FLAC_SINGLETRACK_SUBDIR" "$DECODED_WAV_SINGLETRACK_SUBDIR" )
 
 # "Unit tests": Enabling these will damage the said files to test the checksum verification
 # Notice that only enabling one at once makes sense because the script will terminate if ANY checksum verification fails :)
@@ -408,7 +408,7 @@ encode_wav_singletracks_to_flac_or_die() {
 	echo "Encoding singletrack WAVs to FLAC ..."
 	
 	local inputdir="$WORKING_DIR_ABSOLUTE/$WAV_SINGLETRACK_SUBDIR"
-	local outputdir="$WORKING_DIR_ABSOLUTE/$flac_singletrack_subdir"
+	local outputdir="$WORKING_DIR_ABSOLUTE/$FLAC_SINGLETRACK_SUBDIR"
 	
 	if ! mkdir -p "$outputdir" ; then
 		echo "Making $outputdir subdirectory failed!" >&2
@@ -559,7 +559,7 @@ pretag_singletrack_flacs_from_cue()
 	echo "Pre-tagging the singletrack FLACs with information from the CUE which is physically stored on the CD. Please use MusicBrainz Picard for the rest of the tags..."
 	
 	local cue_file="$WORKING_DIR_ABSOLUTE/$1.cue"
-	local inputdir_flac="$WORKING_DIR_ABSOLUTE/$flac_singletrack_subdir"
+	local inputdir_flac="$WORKING_DIR_ABSOLUTE/$FLAC_SINGLETRACK_SUBDIR"
 	local flac_files=( "$inputdir_flac/"*.flac )
 	
 	for file in "${flac_files[@]}"; do
@@ -575,7 +575,7 @@ pretag_singletrack_flacs_from_cue()
 
 test_flac_singletracks_or_die() {
 	echo "Running flac --test on singletrack FLACs..."
-	local inputdir_flac="$WORKING_DIR_ABSOLUTE/$flac_singletrack_subdir"
+	local inputdir_flac="$WORKING_DIR_ABSOLUTE/$FLAC_SINGLETRACK_SUBDIR"
 	
 	set_working_directory_or_die "$inputdir_flac"	# We need input filenames to be relative for --output-prefix to work
 	local flac_files=( *.flac )
@@ -590,7 +590,7 @@ test_checksums_of_decoded_flac_singletracks_or_die() {
 	echo "Decoding singletrack FLACs to WAVs to validate checksums ..."
 	
 	local inputdir_wav="$WORKING_DIR_ABSOLUTE/$WAV_SINGLETRACK_SUBDIR"
-	local inputdir_flac="$WORKING_DIR_ABSOLUTE/$flac_singletrack_subdir"
+	local inputdir_flac="$WORKING_DIR_ABSOLUTE/$FLAC_SINGLETRACK_SUBDIR"
 	local outputdir="$WORKING_DIR_ABSOLUTE/$DECODED_WAV_SINGLETRACK_SUBDIR"
 	
 	if ! mkdir -p "$outputdir" ; then
@@ -637,7 +637,7 @@ test_checksums_of_decoded_flac_singletracks_or_die() {
 move_output_to_target_dir_or_die() {
 	echo "Moving output to output directory..."
 	
-	local inputdir="$WORKING_DIR_ABSOLUTE/$flac_singletrack_subdir"
+	local inputdir="$WORKING_DIR_ABSOLUTE/$FLAC_SINGLETRACK_SUBDIR"
 	local outputdir="$WORKING_DIR_ABSOLUTE/$1"
 	
 	if ! mkdir -p "$outputdir" ; then
