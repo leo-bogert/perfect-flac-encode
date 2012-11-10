@@ -692,8 +692,6 @@ print_readme_or_die() {
 	local release_name="$1"
 	local e="echo"
 	
-	# TODO: Maybe Wrap lines to fit default Notepad window size
-	
 	$e "About the quality of this CD copy:" &&
 	$e "----------------------------------" &&
 	$e "These audio files were produced with perfect-flac-encode version $VERSION, using `flac --version`."  &&
