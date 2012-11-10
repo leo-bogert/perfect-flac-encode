@@ -50,7 +50,7 @@ TEST_DAMAGE_TO_DECODED_FLAC_SINGLETRACKS=0
 ################################################################################
 # Global variables (naming convention: all globals are uppercase)
 ################################################################################
-VERSION="BETA10"
+VERSION="BETA11"
 WORKING_DIR_ABSOLUTE=""
 ################################################################################
 # End of global variables
@@ -108,6 +108,56 @@ check_whether_input_is_accurately_ripped_or_die() {
 		exit 1
 	else
 		echo "AccurateRip reports a perfect rip."
+	fi
+}
+
+# Uses "shntool len" to check for any of the following problems with the input WAV:
+# - Data is not CD quality
+# - Data is not cut on a sector boundary
+# - Data is too short to be burned
+# - Header is not canonical
+# - Contains extra RIFF chunks
+# - Contains an ID3v2 header
+# - Audio data is not block‐aligned
+# - Header is inconsistent about data size and/or file size
+# - File is truncated
+# - File has junk appended to it
+#
+# parameters: $1 = path to WAV
+check_shntool_wav_problem_diagnosis_or_die() {
+	echo "Using 'shntool len' to check the input WAV image for quality and file format problems..."
+	local wav_file="$1"
+	
+    #       length         expanded size                 cdr         WAVE        problems       fmt         ratio         filename
+	#       54:04.55       572371004         B           ---         --          -----          wav         1.0000        Paul Weller - 1994 - Wild Wood.wav"
+	# ^ \s*    \S*    \s*     \S*     \s*   \S*   \s*   (\S*)  \s*  (\S*)  \s*   (\S*)   \s*    \S*    \s*    \S*    \s*    ($wav_file)$
+	
+	local regex="^\s*\S*\s*\S*\s*\S*\s*(\S*)\s*(\S*)\s*(\S*)\s*\S*\s*\S*\s*($wav_file)$"
+	
+	local len_output=$(shntool len -c -t "$wav_file" | grep -E "$regex")
+
+	if  [[ ! $? -eq 0  ]]; then
+		echo "Regexp for getting the 'shntool len' output failed!" >&2
+		exit 1
+	fi
+	
+	local cdr_column=$(echo "$len_output" | sed -r s/"$regex"/\\1/)
+	local wave_column=$(echo "$len_output" | sed -r s/"$regex"/\\2/)
+	local problems_column=$(echo "$len_output" | sed -r s/"$regex"/\\3/)
+	
+	if [ "$cdr_column" != "---" ] ; then
+		echo "CD-quality column of 'shntool len' indicates problems: $cdr_column" >&2
+		exit 1
+	fi
+	
+	if [ "$wave_column" != "--" ] ; then
+		echo "WAVE column of 'shntool len' shows problems: $wave_column" >&2
+		exit 1
+	fi
+	
+	if [ "$problems_column" != "-----" ] ; then
+		echo "Problems column of 'shntool len' shows problems: $problems_column" >&2
+		exit 1
 	fi
 }
 
@@ -761,7 +811,7 @@ main() {
 	
 	ask_to_delete_existing_output_and_temp_dirs_or_die "$output_dir"	
 	check_whether_input_is_accurately_ripped_or_die "$input_wav_log_cue_filename"
-	# TODO: maybe do "shntool len" and check the "problems" column
+	check_shntool_wav_problem_diagnosis_or_die "$input_wav_log_cue_filename.wav"
 	test_whether_the_two_eac_crcs_match "$input_wav_log_cue_filename"
 	test_eac_crc_or_die "$input_wav_log_cue_filename"
 	split_wav_image_to_singletracks_or_die "$input_wav_log_cue_filename"
