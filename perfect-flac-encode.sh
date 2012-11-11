@@ -51,13 +51,14 @@ TEST_DAMAGE_TO_DECODED_FLAC_SINGLETRACKS=0
 # Global variables (naming convention: all globals are uppercase)
 ################################################################################
 VERSION="BETA11"
-WORKING_DIR_ABSOLUTE=""
+WORKING_DIR_ABSOLUTE=""	# Directory where the input WAV/LOG/CUE are placed.
+INPUT_CUE_LOG_WAV_BASENAME=""	# Filename of input WAV/LOG/CUE without extension. TODO: use.
 ################################################################################
 # End of global variables
 ################################################################################
 
 
-# parameters: $1 = target working directory
+# parameters: $1 = target working directory, absolute or relative to current working dir
 set_working_directory_or_die() {
 	#echo "Changing working directory to $1..."
 	if ! cd "$1" ; then
@@ -67,7 +68,7 @@ set_working_directory_or_die() {
 }
 
 # parameters:
-# $1 = output dir 
+# $1 = path of output dir relative to $WORKING_DIR_ABSOLUTE
 ask_to_delete_existing_output_and_temp_dirs_or_die() {
 	local output_dir_and_temp_dirs=( "${TEMP_DIRS_TO_DELETE[@]}" "$1" )
 	local confirmed=n
@@ -801,7 +802,7 @@ main() {
 	# parameters
 	local rip_dir_absolute="$1"
 	local input_wav_log_cue_filename="$2"
-	local output_dir="$input_wav_log_cue_filename"
+	local output_dir_relative="$input_wav_log_cue_filename"
 	
 	echo "Album: $input_wav_log_cue_filename"
 	
@@ -809,7 +810,7 @@ main() {
 	WORKING_DIR_ABSOLUTE="$rip_dir_absolute"
 	set_working_directory_or_die "$WORKING_DIR_ABSOLUTE"
 	
-	ask_to_delete_existing_output_and_temp_dirs_or_die "$output_dir"	
+	ask_to_delete_existing_output_and_temp_dirs_or_die "$output_dir_relative"
 	check_whether_input_is_accurately_ripped_or_die "$input_wav_log_cue_filename"
 	check_shntool_wav_problem_diagnosis_or_die "$input_wav_log_cue_filename.wav"
 	test_whether_the_two_eac_crcs_match "$input_wav_log_cue_filename"
@@ -822,9 +823,9 @@ main() {
 	pretag_singletrack_flacs_from_cue "$input_wav_log_cue_filename"
 	test_flac_singletracks_or_die
 	test_checksums_of_decoded_flac_singletracks_or_die
-	move_output_to_target_dir_or_die "$output_dir"
-	copy_cue_log_sha256_to_target_dir_or_die "$input_wav_log_cue_filename" "$output_dir"
-	write_readme_txt_to_target_dir_or_die "$output_dir" "$input_wav_log_cue_filename"
+	move_output_to_target_dir_or_die "$output_dir_relative"
+	copy_cue_log_sha256_to_target_dir_or_die "$input_wav_log_cue_filename" "$output_dir_relative"
+	write_readme_txt_to_target_dir_or_die "$output_dir_relative" "$input_wav_log_cue_filename"
 	# TODO: Check whether we can safely append the perfect-flac encode log to the EAC log and do so if we can. EAC adds a checksum to the end of its log, We should check whether the checksum validation tools allow us to add content to the file. If they don't, maybe we should just add another checksum to the end. If we do NOT implement merging of the log files, write our log to a separate file and upate the code which produces the README to reflect that change.
 	delete_temp_dirs
 	
