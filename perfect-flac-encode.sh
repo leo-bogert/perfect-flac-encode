@@ -224,9 +224,8 @@ test_eac_crc_or_die() {
 			exit 1
 		fi
 		
-		set_working_directory_or_die
 		# We replace it with a silent WAV so we don't have to damage the original input image
-		if ! shntool gen -l 1:23 -a "$1"; then 
+		if ! shntool gen -l 1:23 -a "$INPUT_DIR_ABSOLUTE/$1"; then 	# .wav must not be in -a
 			echo "Generating silent WAV file failed!"
 			exit 1
 		fi
