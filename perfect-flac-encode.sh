@@ -807,14 +807,13 @@ main() {
 	echo -e "BETA VERSION - NOT for productive use!\n\n"
 
 	# parameters
-	local rip_dir_absolute="$1"
+	INPUT_DIR_ABSOLUTE="$1"
 	local input_wav_log_cue_filename="$2"
 	local output_dir_relative="$input_wav_log_cue_filename"
 	
 	echo "Album: $input_wav_log_cue_filename"
 	
 	# globals
-	INPUT_DIR_ABSOLUTE="$rip_dir_absolute"
 	set_working_directory_or_die
 	
 	ask_to_delete_existing_output_and_temp_dirs_or_die "$output_dir_relative"
