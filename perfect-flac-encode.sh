@@ -168,10 +168,10 @@ check_shntool_wav_problem_diagnosis_or_die() {
 }
 
 # parameters:
-# $1 = filename of cue/wav/log
+# $1 = path of EAC LOG
 # $2 = "test" or "copy" = which crc to get, EAC provides 2
 get_eac_crc_or_die() {
-	local filename="$INPUT_DIR_ABSOLUTE/$1.log"
+	local eac_log_path="$1"
 
 	case $2 in
 		test)
@@ -184,7 +184,7 @@ get_eac_crc_or_die() {
 	esac
 	
 	local regex="^([[:space:]]*)($mode CRC )([0-9A-F]*)([[:space:]]*)\$"
-	iconv --from-code utf-16 --to-code utf-8 "$filename" | grep -E "$regex" | sed -r s/"$regex"/\\3/
+	iconv --from-code utf-16 --to-code utf-8 "$eac_log_path" | grep -E "$regex" | sed -r s/"$regex"/\\3/
 	
 	if  [[ ! $? -eq 0  ]]; then
 		echo "Regexp for getting the EAC CRC failed!" >&2
@@ -192,11 +192,9 @@ get_eac_crc_or_die() {
 	fi
 }
 
-# parameters:
-# $1 = filename of cue/wav/log
 test_whether_the_two_eac_crcs_match() {
-	local test_crc=`get_eac_crc_or_die "$1" "test"`
-	local copy_crc=`get_eac_crc_or_die "$1" "copy"`
+	local test_crc=`get_eac_crc_or_die "$INPUT_LOG_ABSOLUTE" "test"`
+	local copy_crc=`get_eac_crc_or_die "$INPUT_LOG_ABSOLUTE" "copy"`
 	
 	echo "Checking whether EAC Test CRC matches EAC Copy CRC..."
 	if [ "$test_crc" != "$copy_crc" ] ; then
@@ -212,7 +210,7 @@ test_eac_crc_or_die() {
 	echo "Comparing EAC CRC from EAC LOG to CRC of the input WAV image..."
 	
 	local input_wav_image="$INPUT_DIR_ABSOLUTE/$1.wav"
-	local expected_crc=`get_eac_crc_or_die "$1" "copy"`
+	local expected_crc=`get_eac_crc_or_die "$INPUT_LOG_ABSOLUTE" "copy"`
 	
 	if [ "$TEST_DAMAGE_TO_INPUT_WAV_IMAGE" -eq 1 ]; then 
 		echo "Deliberately damaging the input WAV image (original is renamed to *.original) to test the EAC checksum verification ..."
@@ -823,7 +821,7 @@ main() {
 	ask_to_delete_existing_output_and_temp_dirs_or_die "$output_dir_relative"
 	check_whether_input_is_accurately_ripped_or_die
 	check_shntool_wav_problem_diagnosis_or_die
-	test_whether_the_two_eac_crcs_match "$INPUT_CUE_LOG_WAV_BASENAME"
+	test_whether_the_two_eac_crcs_match
 	test_eac_crc_or_die "$INPUT_CUE_LOG_WAV_BASENAME"
 	split_wav_image_to_singletracks_or_die "$INPUT_CUE_LOG_WAV_BASENAME"
 	test_accuraterip_checksums_of_split_wav_singletracks_or_die "$INPUT_CUE_LOG_WAV_BASENAME"
