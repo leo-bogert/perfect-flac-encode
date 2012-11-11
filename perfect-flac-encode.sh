@@ -51,18 +51,19 @@ TEST_DAMAGE_TO_DECODED_FLAC_SINGLETRACKS=0
 # Global variables (naming convention: all globals are uppercase)
 ################################################################################
 VERSION="BETA11"
-WORKING_DIR_ABSOLUTE=""	# Directory where the input WAV/LOG/CUE are placed.
+INPUT_DIR_ABSOLUTE=""	# Directory where the input WAV/LOG/CUE are placed.
+OUTPUT_DIR_ABSOLUTE=""	# Directory where the output FLACs are placed. The temp directories will also reside in it. TODO: use this actually.
 INPUT_CUE_LOG_WAV_BASENAME=""	# Filename of input WAV/LOG/CUE without extension. TODO: use.
 ################################################################################
 # End of global variables
 ################################################################################
 
 
-# parameters: $1 = target working directory, absolute or relative to current working dir. if not specified, working directory is set to $WORKING_DIR_ABSOLUTE
+# parameters: $1 = target working directory, absolute or relative to current working dir. if not specified, working directory is set to $INPUT_DIR_ABSOLUTE
 set_working_directory_or_die() {
 	#echo "Changing working directory to $dir..."
 	if [ $# -eq 0 ] ; then
-		local dir="$WORKING_DIR_ABSOLUTE"
+		local dir="$INPUT_DIR_ABSOLUTE"
 	else
 		local dir="$1"
 	fi
@@ -74,17 +75,17 @@ set_working_directory_or_die() {
 }
 
 # parameters:
-# $1 = path of output dir relative to $WORKING_DIR_ABSOLUTE
+# $1 = path of output dir relative to $INPUT_DIR_ABSOLUTE
 ask_to_delete_existing_output_and_temp_dirs_or_die() {
 	local output_dir_and_temp_dirs=( "${TEMP_DIRS_TO_DELETE[@]}" "$1" )
 	local confirmed=n
 	
 	for existingdir in "${output_dir_and_temp_dirs[@]}" ; do
-		if [ -d "$WORKING_DIR_ABSOLUTE/$existingdir" ]; then
+		if [ -d "$INPUT_DIR_ABSOLUTE/$existingdir" ]; then
 			[ "$confirmed" == "y" ] || read -p "The output and/or temp directories exist already. Delete them and ALL contained files? (y/n)" confirmed
 		
 			if [ "$confirmed" == "y" ]; then
-				rm --preserve-root -rf "$WORKING_DIR_ABSOLUTE/$existingdir"
+				rm --preserve-root -rf "$INPUT_DIR_ABSOLUTE/$existingdir"
 			else
 				echo "Quitting because you want to keep the existing output."
 				exit 1
@@ -96,8 +97,8 @@ ask_to_delete_existing_output_and_temp_dirs_or_die() {
 delete_temp_dirs() {
 	echo "Deleting temp directories..."
 	for existingdir in "${TEMP_DIRS_TO_DELETE[@]}" ; do
-		if [ -d "$WORKING_DIR_ABSOLUTE/$existingdir" ]; then
-			if ! rm --preserve-root -rf "$WORKING_DIR_ABSOLUTE/$existingdir" ; then
+		if [ -d "$INPUT_DIR_ABSOLUTE/$existingdir" ]; then
+			if ! rm --preserve-root -rf "$INPUT_DIR_ABSOLUTE/$existingdir" ; then
 				echo "Deleting the temp files failed!"
 				exit 1
 			fi
@@ -172,7 +173,7 @@ check_shntool_wav_problem_diagnosis_or_die() {
 # $1 = filename of cue/wav/log
 # $2 = "test" or "copy" = which crc to get, EAC provides 2
 get_eac_crc_or_die() {
-	local filename="$WORKING_DIR_ABSOLUTE/$1.log"
+	local filename="$INPUT_DIR_ABSOLUTE/$1.log"
 
 	case $2 in
 		test)
@@ -212,7 +213,7 @@ test_whether_the_two_eac_crcs_match() {
 test_eac_crc_or_die() {
 	echo "Comparing EAC CRC from EAC LOG to CRC of the input WAV image..."
 	
-	local input_wav_image="$WORKING_DIR_ABSOLUTE/$1.wav"
+	local input_wav_image="$INPUT_DIR_ABSOLUTE/$1.wav"
 	local expected_crc=`get_eac_crc_or_die "$1" "copy"`
 	
 	if [ "$TEST_DAMAGE_TO_INPUT_WAV_IMAGE" -eq 1 ]; then 
@@ -287,7 +288,7 @@ split_wav_image_to_singletracks_or_die() {
 	if [ "$TEST_DAMAGE_TO_SPLIT_WAV_SINGLETRACKS" -eq 1 ]; then 
 		echo "Deliberately damaging a singletrack to test the AccurateRip checksum verification ..."
 		
-		local outputdir_absolute="$WORKING_DIR_ABSOLUTE/$outputdir_relative"
+		local outputdir_absolute="$INPUT_DIR_ABSOLUTE/$outputdir_relative"
 		local wav_singletracks=( "$outputdir_absolute"/*.wav )
 		
 		# accurateripchecksum will ignore trailing garbage in a WAV file and adding leading garbage would make it an invalid WAV which would cause the checksum computation to not even happen
@@ -310,7 +311,7 @@ split_wav_image_to_singletracks_or_die() {
 # $2 = tracknumber
 # $3 = accuraterip version, 1 or 2
 get_accuraterip_checksum_of_singletrack_or_die() {
-	local filename="$WORKING_DIR_ABSOLUTE/$1.log"
+	local filename="$INPUT_DIR_ABSOLUTE/$1.log"
 	local tracknumber="$2"
 	local accuraterip_version="$3"
 	tracknumber=`echo "$tracknumber" | sed 's/^[0]//'`	# remove leading zero (we use 2-digit tracknumbers)
@@ -347,10 +348,10 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 	echo "Comparing AccurateRip checksums of split WAV singletracks to AccurateRip checksums from EAC LOG..."
 	
 	local log_cue_filename="$1"
-	local inputdir_wav="$WORKING_DIR_ABSOLUTE/$WAV_SINGLETRACK_SUBDIR"
+	local inputdir_wav="$INPUT_DIR_ABSOLUTE/$WAV_SINGLETRACK_SUBDIR"
 	local wav_singletracks=( "$inputdir_wav"/*.wav )
 	local hidden_track="$inputdir_wav/00 - pregap.wav"
-	local totaltracks=`get_total_tracks_without_hiddentrack "$WORKING_DIR_ABSOLUTE/$log_cue_filename.cue"`
+	local totaltracks=`get_total_tracks_without_hiddentrack "$INPUT_DIR_ABSOLUTE/$log_cue_filename.cue"`
 	
 	if [ -f "$hidden_track" ] ; then
 		echo "Hidden track one audio found."
@@ -410,9 +411,9 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 generate_checksum_of_original_wav_image_or_die() {
 	echo "Generating checksum of original WAV image ..."
 	
-	local inputdir_absolute="$WORKING_DIR_ABSOLUTE"
+	local inputdir_absolute="$INPUT_DIR_ABSOLUTE"
 	local original_image_filename="$1.wav"
-	local outputdir="$WORKING_DIR_ABSOLUTE/$WAV_JOINTEST_SUBDIR"
+	local outputdir="$INPUT_DIR_ABSOLUTE/$WAV_JOINTEST_SUBDIR"
 	local output_sha256="$outputdir/$1.sha256" # TODO: make a global variable or pass this through since we also need it in test_checksum_of_rejoined_wav_image_or_die
 	
 	if ! mkdir -p "$outputdir" ; then
@@ -435,9 +436,9 @@ test_checksum_of_rejoined_wav_image_or_die() {
 	
 	local inputdir_relative="$WAV_SINGLETRACK_SUBDIR"
 	local outputdir_relative="$WAV_JOINTEST_SUBDIR"
-	local original_image="$WORKING_DIR_ABSOLUTE/$1.wav"
-	local original_image_checksum_file="$WORKING_DIR_ABSOLUTE/$outputdir_relative/$1.sha256"
-	local joined_image="$WORKING_DIR_ABSOLUTE/$outputdir_relative/joined.wav"
+	local original_image="$INPUT_DIR_ABSOLUTE/$1.wav"
+	local original_image_checksum_file="$INPUT_DIR_ABSOLUTE/$outputdir_relative/$1.sha256"
+	local joined_image="$INPUT_DIR_ABSOLUTE/$outputdir_relative/joined.wav"
 	
 	set_working_directory_or_die
 	
@@ -485,8 +486,8 @@ test_checksum_of_rejoined_wav_image_or_die() {
 encode_wav_singletracks_to_flac_or_die() {
 	echo "Encoding singletrack WAVs to FLAC ..."
 	
-	local inputdir="$WORKING_DIR_ABSOLUTE/$WAV_SINGLETRACK_SUBDIR"
-	local outputdir="$WORKING_DIR_ABSOLUTE/$FLAC_SINGLETRACK_SUBDIR"
+	local inputdir="$INPUT_DIR_ABSOLUTE/$WAV_SINGLETRACK_SUBDIR"
+	local outputdir="$INPUT_DIR_ABSOLUTE/$FLAC_SINGLETRACK_SUBDIR"
 	
 	if ! mkdir -p "$outputdir" ; then
 		echo "Making $outputdir subdirectory failed!" >&2
@@ -634,8 +635,8 @@ pretag_singletrack_flacs_from_cue()
 {
 	echo "Pre-tagging the singletrack FLACs with information from the CUE which is physically stored on the CD. Please use MusicBrainz Picard for the rest of the tags..."
 	
-	local cue_file="$WORKING_DIR_ABSOLUTE/$1.cue"
-	local inputdir_flac="$WORKING_DIR_ABSOLUTE/$FLAC_SINGLETRACK_SUBDIR"
+	local cue_file="$INPUT_DIR_ABSOLUTE/$1.cue"
+	local inputdir_flac="$INPUT_DIR_ABSOLUTE/$FLAC_SINGLETRACK_SUBDIR"
 	local flac_files=( "$inputdir_flac/"*.flac )
 	
 	for file in "${flac_files[@]}"; do
@@ -651,7 +652,7 @@ pretag_singletrack_flacs_from_cue()
 
 test_flac_singletracks_or_die() {
 	echo "Running flac --test on singletrack FLACs..."
-	local inputdir_flac="$WORKING_DIR_ABSOLUTE/$FLAC_SINGLETRACK_SUBDIR"
+	local inputdir_flac="$INPUT_DIR_ABSOLUTE/$FLAC_SINGLETRACK_SUBDIR"
 	
 	set_working_directory_or_die "$inputdir_flac"	# We need input filenames to be relative for --output-prefix to work
 	local flac_files=( *.flac )
@@ -666,9 +667,9 @@ test_flac_singletracks_or_die() {
 test_checksums_of_decoded_flac_singletracks_or_die() {
 	echo "Decoding singletrack FLACs to WAVs to validate checksums ..."
 	
-	local inputdir_wav="$WORKING_DIR_ABSOLUTE/$WAV_SINGLETRACK_SUBDIR"
-	local inputdir_flac="$WORKING_DIR_ABSOLUTE/$FLAC_SINGLETRACK_SUBDIR"
-	local outputdir="$WORKING_DIR_ABSOLUTE/$DECODED_WAV_SINGLETRACK_SUBDIR"
+	local inputdir_wav="$INPUT_DIR_ABSOLUTE/$WAV_SINGLETRACK_SUBDIR"
+	local inputdir_flac="$INPUT_DIR_ABSOLUTE/$FLAC_SINGLETRACK_SUBDIR"
+	local outputdir="$INPUT_DIR_ABSOLUTE/$DECODED_WAV_SINGLETRACK_SUBDIR"
 	
 	if ! mkdir -p "$outputdir" ; then
 		echo "Making $outputdir subdirectory failed!" >&2
@@ -713,8 +714,8 @@ test_checksums_of_decoded_flac_singletracks_or_die() {
 move_output_to_target_dir_or_die() {
 	echo "Moving output to output directory..."
 	
-	local inputdir="$WORKING_DIR_ABSOLUTE/$FLAC_SINGLETRACK_SUBDIR"
-	local outputdir="$WORKING_DIR_ABSOLUTE/$1"
+	local inputdir="$INPUT_DIR_ABSOLUTE/$FLAC_SINGLETRACK_SUBDIR"
+	local outputdir="$INPUT_DIR_ABSOLUTE/$1"
 	
 	if ! mkdir -p "$outputdir" ; then
 		echo "Making $outputdir subdirectory failed!" >&2
@@ -733,8 +734,8 @@ move_output_to_target_dir_or_die() {
 copy_cue_log_sha256_to_target_dir_or_die() {
 	echo "Copying CUE, LOG and SHA256 to output directory..."
 	
-	local input_files=( "$WORKING_DIR_ABSOLUTE/$1.cue" "$WORKING_DIR_ABSOLUTE/$1.log" "$WAV_JOINTEST_SUBDIR/$1.sha256" )
-	local outputdir="$WORKING_DIR_ABSOLUTE/$2"
+	local input_files=( "$INPUT_DIR_ABSOLUTE/$1.cue" "$INPUT_DIR_ABSOLUTE/$1.log" "$WAV_JOINTEST_SUBDIR/$1.sha256" )
+	local outputdir="$INPUT_DIR_ABSOLUTE/$2"
 	
 	# TODO: maybe use different filenames for cue/log? also update the REAMDE if we do so
 	
@@ -795,7 +796,7 @@ write_readme_txt_to_target_dir_or_die() {
 	if ! print_readme_or_die "$2" |
 		fold --spaces --width=80 | 	
 		( while read line; do echo -n -e "$line\r\n"; done ) \
-		> "$WORKING_DIR_ABSOLUTE/$1/README.txt"	
+		> "$INPUT_DIR_ABSOLUTE/$1/README.txt"	
 	then
 		echo "Generating README.txt failed!"
 		exit 1
@@ -814,7 +815,7 @@ main() {
 	echo "Album: $input_wav_log_cue_filename"
 	
 	# globals
-	WORKING_DIR_ABSOLUTE="$rip_dir_absolute"
+	INPUT_DIR_ABSOLUTE="$rip_dir_absolute"
 	set_working_directory_or_die
 	
 	ask_to_delete_existing_output_and_temp_dirs_or_die "$output_dir_relative"
