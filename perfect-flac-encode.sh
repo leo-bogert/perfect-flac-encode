@@ -138,9 +138,9 @@ check_shntool_wav_problem_diagnosis_or_die() {
 	
     #       length         expanded size                 cdr         WAVE        problems       fmt         ratio         filename
 	#       54:04.55       572371004         B           ---         --          -----          wav         1.0000        Paul Weller - 1994 - Wild Wood.wav"
-	# ^ \s*    \S*    \s*     \S*     \s*   \S*   \s*   (\S*)  \s*  (\S*)  \s*   (\S*)   \s*    \S*    \s*    \S*    \s*    \S*$
+	# ^ \s*    \S*    \s*     \S*     \s*   \S*   \s*   (\S*)  \s*  (\S*)  \s*   (\S*)   \s*    \S*    \s*    \S*    \s*    (.*)$
 	
-	local regex="^\s*\S*\s*\S*\s*\S*\s*(\S*)\s*(\S*)\s*(\S*)\s*\S*\s*\S*\s*\S*$"
+	local regex="^\s*\S*\s*\S*\s*\S*\s*(\S*)\s*(\S*)\s*(\S*)\s*\S*\s*\S*\s*(.*)$"
 	
 	local len_output=$(shntool len -c -t "$INPUT_WAV_ABSOLUTE" | grep -E "$regex")
 
