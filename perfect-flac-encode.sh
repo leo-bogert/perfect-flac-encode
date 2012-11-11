@@ -58,10 +58,16 @@ INPUT_CUE_LOG_WAV_BASENAME=""	# Filename of input WAV/LOG/CUE without extension.
 ################################################################################
 
 
-# parameters: $1 = target working directory, absolute or relative to current working dir
+# parameters: $1 = target working directory, absolute or relative to current working dir. if not specified, working directory is set to $WORKING_DIR_ABSOLUTE
 set_working_directory_or_die() {
-	#echo "Changing working directory to $1..."
-	if ! cd "$1" ; then
+	#echo "Changing working directory to $dir..."
+	if [ $# -eq 0 ] ; then
+		local dir="$WORKING_DIR_ABSOLUTE"
+	else
+		local dir="$1"
+	fi
+	
+	if ! cd "$dir" ; then
 		echo "Setting working directory failed!" >&2
 		exit 1
 	fi
@@ -206,8 +212,7 @@ test_whether_the_two_eac_crcs_match() {
 test_eac_crc_or_die() {
 	echo "Comparing EAC CRC from EAC LOG to CRC of the input WAV image..."
 	
-	local input_dir_absolute="$WORKING_DIR_ABSOLUTE"
-	local input_wav_image="$input_dir_absolute/$1.wav"
+	local input_wav_image="$WORKING_DIR_ABSOLUTE/$1.wav"
 	local expected_crc=`get_eac_crc_or_die "$1" "copy"`
 	
 	if [ "$TEST_DAMAGE_TO_INPUT_WAV_IMAGE" -eq 1 ]; then 
@@ -218,7 +223,7 @@ test_eac_crc_or_die() {
 			exit 1
 		fi
 		
-		set_working_directory_or_die "$input_dir_absolute"
+		set_working_directory_or_die
 		# We replace it with a silent WAV so we don't have to damage the original input image
 		if ! shntool gen -l 1:23 -a "$1"; then 
 			echo "Generating silent WAV file failed!"
@@ -246,7 +251,7 @@ split_wav_image_to_singletracks_or_die() {
 	
 	local outputdir_relative="$WAV_SINGLETRACK_SUBDIR"
 	
-	set_working_directory_or_die "$WORKING_DIR_ABSOLUTE"
+	set_working_directory_or_die
 	
 	if ! mkdir -p "$outputdir_relative" ; then
 		echo "Making $outputdir_relative subdirectory failed!" >&2
@@ -296,7 +301,7 @@ split_wav_image_to_singletracks_or_die() {
 			exit 1
 		fi
 	fi
-	set_working_directory_or_die "$WORKING_DIR_ABSOLUTE"
+	set_working_directory_or_die
 }
 
 # parameters:
@@ -419,7 +424,7 @@ generate_checksum_of_original_wav_image_or_die() {
 		echo "Generating checksum of original WAV image failed!" >&2
 		exit 1
 	fi
-	set_working_directory_or_die "$WORKING_DIR_ABSOLUTE"
+	set_working_directory_or_die
 }
 
 # parameters:
@@ -433,7 +438,7 @@ test_checksum_of_rejoined_wav_image_or_die() {
 	local original_image_checksum_file="$WORKING_DIR_ABSOLUTE/$outputdir_relative/$1.sha256"
 	local joined_image="$WORKING_DIR_ABSOLUTE/$outputdir_relative/joined.wav"
 	
-	set_working_directory_or_die "$WORKING_DIR_ABSOLUTE"
+	set_working_directory_or_die
 	
 	# This is not needed: It is generated in generate_checksum_of_original_wav_image_or_die already
 	#if ! mkdir -p "$outputdir_relative" ; then
@@ -509,7 +514,7 @@ encode_wav_singletracks_to_flac_or_die() {
 		echo "Encoding WAV to FLAC singletracks failed!" >&2
 		exit 1
 	fi
-	set_working_directory_or_die "$WORKING_DIR_ABSOLUTE"
+	set_working_directory_or_die
 	
 	local flac_files=( "$outputdir/"*.flac )
 	if [ "$TEST_DAMAGE_TO_FLAC_SINGLETRACKS" -eq 1 ]; then 
@@ -654,6 +659,7 @@ test_flac_singletracks_or_die() {
 		echo "Testing FLAC singletracks failed!" >&2
 		exit 1
 	fi
+	set_working_directory_or_die
 }
 
 test_checksums_of_decoded_flac_singletracks_or_die() {
@@ -673,7 +679,7 @@ test_checksums_of_decoded_flac_singletracks_or_die() {
 		echo "Decoding FLAC singletracks failed!" >&2
 		exit 1
 	fi
-	set_working_directory_or_die "$WORKING_DIR_ABSOLUTE"
+	set_working_directory_or_die
 	
 	local wav_files=( "$outputdir/"*.wav )
 	if [ "$TEST_DAMAGE_TO_DECODED_FLAC_SINGLETRACKS" -eq 1 ]; then 
@@ -698,7 +704,7 @@ test_checksums_of_decoded_flac_singletracks_or_die() {
 	else
 		echo "All checksums OK."
 	fi
-	set_working_directory_or_die "$WORKING_DIR_ABSOLUTE"
+	set_working_directory_or_die
 }
 
 # parameters:
@@ -808,7 +814,7 @@ main() {
 	
 	# globals
 	WORKING_DIR_ABSOLUTE="$rip_dir_absolute"
-	set_working_directory_or_die "$WORKING_DIR_ABSOLUTE"
+	set_working_directory_or_die
 	
 	ask_to_delete_existing_output_and_temp_dirs_or_die "$output_dir_relative"
 	check_whether_input_is_accurately_ripped_or_die "$input_wav_log_cue_filename"
