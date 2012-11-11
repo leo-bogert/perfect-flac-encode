@@ -106,12 +106,10 @@ delete_temp_dirs() {
 	done
 }
 
-# parameters:
-# $1 = filename of cue/wav/log
 check_whether_input_is_accurately_ripped_or_die() {
 	echo "Checking EAC LOG for whether AccurateRip reports a perfect rip..."
 	
-	if ! iconv --from-code utf-16 --to-code utf-8 "$1.log" | grep --quiet "All tracks accurately ripped" ; then
+	if ! iconv --from-code utf-16 --to-code utf-8 "$INPUT_DIR_ABSOLUTE/$INPUT_CUE_LOG_WAV_BASENAME.log" | grep --quiet "All tracks accurately ripped" ; then
 		echo "AccurateRip reported that the disk was not ripped properly - aborting!"
 		exit 1
 	else
@@ -819,7 +817,7 @@ main() {
 	OUTPUT_DIR_ABSOLUTE="$INPUT_DIR_ABSOLUTE/$output_dir_relative"	# TODO: this should be a commandline parameters # TODO: use this global actually in the functions.
 	
 	ask_to_delete_existing_output_and_temp_dirs_or_die "$output_dir_relative"
-	check_whether_input_is_accurately_ripped_or_die "$INPUT_CUE_LOG_WAV_BASENAME"
+	check_whether_input_is_accurately_ripped_or_die
 	check_shntool_wav_problem_diagnosis_or_die "$INPUT_CUE_LOG_WAV_BASENAME.wav"
 	test_whether_the_two_eac_crcs_match "$INPUT_CUE_LOG_WAV_BASENAME"
 	test_eac_crc_or_die "$INPUT_CUE_LOG_WAV_BASENAME"
