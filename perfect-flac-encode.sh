@@ -131,19 +131,16 @@ check_whether_input_is_accurately_ripped_or_die() {
 # - Header is inconsistent about data size and/or file size
 # - File is truncated
 # - File has junk appended to it
-#
-# parameters: $1 = path to WAV
 check_shntool_wav_problem_diagnosis_or_die() {
 	echo "Using 'shntool len' to check the input WAV image for quality and file format problems..."
-	local wav_file="$1"
 	
     #       length         expanded size                 cdr         WAVE        problems       fmt         ratio         filename
 	#       54:04.55       572371004         B           ---         --          -----          wav         1.0000        Paul Weller - 1994 - Wild Wood.wav"
-	# ^ \s*    \S*    \s*     \S*     \s*   \S*   \s*   (\S*)  \s*  (\S*)  \s*   (\S*)   \s*    \S*    \s*    \S*    \s*    ($wav_file)$
+	# ^ \s*    \S*    \s*     \S*     \s*   \S*   \s*   (\S*)  \s*  (\S*)  \s*   (\S*)   \s*    \S*    \s*    \S*    \s*    \S*$
 	
-	local regex="^\s*\S*\s*\S*\s*\S*\s*(\S*)\s*(\S*)\s*(\S*)\s*\S*\s*\S*\s*($wav_file)$"
+	local regex="^\s*\S*\s*\S*\s*\S*\s*(\S*)\s*(\S*)\s*(\S*)\s*\S*\s*\S*\s*\S*$"
 	
-	local len_output=$(shntool len -c -t "$wav_file" | grep -E "$regex")
+	local len_output=$(shntool len -c -t "$INPUT_WAV_ABSOLUTE" | grep -E "$regex")
 
 	if  [[ ! $? -eq 0  ]]; then
 		echo "Regexp for getting the 'shntool len' output failed!" >&2
@@ -825,7 +822,7 @@ main() {
 	
 	ask_to_delete_existing_output_and_temp_dirs_or_die "$output_dir_relative"
 	check_whether_input_is_accurately_ripped_or_die
-	check_shntool_wav_problem_diagnosis_or_die "$INPUT_CUE_LOG_WAV_BASENAME.wav"
+	check_shntool_wav_problem_diagnosis_or_die
 	test_whether_the_two_eac_crcs_match "$INPUT_CUE_LOG_WAV_BASENAME"
 	test_eac_crc_or_die "$INPUT_CUE_LOG_WAV_BASENAME"
 	split_wav_image_to_singletracks_or_die "$INPUT_CUE_LOG_WAV_BASENAME"
