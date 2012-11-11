@@ -38,6 +38,7 @@ TEMP_DIRS_TO_DELETE=( "$WAV_SINGLETRACK_SUBDIR" "$WAV_JOINTEST_SUBDIR" "$FLAC_SI
 # If perfect-flac-encode exits with a "checksum failure" error then, the test succeeded.
 # Notice that only enabling one at once makes sense because the script will terminate if ANY checksum verification fails :)
 # Set to 1 to enable
+declare -A UNIT_TESTS	# Attention: We have to explicitely declare the associative array or iteration over the keys will not work!
 UNIT_TESTS["TEST_DAMAGE_TO_INPUT_WAV_IMAGE"]=0
 UNIT_TESTS["TEST_DAMAGE_TO_SPLIT_WAV_SINGLETRACKS"]=0
 UNIT_TESTS["TEST_DAMAGE_TO_REJOINED_WAV_IMAGE"]=0
@@ -581,7 +582,7 @@ pretag_singletrack_flac_from_cue()
 	# We only use the fields which are actually stored on the disc.
 	# TODO: find out whether this is actually everything which is stored on a CD
 	
-	local -A fields	# declare associative array
+	local -A fields	# Attention: We have to explicitely declare the associative array or iteration over the keys will not work!
 	# disc tags
 	fields["CATALOGNUMBER"]=`cue_get_catalog "$cue_file"`						# album UPC/EAN. Debbuging showed that cueprint's %U is broken so we use our function.
 	fields["ENCODEDBY"]="perfect-flac-encode $VERSION with `flac --version`"	# own version :)
