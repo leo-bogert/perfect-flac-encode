@@ -33,14 +33,16 @@ DECODED_WAV_SINGLETRACK_SUBDIR="Stage4_WAV_Singletracks_Decoded_From_FLAC_Single
 
 TEMP_DIRS_TO_DELETE=( "$WAV_SINGLETRACK_SUBDIR" "$WAV_JOINTEST_SUBDIR" "$FLAC_SINGLETRACK_SUBDIR" "$DECODED_WAV_SINGLETRACK_SUBDIR" )
 
-# "Unit tests": Enabling these will damage the said files to test the checksum verification
+# Unit tests:
+# Enabling these will damage the said files to test the checksum verification:
+# If perfect-flac-encode exits with a "checksum failure" error then, the test succeeded.
 # Notice that only enabling one at once makes sense because the script will terminate if ANY checksum verification fails :)
 # Set to 1 to enable
-TEST_DAMAGE_TO_INPUT_WAV_IMAGE=0
-TEST_DAMAGE_TO_SPLIT_WAV_SINGLETRACKS=0
-TEST_DAMAGE_TO_REJOINED_WAV_IMAGE=0
-TEST_DAMAGE_TO_FLAC_SINGLETRACKS=0
-TEST_DAMAGE_TO_DECODED_FLAC_SINGLETRACKS=0
+UNIT_TESTS["TEST_DAMAGE_TO_INPUT_WAV_IMAGE"]=0
+UNIT_TESTS["TEST_DAMAGE_TO_SPLIT_WAV_SINGLETRACKS"]=0
+UNIT_TESTS["TEST_DAMAGE_TO_REJOINED_WAV_IMAGE"]=0
+UNIT_TESTS["TEST_DAMAGE_TO_FLAC_SINGLETRACKS"]=0
+UNIT_TESTS["TEST_DAMAGE_TO_DECODED_FLAC_SINGLETRACKS"]=0
 ################################################################################
 # End of configuration
 ################################################################################
@@ -204,31 +206,28 @@ test_whether_the_two_eac_crcs_match() {
 	echo "Test and Copy CRC match."
 }
 
-# parameters:
-# $1 = filename of cue/wav/log
 test_eac_crc_or_die() {
 	echo "Comparing EAC CRC from EAC LOG to CRC of the input WAV image..."
-	
-	local input_wav_image="$INPUT_DIR_ABSOLUTE/$1.wav"
-	local expected_crc=`get_eac_crc_or_die "$INPUT_LOG_ABSOLUTE" "copy"`
 	
 	if [ "$TEST_DAMAGE_TO_INPUT_WAV_IMAGE" -eq 1 ]; then 
 		echo "Deliberately damaging the input WAV image (original is renamed to *.original) to test the EAC checksum verification ..."
 		
-		if ! mv --no-clobber "$input_wav_image" "$input_wav_image.original" ; then
+		if ! mv --no-clobber "$INPUT_WAV_ABSOLUTE" "$INPUT_WAV_ABSOLUTE.original" ; then
 			echo "Renaming the original WAV image failed!" >&2
 			exit 1
 		fi
 		
 		# We replace it with a silent WAV so we don't have to damage the original input image
-		if ! shntool gen -l 1:23 -a "$INPUT_DIR_ABSOLUTE/$1"; then 	# .wav must not be in -a
+		if ! shntool gen -l 1:23 -a "$INPUT_DIR_ABSOLUTE/$INPUT_CUE_LOG_WAV_BASENAME"; then 	# .wav must not be in -a
 			echo "Generating silent WAV file failed!"
 			exit 1
 		fi
 	fi
 	
+	local expected_crc=`get_eac_crc_or_die "$INPUT_LOG_ABSOLUTE" "copy"`
+	
 	echo "Computing CRC of WAV image..."
-	local actual_crc=`~/eac-crc "$input_wav_image"` # TODO: as soon as a packaged version is available, use the binary from the package
+	local actual_crc=`~/eac-crc "$INPUT_WAV_ABSOLUTE"` # TODO: as soon as a packaged version is available, use the binary from the package
 	echo "Expected EAC CRC: $expected_crc"
 	echo "Actual CRC: $actual_crc"
 	
@@ -798,6 +797,15 @@ write_readme_txt_to_target_dir_or_die() {
 	fi
 }
 
+die_if_unit_tests_failed() {
+	for test in "${!UNIT_TESTS[@]}"; do
+		if [ "$UNIT_TESTS[$test]" != "0" ] ; then
+			echo "Unit test $test failed: perfect-flac-encode should have indicated checksum failure due to the deliberate damage of the unit test but did not do so!" >&2
+			exit 1
+		fi
+	done
+}
+
 main() {
 	echo -e "\n\nperfect-flac-encode.sh Version $VERSION running ... "
 	echo -e "BETA VERSION - NOT for productive use!\n\n"
@@ -822,7 +830,7 @@ main() {
 	check_whether_input_is_accurately_ripped_or_die
 	check_shntool_wav_problem_diagnosis_or_die
 	test_whether_the_two_eac_crcs_match
-	test_eac_crc_or_die "$INPUT_CUE_LOG_WAV_BASENAME"
+	test_eac_crc_or_die
 	split_wav_image_to_singletracks_or_die "$INPUT_CUE_LOG_WAV_BASENAME"
 	test_accuraterip_checksums_of_split_wav_singletracks_or_die "$INPUT_CUE_LOG_WAV_BASENAME"
 	generate_checksum_of_original_wav_image_or_die "$INPUT_CUE_LOG_WAV_BASENAME"
@@ -836,6 +844,7 @@ main() {
 	write_readme_txt_to_target_dir_or_die "$output_dir_relative" "$INPUT_CUE_LOG_WAV_BASENAME"
 	# TODO: Check whether we can safely append the perfect-flac encode log to the EAC log and do so if we can. EAC adds a checksum to the end of its log, We should check whether the checksum validation tools allow us to add content to the file. If they don't, maybe we should just add another checksum to the end. If we do NOT implement merging of the log files, write our log to a separate file and upate the code which produces the README to reflect that change.
 	delete_temp_dirs
+	die_if_unit_tests_failed
 	
 	echo "SUCCESS. Your FLACs are in directory \"$output_dir_relative\""
 	exit 0 # SUCCESS
