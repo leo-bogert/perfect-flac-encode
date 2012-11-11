@@ -54,6 +54,9 @@ VERSION="BETA11"
 INPUT_DIR_ABSOLUTE=""	# Directory where the input WAV/LOG/CUE are placed.
 OUTPUT_DIR_ABSOLUTE=""	# Directory where the output FLACs are placed. The temp directories will also reside in it.
 INPUT_CUE_LOG_WAV_BASENAME=""	# Filename of input WAV/LOG/CUE without extension.
+INPUT_CUE_ABSOLUTE=""	# Full path of input CUE	# TODO: Use everywhere
+INPUT_LOG_ABSOLUTE=""	# Full path of input WAV	# TODO: Use everywhere
+INPUT_WAV_ABSOLUTE=""	# Full path of input LOG	# TODO: Use everywhere
 ################################################################################
 # End of global variables
 ################################################################################
@@ -807,6 +810,10 @@ main() {
 	# parameters
 	INPUT_DIR_ABSOLUTE="$1"
 	INPUT_CUE_LOG_WAV_BASENAME="$2"	# TODO: don't pass this around to functions, make them use it directly since it is global.
+	
+	INPUT_CUE_ABSOLUTE="$INPUT_DIR_ABSOLUTE/$INPUT_CUE_LOG_WAV_BASENAME.cue"
+	INPUT_LOG_ABSOLUTE="$INPUT_DIR_ABSOLUTE/$INPUT_CUE_LOG_WAV_BASENAME.log"
+	INPUT_WAV_ABSOLUTE="$INPUT_DIR_ABSOLUTE/$INPUT_CUE_LOG_WAV_BASENAME.wav"
 	
 	echo "Album: $INPUT_CUE_LOG_WAV_BASENAME"
 	
