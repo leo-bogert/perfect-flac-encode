@@ -209,7 +209,7 @@ test_whether_the_two_eac_crcs_match() {
 test_eac_crc_or_die() {
 	echo "Comparing EAC CRC from EAC LOG to CRC of the input WAV image..."
 	
-	if [ "$TEST_DAMAGE_TO_INPUT_WAV_IMAGE" -eq 1 ]; then 
+	if [ ${UNIT_TESTS["TEST_DAMAGE_TO_INPUT_WAV_IMAGE"]} -eq 1 ]; then 
 		echo "Deliberately damaging the input WAV image (original is renamed to *.original) to test the EAC checksum verification ..."
 		
 		if ! mv --no-clobber "$INPUT_WAV_ABSOLUTE" "$INPUT_WAV_ABSOLUTE.original" ; then
@@ -279,7 +279,7 @@ split_wav_image_to_singletracks_or_die() {
 		exit 1
 	fi
 	
-	if [ "$TEST_DAMAGE_TO_SPLIT_WAV_SINGLETRACKS" -eq 1 ]; then 
+	if [ ${UNIT_TESTS["TEST_DAMAGE_TO_SPLIT_WAV_SINGLETRACKS"]} -eq 1 ]; then 
 		echo "Deliberately damaging a singletrack to test the AccurateRip checksum verification ..."
 		
 		local outputdir_absolute="$INPUT_DIR_ABSOLUTE/$outputdir_relative"
@@ -456,7 +456,7 @@ test_checksum_of_rejoined_wav_image_or_die() {
 		exit 1
 	fi
 	
-	if [ "$TEST_DAMAGE_TO_REJOINED_WAV_IMAGE" -eq 1 ]; then 
+	if [ ${UNIT_TESTS["TEST_DAMAGE_TO_REJOINED_WAV_IMAGE"]} -eq 1 ]; then 
 		echo "Deliberately damaging the joined image to test the checksum verification ..."
 		echo "FAIL" >> "$joined_image"
 	fi
@@ -513,7 +513,7 @@ encode_wav_singletracks_to_flac_or_die() {
 	set_working_directory_or_die
 	
 	local flac_files=( "$outputdir/"*.flac )
-	if [ "$TEST_DAMAGE_TO_FLAC_SINGLETRACKS" -eq 1 ]; then 
+	if [ ${UNIT_TESTS["TEST_DAMAGE_TO_FLAC_SINGLETRACKS"]} -eq 1 ]; then 
 		echo "Deliberately damaging a FLAC singletrack to test flac --test verification..."
 		echo "FAIL" > "${flac_files[0]}" # TODO: We overwrite the whole file because FLAC won't detect trailing garbage. File a bug report
 	fi
@@ -678,7 +678,7 @@ test_checksums_of_decoded_flac_singletracks_or_die() {
 	set_working_directory_or_die
 	
 	local wav_files=( "$outputdir/"*.wav )
-	if [ "$TEST_DAMAGE_TO_DECODED_FLAC_SINGLETRACKS" -eq 1 ]; then 
+	if [ ${UNIT_TESTS["TEST_DAMAGE_TO_DECODED_FLAC_SINGLETRACKS"]} -eq 1 ]; then 
 		echo "Deliberately damaging a decoded WAV singletrack to test checksum verification..."
 		echo "FAIL" >> "${wav_files[0]}"
 	fi
@@ -799,7 +799,7 @@ write_readme_txt_to_target_dir_or_die() {
 
 die_if_unit_tests_failed() {
 	for test in "${!UNIT_TESTS[@]}"; do
-		if [ "$UNIT_TESTS[$test]" != "0" ] ; then
+		if [ "${UNIT_TESTS[$test]}" != "0" ] ; then
 			echo "Unit test $test failed: perfect-flac-encode should have indicated checksum failure due to the deliberate damage of the unit test but did not do so!" >&2
 			exit 1
 		fi
