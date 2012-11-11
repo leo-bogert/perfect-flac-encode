@@ -52,8 +52,8 @@ TEST_DAMAGE_TO_DECODED_FLAC_SINGLETRACKS=0
 ################################################################################
 VERSION="BETA11"
 INPUT_DIR_ABSOLUTE=""	# Directory where the input WAV/LOG/CUE are placed.
-OUTPUT_DIR_ABSOLUTE=""	# Directory where the output FLACs are placed. The temp directories will also reside in it. TODO: use this actually.
-INPUT_CUE_LOG_WAV_BASENAME=""	# Filename of input WAV/LOG/CUE without extension. TODO: use.
+OUTPUT_DIR_ABSOLUTE=""	# Directory where the output FLACs are placed. The temp directories will also reside in it.
+INPUT_CUE_LOG_WAV_BASENAME=""	# Filename of input WAV/LOG/CUE without extension.
 ################################################################################
 # End of global variables
 ################################################################################
@@ -808,34 +808,36 @@ main() {
 
 	# parameters
 	INPUT_DIR_ABSOLUTE="$1"
-	local input_wav_log_cue_filename="$2"
-	local output_dir_relative="$input_wav_log_cue_filename"
+	INPUT_CUE_LOG_WAV_BASENAME="$2"	# TODO: don't pass this around to functions, make them use it directly since it is global.
 	
-	echo "Album: $input_wav_log_cue_filename"
+	echo "Album: $INPUT_CUE_LOG_WAV_BASENAME"
+	
+	local output_dir_relative="$INPUT_CUE_LOG_WAV_BASENAME"	# TODO: get rid of this one. make the functions not reuqire passing around of a relative path and use the global OUTPUT_DIR_ABSOLUTE
 	
 	# globals
 	set_working_directory_or_die
+	OUTPUT_DIR_ABSOLUTE="$INPUT_DIR_ABSOLUTE/$output_dir_relative"	# TODO: this should be a commandline parameters # TODO: use this global actually in the functions.
 	
 	ask_to_delete_existing_output_and_temp_dirs_or_die "$output_dir_relative"
-	check_whether_input_is_accurately_ripped_or_die "$input_wav_log_cue_filename"
-	check_shntool_wav_problem_diagnosis_or_die "$input_wav_log_cue_filename.wav"
-	test_whether_the_two_eac_crcs_match "$input_wav_log_cue_filename"
-	test_eac_crc_or_die "$input_wav_log_cue_filename"
-	split_wav_image_to_singletracks_or_die "$input_wav_log_cue_filename"
-	test_accuraterip_checksums_of_split_wav_singletracks_or_die "$input_wav_log_cue_filename"
-	generate_checksum_of_original_wav_image_or_die "$input_wav_log_cue_filename"
-	test_checksum_of_rejoined_wav_image_or_die "$input_wav_log_cue_filename"
+	check_whether_input_is_accurately_ripped_or_die "$INPUT_CUE_LOG_WAV_BASENAME"
+	check_shntool_wav_problem_diagnosis_or_die "$INPUT_CUE_LOG_WAV_BASENAME.wav"
+	test_whether_the_two_eac_crcs_match "$INPUT_CUE_LOG_WAV_BASENAME"
+	test_eac_crc_or_die "$INPUT_CUE_LOG_WAV_BASENAME"
+	split_wav_image_to_singletracks_or_die "$INPUT_CUE_LOG_WAV_BASENAME"
+	test_accuraterip_checksums_of_split_wav_singletracks_or_die "$INPUT_CUE_LOG_WAV_BASENAME"
+	generate_checksum_of_original_wav_image_or_die "$INPUT_CUE_LOG_WAV_BASENAME"
+	test_checksum_of_rejoined_wav_image_or_die "$INPUT_CUE_LOG_WAV_BASENAME"
 	encode_wav_singletracks_to_flac_or_die
-	pretag_singletrack_flacs_from_cue "$input_wav_log_cue_filename"
+	pretag_singletrack_flacs_from_cue "$INPUT_CUE_LOG_WAV_BASENAME"
 	test_flac_singletracks_or_die
 	test_checksums_of_decoded_flac_singletracks_or_die
 	move_output_to_target_dir_or_die "$output_dir_relative"
-	copy_cue_log_sha256_to_target_dir_or_die "$input_wav_log_cue_filename" "$output_dir_relative"
-	write_readme_txt_to_target_dir_or_die "$output_dir_relative" "$input_wav_log_cue_filename"
+	copy_cue_log_sha256_to_target_dir_or_die "$INPUT_CUE_LOG_WAV_BASENAME" "$output_dir_relative"
+	write_readme_txt_to_target_dir_or_die "$output_dir_relative" "$INPUT_CUE_LOG_WAV_BASENAME"
 	# TODO: Check whether we can safely append the perfect-flac encode log to the EAC log and do so if we can. EAC adds a checksum to the end of its log, We should check whether the checksum validation tools allow us to add content to the file. If they don't, maybe we should just add another checksum to the end. If we do NOT implement merging of the log files, write our log to a separate file and upate the code which produces the README to reflect that change.
 	delete_temp_dirs
 	
-	echo "SUCCESS. Your FLACs are in directory \"$input_wav_log_cue_filename\""
+	echo "SUCCESS. Your FLACs are in directory \"$output_dir_relative\""
 	exit 0 # SUCCESS
 }
 
