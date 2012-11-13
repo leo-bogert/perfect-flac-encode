@@ -244,10 +244,9 @@ split_wav_image_to_singletracks_or_die() {
 	echo "Splitting WAV image to singletrack WAVs..."
 	
 	local outputdir_relative="$WAV_SINGLETRACK_SUBDIR"
-	
-	set_working_directory_or_die
-	
-	if ! mkdir -p "$outputdir_relative" ; then
+
+	# The output dir must be a subdirectory of the input dir for shntool "-d" to work
+	if ! mkdir -p "$INPUT_DIR_ABSOLUTE/$outputdir_relative" ; then
 		echo "Making $outputdir_relative subdirectory failed!" >&2
 		exit 1
 	fi
@@ -272,7 +271,8 @@ split_wav_image_to_singletracks_or_die() {
 	# - We replace Windows' reserved filename characters with "_". We do this because we recommend MusicBrainz Picard for tagging and it does the same. List of reserved characters was taken from http://msdn.microsoft.com/en-us/library/windows/desktop/aa365247%28v=vs.85%29.aspx
 	# - We prefix the filename with the maximal amount of zeroes required to get proper sorting for the maximal possible trackcount on a CD which is 99. We do this because cuetag requires proper sort order of the input files and we just use "*.flac" for finding the input files
 
-	# For making the shntool output more readable we don't use absolute paths but changed the working directory above.
+	# For making the shntool output more readable we don't use absolute paths but changed the working directory
+	set_working_directory_or_die
 	if ! shntool split -P dot -d "$outputdir_relative" -f "$INPUT_CUE_LOG_WAV_BASENAME.cue" -m '<_>_:_"_/_\_|_?_*_' -n %02d -t "%n - %t" -- "$INPUT_CUE_LOG_WAV_BASENAME.wav" ; then
 		echo "Splitting WAV image to singletracks failed!" >&2
 		exit 1
