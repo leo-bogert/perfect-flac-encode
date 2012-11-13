@@ -243,10 +243,10 @@ test_eac_crc_or_die() {
 split_wav_image_to_singletracks_or_die() {
 	echo "Splitting WAV image to singletrack WAVs..."
 	
-	local outputdir_relative="$WAV_SINGLETRACK_SUBDIR"
+	local wav_singletracks_dir_absolute="$INPUT_DIR_ABSOLUTE/$WAV_SINGLETRACK_SUBDIR"
 
 	# The output dir must be a subdirectory of the input dir for shntool "-d" to work
-	if ! mkdir -p "$INPUT_DIR_ABSOLUTE/$outputdir_relative" ; then
+	if ! mkdir -p "$wav_singletracks_dir_absolute" ; then
 		echo "Making $outputdir_relative subdirectory failed!" >&2
 		exit 1
 	fi
@@ -280,7 +280,6 @@ split_wav_image_to_singletracks_or_die() {
 	if [ ${UNIT_TESTS["TEST_DAMAGE_TO_SPLIT_WAV_SINGLETRACKS"]} -eq 1 ]; then 
 		echo "Deliberately damaging a singletrack to test the AccurateRip checksum verification ..."
 		
-		local wav_singletracks_dir_absolute="$INPUT_DIR_ABSOLUTE/$outputdir_relative"
 		local wav_singletracks=( "$wav_singletracks_dir_absolute"/*.wav )
 		
 		# accurateripchecksum will ignore trailing garbage in a WAV file and adding leading garbage would make it an invalid WAV which would cause the checksum computation to not even happen
