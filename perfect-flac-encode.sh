@@ -299,13 +299,11 @@ split_wav_image_to_singletracks_or_die() {
 }
 
 # parameters:
-# $1 = filename of cue/wav/logs
-# $2 = tracknumber
-# $3 = accuraterip version, 1 or 2
+# $1 = tracknumber
+# $2 = accuraterip version, 1 or 2
 get_accuraterip_checksum_of_singletrack_or_die() {
-	local filename="$INPUT_DIR_ABSOLUTE/$1.log"
-	local tracknumber="$2"
-	local accuraterip_version="$3"
+	local tracknumber="$1"
+	local accuraterip_version="$2"
 	tracknumber=`echo "$tracknumber" | sed 's/^[0]//'`	# remove leading zero (we use 2-digit tracknumbers)
 	
 	if [ "$accuraterip_version" != "1" -a "$accuraterip_version" != "2" ] ; then
@@ -315,7 +313,7 @@ get_accuraterip_checksum_of_singletrack_or_die() {
 	
 	local regex="^Track( {1,2})($tracknumber)( {2})accurately ripped \\(confidence ([[:digit:]]+)\\)  \\[([0-9A-Fa-f]+)\\]  \\(AR v$accuraterip_version\\)(.*)\$"
 	
-	iconv --from-code utf-16 --to-code utf-8 "$filename" | grep -E "$regex" | sed -r s/"$regex"/\\5/
+	iconv --from-code utf-16 --to-code utf-8 "$INPUT_LOG_ABSOLUTE" | grep -E "$regex" | sed -r s/"$regex"/\\5/
 }
 
 # parameters:
@@ -366,8 +364,8 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 			continue
  		fi
 		
-		local expected_checksums[1]=`get_accuraterip_checksum_of_singletrack_or_die "$log_cue_filename" "$tracknumber" "1"`
-		local expected_checksums[2]=`get_accuraterip_checksum_of_singletrack_or_die "$log_cue_filename" "$tracknumber" "2"`
+		local expected_checksums[1]=`get_accuraterip_checksum_of_singletrack_or_die "$tracknumber" "1"`
+		local expected_checksums[2]=`get_accuraterip_checksum_of_singletrack_or_die "$tracknumber" "2"`
 		
 		if [ "${expected_checksums[2]}" != "" ] ; then
 			local accuraterip_version="2"
