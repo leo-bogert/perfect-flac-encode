@@ -281,12 +281,12 @@ split_wav_image_to_singletracks_or_die() {
 	if [ ${UNIT_TESTS["TEST_DAMAGE_TO_SPLIT_WAV_SINGLETRACKS"]} -eq 1 ]; then 
 		echo "Deliberately damaging a singletrack to test the AccurateRip checksum verification ..."
 		
-		local outputdir_absolute="$INPUT_DIR_ABSOLUTE/$outputdir_relative"
-		local wav_singletracks=( "$outputdir_absolute"/*.wav )
+		local wav_singletracks_dir_absolute="$INPUT_DIR_ABSOLUTE/$outputdir_relative"
+		local wav_singletracks=( "$wav_singletracks_dir_absolute"/*.wav )
 		
 		# accurateripchecksum will ignore trailing garbage in a WAV file and adding leading garbage would make it an invalid WAV which would cause the checksum computation to not even happen
 		# Luckily, while reading the manpage of shntool I saw that it is able to generate silent WAV files. So we just replace it with a silent file as "damage":
-		set_working_directory_or_die "$outputdir_absolute"
+		set_working_directory_or_die "$wav_singletracks_dir_absolute"
 		if ! shntool gen -l 1:23 ; then 
 			echo "Generating silent WAV file failed!"
 			exit 1
