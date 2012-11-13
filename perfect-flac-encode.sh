@@ -240,8 +240,6 @@ test_eac_crc_or_die() {
 	echo "EAC CRC of input WAV image is OK."
 }
 
-# parameters:
-# $1 = filename of cue/wav/log
 split_wav_image_to_singletracks_or_die() {
 	echo "Splitting WAV image to singletrack WAVs..."
 	
@@ -275,7 +273,7 @@ split_wav_image_to_singletracks_or_die() {
 	# - We prefix the filename with the maximal amount of zeroes required to get proper sorting for the maximal possible trackcount on a CD which is 99. We do this because cuetag requires proper sort order of the input files and we just use "*.flac" for finding the input files
 
 	# For making the shntool output more readable we don't use absolute paths but changed the working directory above.
-	if ! shntool split -P dot -d "$outputdir_relative" -f "$1.cue" -m '<_>_:_"_/_\_|_?_*_' -n %02d -t "%n - %t" -- "$1.wav" ; then
+	if ! shntool split -P dot -d "$outputdir_relative" -f "$INPUT_CUE_LOG_WAV_BASENAME.cue" -m '<_>_:_"_/_\_|_?_*_' -n %02d -t "%n - %t" -- "$INPUT_CUE_LOG_WAV_BASENAME.wav" ; then
 		echo "Splitting WAV image to singletracks failed!" >&2
 		exit 1
 	fi
@@ -832,7 +830,7 @@ main() {
 	check_shntool_wav_problem_diagnosis_or_die
 	test_whether_the_two_eac_crcs_match
 	test_eac_crc_or_die
-	split_wav_image_to_singletracks_or_die "$INPUT_CUE_LOG_WAV_BASENAME"
+	split_wav_image_to_singletracks_or_die
 	test_accuraterip_checksums_of_split_wav_singletracks_or_die "$INPUT_CUE_LOG_WAV_BASENAME"
 	generate_checksum_of_original_wav_image_or_die "$INPUT_CUE_LOG_WAV_BASENAME"
 	test_checksum_of_rejoined_wav_image_or_die "$INPUT_CUE_LOG_WAV_BASENAME"
