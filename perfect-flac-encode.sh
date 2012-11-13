@@ -252,16 +252,15 @@ split_wav_image_to_singletracks_or_die() {
 	fi
 	
 	# shntool syntax:
-	# -D = print debugging information
 	# -P type Specify progress indicator type. dot shows the progress of each operation by displaying a '.' after each 10% step toward completion.
 	# -d dir Specify output directory 
-	# -o str Specify output file format extension, encoder and/or arguments.  Format is:  "fmt [ext=abc] [encoder [arg1 ... argN (%f = filename)]]"
 	# -f file Specifies a file from which to read split point data.  If not given, then split points are read from the terminal.
 	# -m str Specifies  a  character  manipulation  string for filenames generated from CUE sheets.  
 	# -n fmt Specifies the file count output format.  The default is %02d, which gives two‐digit zero‐padded numbers (01, 02, 03, ...).
 	# -t fmt Name output files in user‐specified format based on CUE sheet fields. %t Track title, %n Track number
 	# -- = indicates that everything following it is a filename
 	
+	# TODO: ask someone to proof read options. i did proof read them again already.
 	# TODO: shntool generates a "00 - pregap.wav" for HTOA. Decide what to do about this and check MusicBrainz for what they prefer. Options are: Keep as track 0? Merge with track 1? Shift all tracks by 1?
 	
 	# Ideas behind parameter decisions:
