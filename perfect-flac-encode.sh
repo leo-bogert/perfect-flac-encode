@@ -27,6 +27,8 @@
 ################################################################################
 # Configuration:
 ################################################################################
+# Those directories will be created in the input directory
+# They MUST NOT contain further subdirectories because the shntool syntax does not allow it the way we use it
 WAV_SINGLETRACK_SUBDIR="Stage1_WAV_Singletracks_From_WAV_Image"
 WAV_JOINTEST_SUBDIR="Stage2_WAV_Image_Joined_From_WAV_Singletracks"
 FLAC_SINGLETRACK_SUBDIR="Stage3_FLAC_Singletracks_Encoded_From_WAV_Singletracks"
