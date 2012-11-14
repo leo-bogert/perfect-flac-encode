@@ -96,7 +96,7 @@ ask_to_delete_existing_output_and_temp_dirs_or_die() {
 			if [ "$confirmed" == "y" ]; then
 				rm --preserve-root -rf "$INPUT_DIR_ABSOLUTE/$existingdir"
 			else
-				echo "Quitting because you want to keep the existing output."
+				echo "Quitting because you want to keep the existing output." >&2
 				exit 1
 			fi
 		fi
@@ -108,7 +108,7 @@ delete_temp_dirs() {
 	for existingdir in "${TEMP_DIRS_TO_DELETE[@]}" ; do
 		if [ -d "$INPUT_DIR_ABSOLUTE/$existingdir" ]; then
 			if ! rm --preserve-root -rf "$INPUT_DIR_ABSOLUTE/$existingdir" ; then
-				echo "Deleting the temp files failed!"
+				echo "Deleting the temp files failed!" >&2
 				exit 1
 			fi
 		fi
