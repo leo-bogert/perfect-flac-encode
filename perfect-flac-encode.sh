@@ -331,16 +331,13 @@ get_total_tracks_without_hiddentrack() {
 	cueprint -d '%N' "$1"
 }
 
-# parameters:
-# $1 = filename of cue/wav/log
 test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 	echo "Comparing AccurateRip checksums of split WAV singletracks to AccurateRip checksums from EAC LOG..."
 	
-	local log_cue_filename="$1"
 	local inputdir_wav="$INPUT_DIR_ABSOLUTE/$WAV_SINGLETRACK_SUBDIR"
 	local wav_singletracks=( "$inputdir_wav"/*.wav )
 	local hidden_track="$inputdir_wav/00 - pregap.wav"
-	local totaltracks=`get_total_tracks_without_hiddentrack "$INPUT_DIR_ABSOLUTE/$log_cue_filename.cue"`
+	local totaltracks=`get_total_tracks_without_hiddentrack "$INPUT_CUE_ABSOLUTE"`
 	
 	if [ -f "$hidden_track" ] ; then
 		echo "Hidden track one audio found."
@@ -827,7 +824,7 @@ main() {
 	test_whether_the_two_eac_crcs_match
 	test_eac_crc_or_die
 	split_wav_image_to_singletracks_or_die
-	test_accuraterip_checksums_of_split_wav_singletracks_or_die "$INPUT_CUE_LOG_WAV_BASENAME"
+	test_accuraterip_checksums_of_split_wav_singletracks_or_die
 	generate_checksum_of_original_wav_image_or_die "$INPUT_CUE_LOG_WAV_BASENAME"
 	test_checksum_of_rejoined_wav_image_or_die "$INPUT_CUE_LOG_WAV_BASENAME"
 	encode_wav_singletracks_to_flac_or_die
