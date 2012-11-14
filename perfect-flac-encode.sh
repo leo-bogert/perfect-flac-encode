@@ -421,7 +421,6 @@ test_checksum_of_rejoined_wav_image_or_die() {
 	
 	local inputdir_relative="$WAV_SINGLETRACK_SUBDIR"
 	local outputdir_relative="$WAV_JOINTEST_SUBDIR"
-	local original_image="$INPUT_DIR_ABSOLUTE/$1.wav"
 	local original_image_checksum_file="$INPUT_DIR_ABSOLUTE/$outputdir_relative/$1.sha256"
 	local joined_image="$INPUT_DIR_ABSOLUTE/$outputdir_relative/joined.wav"
 	
