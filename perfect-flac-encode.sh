@@ -824,7 +824,7 @@ main() {
 	test_eac_crc_or_die
 	split_wav_image_to_singletracks_or_die
 	test_accuraterip_checksums_of_split_wav_singletracks_or_die
-	generate_checksum_of_original_wav_image_or_diess
+	generate_checksum_of_original_wav_image_or_die
 	test_checksum_of_rejoined_wav_image_or_die "$INPUT_CUE_LOG_WAV_BASENAME"
 	encode_wav_singletracks_to_flac_or_die
 	pretag_singletrack_flacs_from_cue "$INPUT_CUE_LOG_WAV_BASENAME"
