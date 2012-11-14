@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/bin/bash -u
+# -u : exit with error upon access of unset variable
 
 ################################################################################
 # NAME: perfect-flac-encode
@@ -247,7 +248,7 @@ split_wav_image_to_singletracks_or_die() {
 
 	# The output dir must be a subdirectory of the input dir for shntool "-d" to work
 	if ! mkdir -p "$wav_singletracks_dir_absolute" ; then
-		echo "Making $outputdir_relative subdirectory failed!" >&2
+		echo "Making $WAV_SINGLETRACK_SUBDIR subdirectory failed!" >&2
 		exit 1
 	fi
 	
@@ -272,7 +273,7 @@ split_wav_image_to_singletracks_or_die() {
 
 	# For making the shntool output more readable we don't use absolute paths but changed the working directory
 	set_working_directory_or_die
-	if ! shntool split -P dot -d "$outputdir_relative" -f "$INPUT_CUE_LOG_WAV_BASENAME.cue" -m '<_>_:_"_/_\_|_?_*_' -n %02d -t "%n - %t" -- "$INPUT_CUE_LOG_WAV_BASENAME.wav" ; then
+	if ! shntool split -P dot -d "$WAV_SINGLETRACK_SUBDIR" -f "$INPUT_CUE_LOG_WAV_BASENAME.cue" -m '<_>_:_"_/_\_|_?_*_' -n %02d -t "%n - %t" -- "$INPUT_CUE_LOG_WAV_BASENAME.wav" ; then
 		echo "Splitting WAV image to singletracks failed!" >&2
 		exit 1
 	fi
@@ -348,8 +349,10 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 		#mv "joined.wav" "$inputdir_wav/01"*.wav
 	else
 		echo "Hidden track one audio not found."
+		local hidden_track_excluded_message=""
 	fi
 	
+	local do_exit="0"
 	echo "Total tracks$hidden_track_excluded_message: $totaltracks"
 	for filename in "${wav_singletracks[@]}"; do
 		local filename_without_path=`basename "$filename"`
