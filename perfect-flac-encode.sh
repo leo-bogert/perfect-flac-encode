@@ -365,13 +365,11 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 		
 		if [ "${expected_checksums[2]}" != "" ] ; then
 			local accuraterip_version="2"
+		elif [ "${expected_checksums[1]}" != "" ] ; then
+			local accuraterip_version="1"
 		else
-			if [ "${expected_checksums[1]}" != "" ] ; then
-				local accuraterip_version="1"
-			else
-				echo "AccurateRip checksum not found in LOG!" >&2
-				exit 1
-			fi
+			echo "AccurateRip checksum not found in LOG!" >&2
+			exit 1
 		fi
 		
 		local expected_checksum="${expected_checksums[$accuraterip_version]^^}" # ^^ = convert to uppercase
