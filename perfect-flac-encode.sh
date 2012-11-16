@@ -698,7 +698,7 @@ test_checksums_of_decoded_flac_singletracks_or_die() {
 # parameters:
 # $1 = target subdir
 move_output_to_target_dir_or_die() {
-	echo "Moving output to output directory..."
+	echo "Moving FLACs to output directory..."
 	
 	local inputdir="$INPUT_DIR_ABSOLUTE/$FLAC_SINGLETRACK_SUBDIR"
 	local outputdir="$INPUT_DIR_ABSOLUTE/$1"
