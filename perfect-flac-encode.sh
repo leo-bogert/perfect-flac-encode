@@ -115,6 +115,24 @@ delete_temp_dirs() {
 	done
 }
 
+create_directories_or_die() {
+	local output_dir_and_temp_dirs=( "${TEMP_DIRS_TO_DELETE[@]}" "$OUTPUT_DIR_ABSOLUTE" )
+	
+	echo "Creating temp and output directories..."
+	set_working_directory_or_die	# We set the working directory so we can use absolute and relative dirs in the input array
+	for dir in "${output_dir_and_temp_dirs[@]}" ; do
+		if [ -d "$dir" ]; then
+			echo "Temp dir exists already: $dir" >&2
+			exit 1
+		fi
+		
+		if ! mkdir -p "$dir" ; then
+			echo "Making temp directory \"$dir\" in input directory failed!" >&2
+			exit 1
+		fi
+	done
+}
+
 check_whether_input_is_accurately_ripped_or_die() {
 	echo "Checking EAC LOG for whether AccurateRip reports a perfect rip..."
 	
@@ -247,12 +265,6 @@ split_wav_image_to_singletracks_or_die() {
 	echo "Splitting WAV image to singletrack WAVs..."
 	
 	local wav_singletracks_dir_absolute="$INPUT_DIR_ABSOLUTE/$WAV_SINGLETRACK_SUBDIR"
-
-	# The output dir must be a subdirectory of the input dir for shntool "-d" to work
-	if ! mkdir -p "$wav_singletracks_dir_absolute" ; then
-		echo "Making $WAV_SINGLETRACK_SUBDIR subdirectory failed!" >&2
-		exit 1
-	fi
 	
 	# shntool syntax:
 	# -P type Specify progress indicator type. dot shows the progress of each operation by displaying a '.' after each 10% step toward completion.
@@ -401,13 +413,7 @@ generate_checksum_of_original_wav_image_or_die() {
 	echo "Generating checksum of original WAV image ..."
 
 	local original_image_filename="$INPUT_CUE_LOG_WAV_BASENAME.wav"
-	local outputdir="$INPUT_DIR_ABSOLUTE/$WAV_JOINTEST_SUBDIR"
-	local output_sha256="$outputdir/$INPUT_CUE_LOG_WAV_BASENAME.sha256" # TODO: make a global variable or pass this through since we also need it in test_checksum_of_rejoined_wav_image_or_die
-	
-	if ! mkdir -p "$outputdir" ; then
-		echo "Making $outputdir subdirectory failed!" >&2
-		exit 1
-	fi
+	local output_sha256="$INPUT_DIR_ABSOLUTE/$WAV_JOINTEST_SUBDIR/$INPUT_CUE_LOG_WAV_BASENAME.sha256" # TODO: make a global variable or pass this through since we also need it in test_checksum_of_rejoined_wav_image_or_die
 	
 	set_working_directory_or_die # We need to pass a relative filename to sha256 so the output does not contain the absolute path
 	if ! sha256sum --binary "$original_image_filename" > "$output_sha256" ; then
@@ -425,15 +431,7 @@ test_checksum_of_rejoined_wav_image_or_die() {
 	local outputdir_relative="$WAV_JOINTEST_SUBDIR"
 	local original_image_checksum_file="$INPUT_DIR_ABSOLUTE/$outputdir_relative/$1.sha256"
 	local joined_image="$INPUT_DIR_ABSOLUTE/$outputdir_relative/joined.wav"
-	
-	set_working_directory_or_die
-	
-	# This is not needed: It is generated in generate_checksum_of_original_wav_image_or_die already
-	#if ! mkdir -p "$outputdir_relative" ; then
-	#	echo "Making $outputdir_relative subdirectory failed!" >&2
-	#	exit 1
-	#fi
-	
+
 	# shntool syntax:
 	# -D = print debugging information
 	# -P type Specify progress indicator type. dot shows the progress of each operation by displaying a '.' after each 10% step toward completion.
@@ -443,6 +441,7 @@ test_checksum_of_rejoined_wav_image_or_die() {
 	# Ideas behind parameter decisions:
 	# - We specify a different progress indicator so redirecting the script output to a log file will not result in a bloated file"
 	# - We join into a subdirectory because we don't need the joined file afterwards and we can just delete the subdir to get rid of it
+	set_working_directory_or_die
 	if ! shntool join -P dot -d "$outputdir_relative" -- "$inputdir_relative"/*.wav ; then 
 		echo "Joining WAV failed!" >&2
 		exit 1
@@ -474,11 +473,6 @@ encode_wav_singletracks_to_flac_or_die() {
 	
 	local inputdir="$INPUT_DIR_ABSOLUTE/$WAV_SINGLETRACK_SUBDIR"
 	local outputdir="$INPUT_DIR_ABSOLUTE/$FLAC_SINGLETRACK_SUBDIR"
-	
-	if ! mkdir -p "$outputdir" ; then
-		echo "Making $outputdir subdirectory failed!" >&2
-		exit 1
-	fi
 	
 	# used flac parameters:
 	# --silent	Silent mode (do not write runtime encode/decode statistics to stderr)
@@ -657,11 +651,6 @@ test_checksums_of_decoded_flac_singletracks_or_die() {
 	local inputdir_flac="$INPUT_DIR_ABSOLUTE/$FLAC_SINGLETRACK_SUBDIR"
 	local outputdir="$INPUT_DIR_ABSOLUTE/$DECODED_WAV_SINGLETRACK_SUBDIR"
 	
-	if ! mkdir -p "$outputdir" ; then
-		echo "Making $outputdir subdirectory failed!" >&2
-		exit 1
-	fi
-	
 	set_working_directory_or_die "$inputdir_flac"	# We need input filenames to be relative for --output-prefix to work
 	if ! flac --decode --silent --warnings-as-errors --output-prefix="$outputdir/"  *.flac ; then
 		echo "Decoding FLAC singletracks failed!" >&2
@@ -695,20 +684,12 @@ test_checksums_of_decoded_flac_singletracks_or_die() {
 	set_working_directory_or_die
 }
 
-# parameters:
-# $1 = target subdir
 move_output_to_target_dir_or_die() {
 	echo "Moving FLACs to output directory..."
 	
 	local inputdir="$INPUT_DIR_ABSOLUTE/$FLAC_SINGLETRACK_SUBDIR"
-	local outputdir="$INPUT_DIR_ABSOLUTE/$1"
 	
-	if ! mkdir -p "$outputdir" ; then
-		echo "Making $outputdir subdirectory failed!" >&2
-		exit 1
-	fi
-	
-	if ! mv --no-clobber "$inputdir"/*.flac "$outputdir" ; then
+	if ! mv --no-clobber "$inputdir"/*.flac "$OUTPUT_DIR_ABSOLUTE" ; then
 		echo "Moving FLAC files to output dir failed!" >&2
 		exit 1
 	fi
@@ -819,6 +800,7 @@ main() {
 	OUTPUT_DIR_ABSOLUTE="$INPUT_DIR_ABSOLUTE/$output_dir_relative"	# TODO: this should be a commandline parameters # TODO: use this global actually in the functions.
 	
 	ask_to_delete_existing_output_and_temp_dirs_or_die "$output_dir_relative"
+	create_directories_or_die
 	check_whether_input_is_accurately_ripped_or_die
 	check_shntool_wav_problem_diagnosis_or_die
 	test_whether_the_two_eac_crcs_match
@@ -831,7 +813,7 @@ main() {
 	pretag_singletrack_flacs_from_cue "$INPUT_CUE_LOG_WAV_BASENAME"
 	test_flac_singletracks_or_die
 	test_checksums_of_decoded_flac_singletracks_or_die
-	move_output_to_target_dir_or_die "$output_dir_relative"
+	move_output_to_target_dir_or_die
 	copy_cue_log_sha256_to_target_dir_or_die "$INPUT_CUE_LOG_WAV_BASENAME" "$output_dir_relative"
 	write_readme_txt_to_target_dir_or_die "$output_dir_relative" "$INPUT_CUE_LOG_WAV_BASENAME"
 	# TODO: Check whether we can safely append the perfect-flac encode log to the EAC log and do so if we can. EAC adds a checksum to the end of its log, We should check whether the checksum validation tools allow us to add content to the file. If they don't, maybe we should just add another checksum to the end. If we do NOT implement merging of the log files, write our log to a separate file and upate the code which produces the README to reflect that change.
