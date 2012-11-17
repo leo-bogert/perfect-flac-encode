@@ -520,14 +520,12 @@ cue_get_catalog() {
 # It's license is GPL so this function is GPL as well. 
 #
 # parameters:
-# $1 = full path of CUE file
-# $2 = full path of FLAC file
-# $3 = track number of FLAC file
+# $1 = full path of FLAC file
+# $2 = track number of FLAC file
 pretag_singletrack_flac_from_cue_or_die()
 {
-	local cue_file="$1"
-	local flac_file="$2"
-	local trackno="$3"
+	local flac_file="$1"
+	local trackno="$2"
 
 	# REASONS OF THE DECISIONS OF MAPPING CUE TAGS TO FLAC TAGS:
 	#
@@ -570,7 +568,7 @@ pretag_singletrack_flac_from_cue_or_die()
 	
 	local -A fields	# Attention: We have to explicitely declare the associative array or iteration over the keys will not work!
 	# disc tags
-	fields["CATALOGNUMBER"]=`cue_get_catalog "$cue_file"`						# album UPC/EAN. Debbuging showed that cueprint's %U is broken so we use our function.
+	fields["CATALOGNUMBER"]=`cue_get_catalog "$INPUT_CUE_ABSOLUTE"`						# album UPC/EAN. Debbuging showed that cueprint's %U is broken so we use our function.
 	fields["ENCODEDBY"]="perfect-flac-encode $VERSION with `flac --version`"	# own version :)
 	fields["TRACKTOTAL"]='%N'													# number of tracks
 	fields["TOTALTRACKS"]="${fields['TRACKTOTAL']}"								# musicbrainz lists both TRACKTOAL and TOTALTRACKS and for track count.
@@ -594,7 +592,7 @@ pretag_singletrack_flac_from_cue_or_die()
 		fi
 		
 		local conversion="${fields[$field]}"
-		local value=`cueprint -n $trackno -t "$conversion\n" "$cue_file"`
+		local value=`cueprint -n $trackno -t "$conversion\n" "$INPUT_CUE_ABSOLUTE"`
 		
 		if [ -z "$value" ] ; then
 			continue	# Skip empty field
@@ -609,14 +607,10 @@ pretag_singletrack_flac_from_cue_or_die()
 
 # This function was inspired by the cuetag script of cuetools, taken from https://github.com/svend/cuetools
 # It's license is GPL so this function is GPL as well. 
-#
-# parameters:
-# $1 = filename of cue/wav/log
 pretag_singletrack_flacs_from_cue_or_die()
 {
 	echo "Pre-tagging the singletrack FLACs with information from the CUE which is physically stored on the CD. Please use MusicBrainz Picard for the rest of the tags..."
 	
-	local cue_file="$INPUT_DIR_ABSOLUTE/$1.cue"
 	local inputdir_flac="$INPUT_DIR_ABSOLUTE/${TEMP_DIRS[FLAC_SINGLETRACK_SUBDIR]}"
 	local flac_files=( "$inputdir_flac/"*.flac )
 	
@@ -624,7 +618,7 @@ pretag_singletrack_flacs_from_cue_or_die()
 		local filename_without_path=`basename "$file"`
 		local tracknumber=`get_tracknumber_of_singletrack "$filename_without_path"`
 
-		if ! pretag_singletrack_flac_from_cue_or_die "$cue_file" "$file" "$tracknumber" ; then
+		if ! pretag_singletrack_flac_from_cue_or_die "$file" "$tracknumber" ; then
 			echo "Tagging $file failed!" >&2
 			exit 1
 		fi
@@ -811,7 +805,7 @@ main() {
 	generate_checksum_of_original_wav_image_or_die
 	test_checksum_of_rejoined_wav_image_or_die "$INPUT_CUE_LOG_WAV_BASENAME"
 	encode_wav_singletracks_to_flac_or_die
-	pretag_singletrack_flacs_from_cue_or_die "$INPUT_CUE_LOG_WAV_BASENAME"
+	pretag_singletrack_flacs_from_cue_or_die
 	test_flac_singletracks_or_die
 	test_checksums_of_decoded_flac_singletracks_or_die
 	move_output_to_target_dir_or_die
