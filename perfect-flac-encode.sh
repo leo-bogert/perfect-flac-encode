@@ -644,7 +644,7 @@ test_checksums_of_decoded_flac_singletracks_or_die() {
 	local outputdir="$INPUT_DIR_ABSOLUTE/${TEMP_DIRS[DECODED_WAV_SINGLETRACK_SUBDIR]}"
 	
 	set_working_directory_or_die "$inputdir_flac"	# We need input filenames to be relative for --output-prefix to work
-	if ! flac --decode --silent --warnings-as-errors --output-prefix="$outputdir/"  *.flac ; then
+	if ! flac --decode --silent --warnings-as-errors --output-prefix="$outputdir/" *.flac ; then
 		echo "Decoding FLAC singletracks failed!" >&2
 		exit 1
 	fi
