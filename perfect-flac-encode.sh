@@ -687,18 +687,14 @@ move_output_to_target_dir_or_die() {
 	fi
 }
 
-# parameters:
-# $1 = filename of CUE/LOG/SHA256
-# $2 = target subdirectory
 copy_cue_log_sha256_to_target_dir_or_die() {
 	echo "Copying CUE, LOG and SHA256 to output directory..."
 	
-	local input_files=( "$INPUT_DIR_ABSOLUTE/$1.cue" "$INPUT_DIR_ABSOLUTE/$1.log" "${TEMP_DIRS[WAV_JOINTEST_SUBDIR]}/$1.sha256" )
-	local outputdir="$INPUT_DIR_ABSOLUTE/$2"
+	local input_files=( "$INPUT_CUE_ABSOLUTE" "$INPUT_LOG_ABSOLUTE" "$INPUT_DIR_ABSOLUTE/${TEMP_DIRS[WAV_JOINTEST_SUBDIR]}/$INPUT_CUE_LOG_WAV_BASENAME.sha256" )
 	
-	# TODO: maybe use different filenames for cue/log? also update the REAMDE if we do so
+	# TODO: maybe use different filenames for cue/log? also update the README if we do so
 	
-	if ! cp --archive --no-clobber "${input_files[@]}" "$outputdir" ; then
+	if ! cp --archive --no-clobber "${input_files[@]}" "$OUTPUT_DIR_ABSOLUTE" ; then
 		"Copying CUE, LOG and SHA256 to output directory failed!" >&2
 		exit 1;
 	fi
@@ -806,7 +802,7 @@ main() {
 	test_flac_singletracks_or_die
 	test_checksums_of_decoded_flac_singletracks_or_die
 	move_output_to_target_dir_or_die
-	copy_cue_log_sha256_to_target_dir_or_die "$INPUT_CUE_LOG_WAV_BASENAME" "$output_dir_relative"
+	copy_cue_log_sha256_to_target_dir_or_die
 	write_readme_txt_to_target_dir_or_die "$output_dir_relative" "$INPUT_CUE_LOG_WAV_BASENAME"
 	# TODO: Check whether we can safely append the perfect-flac encode log to the EAC log and do so if we can. EAC adds a checksum to the end of its log, We should check whether the checksum validation tools allow us to add content to the file. If they don't, maybe we should just add another checksum to the end. If we do NOT implement merging of the log files, write our log to a separate file and upate the code which produces the README to reflect that change.
 	delete_temp_dirs
