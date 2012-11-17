@@ -628,15 +628,12 @@ pretag_singletrack_flacs_from_cue_or_die()
 test_flac_singletracks_or_die() {
 	echo "Running flac --test on singletrack FLACs..."
 	local inputdir_flac="$INPUT_DIR_ABSOLUTE/${TEMP_DIRS[FLAC_SINGLETRACK_SUBDIR]}"
-	
-	set_working_directory_or_die "$inputdir_flac"	# We need input filenames to be relative for --output-prefix to work
-	local flac_files=( *.flac )
+	local flac_files=( "$inputdir_flac"/*.flac )
 	
 	if ! flac --test --silent --warnings-as-errors "${flac_files[@]}"; then
 		echo "Testing FLAC singletracks failed!" >&2
 		exit 1
 	fi
-	set_working_directory_or_die
 }
 
 test_checksums_of_decoded_flac_singletracks_or_die() {
