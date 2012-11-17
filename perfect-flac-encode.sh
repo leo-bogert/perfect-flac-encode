@@ -612,7 +612,7 @@ pretag_singletrack_flac_from_cue()
 #
 # parameters:
 # $1 = filename of cue/wav/log
-pretag_singletrack_flacs_from_cue()
+pretag_singletrack_flacs_from_cue_or_die()
 {
 	echo "Pre-tagging the singletrack FLACs with information from the CUE which is physically stored on the CD. Please use MusicBrainz Picard for the rest of the tags..."
 	
@@ -811,7 +811,7 @@ main() {
 	generate_checksum_of_original_wav_image_or_die
 	test_checksum_of_rejoined_wav_image_or_die "$INPUT_CUE_LOG_WAV_BASENAME"
 	encode_wav_singletracks_to_flac_or_die
-	pretag_singletrack_flacs_from_cue "$INPUT_CUE_LOG_WAV_BASENAME"
+	pretag_singletrack_flacs_from_cue_or_die "$INPUT_CUE_LOG_WAV_BASENAME"
 	test_flac_singletracks_or_die
 	test_checksums_of_decoded_flac_singletracks_or_die
 	move_output_to_target_dir_or_die
