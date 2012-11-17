@@ -428,8 +428,8 @@ test_checksum_of_rejoined_wav_image_or_die() {
 	
 	local inputdir_relative="${TEMP_DIRS[WAV_SINGLETRACK_SUBDIR]}"
 	local outputdir_relative="${TEMP_DIRS[WAV_JOINTEST_SUBDIR]}"
-	local original_image_checksum_file="$INPUT_DIR_ABSOLUTE/$outputdir_relative/$1.sha256"
-	local joined_image="$INPUT_DIR_ABSOLUTE/$outputdir_relative/joined.wav"
+	local original_image_checksum_file_absolute="$INPUT_DIR_ABSOLUTE/$outputdir_relative/$1.sha256"
+	local joined_image_absolute="$INPUT_DIR_ABSOLUTE/$outputdir_relative/joined.wav"
 
 	# shntool syntax:
 	# -D = print debugging information
@@ -448,13 +448,13 @@ test_checksum_of_rejoined_wav_image_or_die() {
 	
 	if [ ${UNIT_TESTS["TEST_DAMAGE_TO_REJOINED_WAV_IMAGE"]} -eq 1 ]; then 
 		echo "Deliberately damaging the joined image to test the checksum verification ..."
-		echo "FAIL" >> "$joined_image"
+		echo "FAIL" >> "$joined_image_absolute"
 	fi
 	
-	local original_sum=( `cat "$original_image_checksum_file"` )	# it will also print the filename so we split the output by spaces to an array and the first slot will be the actual checksum
+	local original_sum=( `cat "$original_image_checksum_file_absolute"` )	# it will also print the filename so we split the output by spaces to an array and the first slot will be the actual checksum
 	
 	echo "Computing checksum of joined WAV image..."
-	local joined_sum=( `sha256sum --binary "$joined_image"` ) # it will also print the filename so we split the output by spaces to an array and the first slot will be the actual checksum
+	local joined_sum=( `sha256sum --binary "$joined_image_absolute"` ) # it will also print the filename so we split the output by spaces to an array and the first slot will be the actual checksum
 	
 	echo -e "Original checksum: \t\t${original_sum[0]}"
 	echo -e "Checksum of joined image:\t${joined_sum[0]}"
