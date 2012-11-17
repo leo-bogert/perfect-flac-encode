@@ -523,7 +523,7 @@ cue_get_catalog() {
 # $1 = full path of CUE file
 # $2 = full path of FLAC file
 # $3 = track number of FLAC file
-pretag_singletrack_flac_from_cue()
+pretag_singletrack_flac_from_cue_or_die()
 {
 	local cue_file="$1"
 	local flac_file="$2"
@@ -624,7 +624,7 @@ pretag_singletrack_flacs_from_cue_or_die()
 		local filename_without_path=`basename "$file"`
 		local tracknumber=`get_tracknumber_of_singletrack "$filename_without_path"`
 
-		if ! pretag_singletrack_flac_from_cue "$cue_file" "$file" "$tracknumber" ; then
+		if ! pretag_singletrack_flac_from_cue_or_die "$cue_file" "$file" "$tracknumber" ; then
 			echo "Tagging $file failed!" >&2
 			exit 1
 		fi
