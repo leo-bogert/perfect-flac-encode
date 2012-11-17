@@ -459,6 +459,8 @@ test_checksum_of_rejoined_wav_image_or_die() {
 	echo -e "Original checksum: \t\t${original_sum[0]}"
 	echo -e "Checksum of joined image:\t${joined_sum[0]}"
 	
+	# TODO: make sure the checksum strings are not empty
+	
 	if [ "${original_sum[0]}" != "${joined_sum[0]}" ]; then
 		echo "Checksum of joined image does not match original checksum!"
 		exit 1
