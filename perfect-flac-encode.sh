@@ -421,14 +421,12 @@ generate_checksum_of_original_wav_image_or_die() {
 	fi
 }
 
-# parameters:
-# $1 = filename of cue/wav/log
 test_checksum_of_rejoined_wav_image_or_die() {
 	echo "Joining singletrack WAV temporarily for comparing their checksum with the original image's checksum..."	
 	
 	local inputdir_relative="${TEMP_DIRS[WAV_SINGLETRACK_SUBDIR]}"
 	local outputdir_relative="${TEMP_DIRS[WAV_JOINTEST_SUBDIR]}"
-	local original_image_checksum_file_absolute="$INPUT_DIR_ABSOLUTE/$outputdir_relative/$1.sha256"
+	local original_image_checksum_file_absolute="$INPUT_DIR_ABSOLUTE/$outputdir_relative/$INPUT_CUE_LOG_WAV_BASENAME.sha256"
 	local joined_image_absolute="$INPUT_DIR_ABSOLUTE/$outputdir_relative/joined.wav"
 
 	# shntool syntax:
@@ -791,7 +789,7 @@ main() {
 	split_wav_image_to_singletracks_or_die
 	test_accuraterip_checksums_of_split_wav_singletracks_or_die
 	generate_checksum_of_original_wav_image_or_die
-	test_checksum_of_rejoined_wav_image_or_die "$INPUT_CUE_LOG_WAV_BASENAME"
+	test_checksum_of_rejoined_wav_image_or_die
 	encode_wav_singletracks_to_flac_or_die
 	pretag_singletrack_flacs_from_cue_or_die
 	test_flac_singletracks_or_die
