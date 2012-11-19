@@ -701,9 +701,7 @@ copy_cue_log_sha256_to_target_dir_or_die() {
 }
 
 # Prints the README to stdout.
-# parameters: $1 : release name
 print_readme_or_die() {
-	local release_name="$1"
 	local e="echo"
 	
 	$e "About the quality of this CD copy:" &&
@@ -722,13 +720,13 @@ print_readme_or_die() {
 	$e "" &&
 	$e "Explanation of the purpose of the files you got:" &&
 	$e "------------------------------------------------" &&
-	$e "\"$release_name.cue\"" &&
+	$e "\"$INPUT_CUE_LOG_WAV_BASENAME.cue\"" &&
 	$e "This file contains the layout of the original disc. It will be the file which you load with your CD burning software if you want to burn a backup of the disc. Please remember: Before burning it you have to decompress the audio with perfect-flac-decode. If you don't do this, burning the 'cue' will not work." &&
 	$e "" &&
-	$e "\"$release_name.sha56\"" &&
+	$e "\"$INPUT_CUE_LOG_WAV_BASENAME.sha56\"" &&
 	$e "This contains a so-called checksum of the original, uncompressed disc image. If you want to burn the disc to a CD, you will have to decompress the FLAC files to a WAV image with perfect-flac-decode. The checksum file allows perfect-flac-decode to validate that the decompression did not produce any errors." &&
 	$e "" &&
-	$e "\"$release_name.log\"" &&
+	$e "\"$INPUT_CUE_LOG_WAV_BASENAME.log\"" &&
 	$e "This file is a 'proof of quality'. It contains the output of Exact Audio Copy and perfect-flac-encode as well as their versions. It allows you to see the conditions of the copying. You can check it to see that there were no errors. Further, if someone finds bugs in the future in certain versions of the involved software you will be able to check whether your audio files are affected." &&
 	$e "" &&
 	$e "" &&
@@ -740,18 +738,15 @@ print_readme_or_die() {
 	$e "Exact Audio Copy: http://www.exactaudiocopy.de/"
 }
 
-# parameters:
-# $1 = target subdirectory
-# $2 = release name
 write_readme_txt_to_target_dir_or_die() {
 	echo "Generating README.txt ..."
 
 	# We wrap at 80 characters so the full file will fit into a standard Windows Notepad window. TODO: Find out the actual line width of default Notepad. I don't have Windows at hand right now
 	# We use Windows linebreaks since they will work on any plattform. Unix linebreaks would not wrap the line with many Windows editors.
-	if ! print_readme_or_die "$2" |
+	if ! print_readme_or_die |
 		fold --spaces --width=80 | 	
 		( while read line; do echo -n -e "$line\r\n"; done ) \
-		> "$INPUT_DIR_ABSOLUTE/$1/README.txt"	
+		> "$OUTPUT_DIR_ABSOLUTE/README.txt"	
 	then
 		echo "Generating README.txt failed!"
 		exit 1
@@ -803,7 +798,7 @@ main() {
 	test_checksums_of_decoded_flac_singletracks_or_die
 	move_output_to_target_dir_or_die
 	copy_cue_log_sha256_to_target_dir_or_die
-	write_readme_txt_to_target_dir_or_die "$output_dir_relative" "$INPUT_CUE_LOG_WAV_BASENAME"
+	write_readme_txt_to_target_dir_or_die
 	# TODO: Check whether we can safely append the perfect-flac encode log to the EAC log and do so if we can. EAC adds a checksum to the end of its log, We should check whether the checksum validation tools allow us to add content to the file. If they don't, maybe we should just add another checksum to the end. If we do NOT implement merging of the log files, write our log to a separate file and upate the code which produces the README to reflect that change.
 	delete_temp_dirs
 	die_if_unit_tests_failed
