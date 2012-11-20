@@ -500,7 +500,7 @@ encode_wav_singletracks_to_flac_or_die() {
 	local flac_files=( "$outputdir/"*.flac )
 	if [ ${UNIT_TESTS["TEST_DAMAGE_TO_FLAC_SINGLETRACKS"]} -eq 1 ]; then 
 		echo "Deliberately damaging a FLAC singletrack to test flac --test verification..."
-		echo "FAIL" > "${flac_files[0]}" # TODO: We overwrite the whole file because FLAC won't detect trailing garbage. File a bug report
+		truncate --size=-1 "${flac_files[0]}" # We truncate the file instead of appending garbage because FLAC won't detect trailing garbage. TODO: File a bug report
 	fi
 }
 
