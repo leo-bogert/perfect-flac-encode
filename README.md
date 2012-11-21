@@ -54,28 +54,30 @@ To obtain its dependancies, do the following:
 # Syntax:
 EAC commandline should be
 
-    perfect-flac-encode.sh "(path where the wav/log/cue are)" "%albumartist% - %albumtitle%"
+    perfect-flac-encode.sh "(base filename of cue/log/wav)" "(path where the cue/log/wav are)" "(output directory)" 
 
-The WAV / CUE / LOG files must have the name "%albumartist% - %albumtitle%.(wav/cue/log)".
-The output of the script will be in a subdirectory whose name is equal to "%albumartist% - %albumtitle%".
+Parameter 1 is called the "release name". It must be the basename of the CUE/LOG/WAV - this is the filename without file extension.
+
+Parameter 2 is called the "input directory". It is the directory where the input CUE/LOG/WAV are.
+
+Parameter 3 is called the "output directory". A subdirectory with the release name as directory name will be created within it. All output will be put into this subdirectory.
 
 # Return value:
 The script will exit with exit code 0 upon success and exit code > 0 upon failure.
 
 # Output:
-As you know from the syntax, parameter 1 is the "working directory".
-Parameter 2 is the filename of wav/cue/log and called "album name".
+Please make sure you know the parameters and their names from the Syntax section before reading on.
 
-Upon success, the script will create a subdirectory in the working directory which is named with the album name - the output directory.
-The output directory will contain:
+Upon success, the script will create a subdirectory in the output directory which is named with the release name.
+This directory will contain:
 
-* Per-track FLACs called "(tracknumber) - (track title).flac"
-* A copy of the origianl "(album name).log" and "(album name).cue" (with timestamps, permissions, etc. preserved)
-* A file "(album name).sha256" with the checksum of the original input WAV image (see the "Description" section for the purpose of this)
+* Per-track FLACs called "(tracknumber) - (track title).flac". The tracknumber and title are taken from the CUE. 
+* A copy of the origian "(release name).log" and "(release name).cue" (with timestamps, permissions, etc. preserved)
+* A file "(release name).sha256" with the checksum of the original input WAV image (see the "Description" section for the purpose of this)
 * A "README.txt". It tries to explain in layman's terms how the rip was created, which software was used, that the rip should be high quality, which files are in the directory, and how to restore an identical CD.
 
 Upon success, all temporary directories will be deleted, so the output directory will be the only output.
-Upon failure, neither the temporary files nor the output is deleted. If you run the script again, it will detect the existence of temp/output directories and ask you whether it should delete them.
+Upon failure, the output subdirectory and the temporary directories within will NOT be deleted. If you run the script again, it will detect the existence of the output subdirectory and ask you whether it should delete it.
 
 # Temporary Output (deleted upon success):
     Stage1_WAV_Singletracks_From_WAV_Image

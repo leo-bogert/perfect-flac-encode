@@ -27,7 +27,7 @@
 ################################################################################
 # Configuration:
 ################################################################################
-# Those directories will be created in the input directory
+# Those directories will be created in the output directory
 # They MUST NOT contain further subdirectories because the shntool syntax does not allow it the way we use it
 declare -A TEMP_DIRS # Attention: We have to explicitely declare the associative array or iteration over the keys will not work!
 TEMP_DIRS[WAV_SINGLETRACK_SUBDIR]="Stage1_WAV_Singletracks_From_WAV_Image"
@@ -62,13 +62,20 @@ INPUT_CUE_LOG_WAV_BASENAME=""	# Filename of input WAV/LOG/CUE without extension.
 INPUT_CUE_ABSOLUTE=""	# Full path of input CUE	# TODO: Use everywhere
 INPUT_LOG_ABSOLUTE=""	# Full path of input WAV	# TODO: Use everywhere
 INPUT_WAV_ABSOLUTE=""	# Full path of input LOG	# TODO: Use everywhere
+
+# Absolute paths to the temp directories. For documentation see above in the "Configuration" section.
+declare -A TEMP_DIRS_ABSOLUTE  # Attention: We have to explicitely declare the associative array or iteration over the keys will not work!
+TEMP_DIRS_ABSOLUTE[WAV_SINGLETRACK_SUBDIR]=""
+TEMP_DIRS_ABSOLUTE[WAV_JOINTEST_SUBDIR]=""
+TEMP_DIRS_ABSOLUTE[FLAC_SINGLETRACK_SUBDIR]=""
+TEMP_DIRS_ABSOLUTE[DECODED_WAV_SINGLETRACK_SUBDIR]=""
 ################################################################################
 # End of global variables
 ################################################################################
 
 
 # parameters: $1 = target working directory, absolute or relative to current working dir. if not specified, working directory is set to $INPUT_DIR_ABSOLUTE
-set_working_directory_or_die() {
+set_working_directory_or_die() {	# FIXME: review all uses of the function and decide whether setting the WD to input dir makes sense
 	#echo "Changing working directory to $dir..."
 	if [ $# -eq 0 ] ; then
 		local dir="$INPUT_DIR_ABSOLUTE"
@@ -82,51 +89,49 @@ set_working_directory_or_die() {
 	fi
 }
 
-# parameters:
-# $1 = path of output dir relative to $INPUT_DIR_ABSOLUTE
 ask_to_delete_existing_output_and_temp_dirs_or_die() {
-	local output_dir_and_temp_dirs=( "${TEMP_DIRS[@]}" "$1" )
-	local confirmed=n
+	# We only have to delete the output directory since the temp dirs will be subdirectories
+	if [ ! -d "$OUTPUT_DIR_ABSOLUTE" ]; then
+		return 0
+	fi
 	
-	for existingdir in "${output_dir_and_temp_dirs[@]}" ; do
-		if [ -d "$INPUT_DIR_ABSOLUTE/$existingdir" ]; then
-			[ "$confirmed" == "y" ] || read -p "The output and/or temp directories exist already. Delete them and ALL contained files? (y/n)" confirmed
-		
-			if [ "$confirmed" == "y" ]; then
-				rm --preserve-root -rf "$INPUT_DIR_ABSOLUTE/$existingdir"
-			else
-				echo "Quitting because you want to keep the existing output." >&2
-				exit 1
-			fi
-		fi
-	done
+	local confirmed=n
+	read -p "The output directory exists already. Delete it and ALL contained files? (y/n)" confirmed
+	
+	if [ "$confirmed" == "y" ]; then
+		rm --preserve-root -rf "$OUTPUT_DIR_ABSOLUTE"
+	else
+		echo "Quitting because you want to keep the existing output." >&2
+		exit 1
+	fi
 }
 
 delete_temp_dirs() {
 	echo "Deleting temp directories..."
-	for existingdir in "${TEMP_DIRS[@]}" ; do
-		if [ -d "$INPUT_DIR_ABSOLUTE/$existingdir" ]; then
-			if ! rm --preserve-root -rf "$INPUT_DIR_ABSOLUTE/$existingdir" ; then
-				echo "Deleting the temp files failed!" >&2
-				exit 1
-			fi
+	for tempdir in "${TEMP_DIRS_ABSOLUTE[@]}" ; do
+		if [ ! -d "$tempdir" ]; then
+			continue
 		fi
+		
+		if ! echo rm --preserve-root -rf "$tempdir" ; then	# FIXME: remove echo after it is tested
+			echo "Deleting the temp files failed!" >&2
+			exit 1
+		fi	
 	done
 }
 
 create_directories_or_die() {
-	local output_dir_and_temp_dirs=( "${TEMP_DIRS[@]}" "$OUTPUT_DIR_ABSOLUTE" )
+	local output_dir_and_temp_dirs=( "$OUTPUT_DIR_ABSOLUTE" "${TEMP_DIRS_ABSOLUTE[@]}" )
 	
-	echo "Creating temp and output directories..."
-	set_working_directory_or_die	# We set the working directory so we can use absolute and relative dirs in the input array
+	echo "Creating output and temp directories..."
 	for dir in "${output_dir_and_temp_dirs[@]}" ; do
 		if [ -d "$dir" ]; then
-			echo "Temp dir exists already: $dir" >&2
+			echo "Dir exists already: $dir" >&2
 			exit 1
 		fi
 		
 		if ! mkdir -p "$dir" ; then
-			echo "Making temp directory \"$dir\" in input directory failed!" >&2
+			echo "Making directory \"$dir\" in input directory failed!" >&2
 			exit 1
 		fi
 	done
@@ -763,25 +768,36 @@ die_if_unit_tests_failed() {
 main() {
 	echo -e "\n\nperfect-flac-encode.sh Version $VERSION running ... "
 	echo -e "BETA VERSION - NOT for productive use!\n\n"
-
-	# parameters
-	INPUT_DIR_ABSOLUTE="$1"
-	INPUT_CUE_LOG_WAV_BASENAME="$2"	# TODO: don't pass this around to functions, make them use it directly since it is global.
+	
+	# obtain parameters
+	local original_working_dir="$(pwd)"	# store the working directory in case the parameters are relative paths
+	local original_cue_log_wav_basename="$1"
+	local original_input_dir="$2"
+	local original_output_dir="$3"
+	
+	echo "Album: $original_cue_log_wav_basename"
+	echo "Input directory: $original_input_dir"
+	echo "Output directory: $original_output_dir"
+	
+	
+	# initialize globals
+	INPUT_CUE_LOG_WAV_BASENAME="$original_cue_log_wav_basename"
+		# make the directories absolute if they are not
+	[[ "$original_input_dir" = /* ]] && INPUT_DIR_ABSOLUTE="$original_input_dir" || INPUT_DIR_ABSOLUTE="$original_working_dir/$original_input_dir"
+	[[ "$original_output_dir" = /* ]] && OUTPUT_DIR_ABSOLUTE="$original_output_dir/$INPUT_CUE_LOG_WAV_BASENAME" || OUTPUT_DIR_ABSOLUTE="$original_working_dir/$original_output_dir/$INPUT_CUE_LOG_WAV_BASENAME"
 	
 	INPUT_CUE_ABSOLUTE="$INPUT_DIR_ABSOLUTE/$INPUT_CUE_LOG_WAV_BASENAME.cue"
 	INPUT_LOG_ABSOLUTE="$INPUT_DIR_ABSOLUTE/$INPUT_CUE_LOG_WAV_BASENAME.log"
 	INPUT_WAV_ABSOLUTE="$INPUT_DIR_ABSOLUTE/$INPUT_CUE_LOG_WAV_BASENAME.wav"
 	
-	echo "Album: $INPUT_CUE_LOG_WAV_BASENAME"
+	for tempdir in "${!TEMP_DIRS[@]}" ; do
+		TEMP_DIRS_ABSOLUTE[$tempdir]="$OUTPUT_DIR_ABSOLUTE/${TEMP_DIRS[$tempdir]}"
+	done
 	
-	local output_dir_relative="$INPUT_CUE_LOG_WAV_BASENAME"	# TODO: get rid of this one. make the functions not reuqire passing around of a relative path and use the global OUTPUT_DIR_ABSOLUTE
-	
-	# globals
 	set_working_directory_or_die
-	OUTPUT_DIR_ABSOLUTE="$INPUT_DIR_ABSOLUTE/$output_dir_relative"	# TODO: this should be a commandline parameters # TODO: use this global actually in the functions.
-	
-	ask_to_delete_existing_output_and_temp_dirs_or_die "$output_dir_relative"
+	ask_to_delete_existing_output_and_temp_dirs_or_die
 	create_directories_or_die
+	exit 1	# FIXME: apply planned changes of this branch to all following functions
 	check_whether_input_is_accurately_ripped_or_die
 	check_shntool_wav_problem_diagnosis_or_die
 	test_whether_the_two_eac_crcs_match
@@ -801,7 +817,7 @@ main() {
 	delete_temp_dirs
 	die_if_unit_tests_failed
 	
-	echo "SUCCESS. Your FLACs are in directory \"$output_dir_relative\""
+	echo "SUCCESS."
 	exit 0 # SUCCESS
 }
 
