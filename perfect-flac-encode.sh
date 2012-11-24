@@ -243,8 +243,9 @@ test_eac_crc_or_die() {
 			exit 1
 		fi
 		
+		local input_wav_without_extension_absolute=$(basename "$INPUT_WAV_ABSOLUTE" ".wav")
 		# We replace it with a silent WAV so we don't have to damage the original input image
-		if ! shntool gen -l 1:23 -a "$INPUT_DIR_ABSOLUTE/$INPUT_CUE_LOG_WAV_BASENAME"; then 	# .wav must not be in -a
+		if ! shntool gen -l 1:23 -a "$input_wav_without_extension_absolute"; then 	# .wav must not be in -a
 			echo "Generating silent WAV file failed!"
 			exit 1
 		fi
@@ -779,12 +780,12 @@ main() {
 	echo "Input directory: $original_input_dir"
 	echo "Output directory: $original_output_dir"
 	
-	
 	# initialize globals
 	INPUT_CUE_LOG_WAV_BASENAME="$original_cue_log_wav_basename"
-		# make the directories absolute if they are not
+	# make the directories absolute if they are not
 	[[ "$original_input_dir" = /* ]] && INPUT_DIR_ABSOLUTE="$original_input_dir" || INPUT_DIR_ABSOLUTE="$original_working_dir/$original_input_dir"
 	[[ "$original_output_dir" = /* ]] && OUTPUT_DIR_ABSOLUTE="$original_output_dir/$INPUT_CUE_LOG_WAV_BASENAME" || OUTPUT_DIR_ABSOLUTE="$original_working_dir/$original_output_dir/$INPUT_CUE_LOG_WAV_BASENAME"
+	# TODO: strip trailing slash
 	
 	INPUT_CUE_ABSOLUTE="$INPUT_DIR_ABSOLUTE/$INPUT_CUE_LOG_WAV_BASENAME.cue"
 	INPUT_LOG_ABSOLUTE="$INPUT_DIR_ABSOLUTE/$INPUT_CUE_LOG_WAV_BASENAME.log"
@@ -797,11 +798,11 @@ main() {
 	set_working_directory_or_die
 	ask_to_delete_existing_output_and_temp_dirs_or_die
 	create_directories_or_die
-	exit 1	# FIXME: apply planned changes of this branch to all following functions
 	check_whether_input_is_accurately_ripped_or_die
 	check_shntool_wav_problem_diagnosis_or_die
 	test_whether_the_two_eac_crcs_match
 	test_eac_crc_or_die
+	exit 1	# FIXME: apply planned changes of this branch to all following functions
 	split_wav_image_to_singletracks_or_die
 	test_accuraterip_checksums_of_split_wav_singletracks_or_die
 	generate_checksum_of_original_wav_image_or_die
