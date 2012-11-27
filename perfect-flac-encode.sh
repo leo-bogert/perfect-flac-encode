@@ -430,7 +430,7 @@ generate_checksum_of_original_wav_image_or_die() {
 }
 
 test_checksum_of_rejoined_wav_image_or_die() {
-	echo "Joining singletrack WAV temporarily for comparing their checksum with the original image's checksum..."	
+	echo "Joining singletrack WAVs temporarily for comparing their checksum with the original image's checksum..."
 	
 	local inputdir_relative="${TEMP_DIRS[WAV_SINGLETRACK_SUBDIR]}"
 	local outputdir_relative="${TEMP_DIRS[WAV_JOINTEST_SUBDIR]}"
