@@ -95,6 +95,8 @@ ask_to_delete_existing_output_and_temp_dirs_or_die() {
 		return 0
 	fi
 	
+	echo "Output directory: $OUTPUT_DIR_ABSOLUTE"
+	
 	local confirmed=n
 	read -p "The output directory exists already. Delete it and ALL contained files? (y/n)" confirmed
 	
