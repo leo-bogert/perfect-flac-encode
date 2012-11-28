@@ -415,12 +415,12 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 
 # This genrates a .sha256 file with the SHA256-checksum of the original WAV image. We do not use the EAC CRC from the log because it is non-standard and does not cover the full WAV.
 # $1 = filename of wav image (without extension)
-# The SHA256 file will be placed in the ${TEMP_DIRS[WAV_JOINTEST_SUBDIR]} so it can be used for checking the checksum of the joined file
+# The SHA256 file will be placed in the ${TEMP_DIRS_ABSOLUTE[WAV_JOINTEST_SUBDIR]} so it can be used for checking the checksum of the joined file
 generate_checksum_of_original_wav_image_or_die() {
 	echo "Generating checksum of original WAV image ..."
 
 	local original_image_filename="$INPUT_CUE_LOG_WAV_BASENAME.wav"
-	local output_sha256="$INPUT_DIR_ABSOLUTE/${TEMP_DIRS[WAV_JOINTEST_SUBDIR]}/$INPUT_CUE_LOG_WAV_BASENAME.sha256" # TODO: make a global variable or pass this through since we also need it in test_checksum_of_rejoined_wav_image_or_die
+	local output_sha256="${TEMP_DIRS_ABSOLUTE[WAV_JOINTEST_SUBDIR]}/$INPUT_CUE_LOG_WAV_BASENAME.sha256" # TODO: make a global variable or pass this through since we also need it in test_checksum_of_rejoined_wav_image_or_die
 	
 	set_working_directory_or_die # We need to pass a relative filename to sha256 so the output does not contain the absolute path
 	if ! sha256sum --binary "$original_image_filename" > "$output_sha256" ; then
