@@ -644,9 +644,9 @@ test_flac_singletracks_or_die() {
 test_checksums_of_decoded_flac_singletracks_or_die() {
 	echo "Decoding singletrack FLACs to WAVs to validate checksums ..."
 	
-	local inputdir_wav="$INPUT_DIR_ABSOLUTE/${TEMP_DIRS[WAV_SINGLETRACK_SUBDIR]}"
-	local inputdir_flac="$INPUT_DIR_ABSOLUTE/${TEMP_DIRS[FLAC_SINGLETRACK_SUBDIR]}"
-	local outputdir="$INPUT_DIR_ABSOLUTE/${TEMP_DIRS[DECODED_WAV_SINGLETRACK_SUBDIR]}"
+	local inputdir_wav="${TEMP_DIRS_ABSOLUTE[WAV_SINGLETRACK_SUBDIR]}"
+	local inputdir_flac="${TEMP_DIRS_ABSOLUTE[FLAC_SINGLETRACK_SUBDIR]}"
+	local outputdir="${TEMP_DIRS_ABSOLUTE[DECODED_WAV_SINGLETRACK_SUBDIR]}"
 	
 	set_working_directory_or_die "$inputdir_flac"	# We need input filenames to be relative for --output-prefix to work
 	if ! flac --decode --silent --warnings-as-errors --output-prefix="$outputdir/" *.flac ; then
