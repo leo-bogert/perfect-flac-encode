@@ -75,7 +75,7 @@ TEMP_DIRS_ABSOLUTE[DECODED_WAV_SINGLETRACK_SUBDIR]=""
 
 
 # parameters: $1 = target working directory, absolute or relative to current working dir. if not specified, working directory is set to $INPUT_DIR_ABSOLUTE
-set_working_directory_or_die() {	# FIXME: review all uses of the function and decide whether setting the WD to input dir makes sense
+set_working_directory_or_die() {
 	#echo "Changing working directory to $dir..."
 	if [ $# -eq 0 ] ; then
 		local dir="$OUTPUT_DIR_ABSOLUTE" # We default to the output dir so the probability of accidentially damaging something is lower
