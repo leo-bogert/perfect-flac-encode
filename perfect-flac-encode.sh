@@ -684,9 +684,7 @@ test_checksums_of_decoded_flac_singletracks_or_die() {
 move_output_to_target_dir_or_die() {
 	echo "Moving FLACs to output directory..."
 	
-	local inputdir="$INPUT_DIR_ABSOLUTE/${TEMP_DIRS[FLAC_SINGLETRACK_SUBDIR]}"
-	
-	if ! mv --no-clobber "$inputdir"/*.flac "$OUTPUT_DIR_ABSOLUTE" ; then
+	if ! mv --no-clobber "${TEMP_DIRS_ABSOLUTE[FLAC_SINGLETRACK_SUBDIR]}"/*.flac "$OUTPUT_DIR_ABSOLUTE" ; then
 		echo "Moving FLAC files to output dir failed!" >&2
 		exit 1
 	fi
