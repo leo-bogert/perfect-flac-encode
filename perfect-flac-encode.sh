@@ -271,10 +271,8 @@ test_eac_crc_or_die() {
 split_wav_image_to_singletracks_or_die() {
 	echo "Splitting WAV image to singletrack WAVs..."
 	
-	local wav_singletracks_dir_absolute="$INPUT_DIR_ABSOLUTE/${TEMP_DIRS[WAV_SINGLETRACK_SUBDIR]}"
-	
 	# shntool syntax:
-	# -P type Specify progress indicator type. dot shows the progress of each operation by displaying a '.' after each 10% step toward completion.
+	# -q Suppress  non‐critical output (quiet mode).  Output that normally goes to stderr will not be displayed, other than errors or debugging information (if specified).
 	# -d dir Specify output directory 
 	# -f file Specifies a file from which to read split point data.  If not given, then split points are read from the terminal.
 	# -m str Specifies  a  character  manipulation  string for filenames generated from CUE sheets.  
@@ -286,15 +284,13 @@ split_wav_image_to_singletracks_or_die() {
 	# TODO: shntool generates a "00 - pregap.wav" for HTOA. Decide what to do about this and check MusicBrainz for what they prefer. Options are: Keep as track 0? Merge with track 1? Shift all tracks by 1?
 	
 	# Ideas behind parameter decisions:
-	# - We specify a different progress indicator so redirecting the script output to a log file will not result in a bloated file"
+	# - We use quiet mode because otherwise shntool will print the full paths of the input/output files and we don't want those in the log file
 	# - We do NOT let shntool encode the FLAC files on its own. While testing it has shown that the error messages of FLAC are not printed. Further, because we want this script to be robust, we only use the core features of each tool and not use fancy stuff which they were not primarily designed for.
 	# - We split the tracks into a subdirectory so when encoding the files we can just encode "*.wav", we don't need any mechanism for excluding the image WAV
 	# - We replace Windows' reserved filename characters with "_". We do this because we recommend MusicBrainz Picard for tagging and it does the same. List of reserved characters was taken from http://msdn.microsoft.com/en-us/library/windows/desktop/aa365247%28v=vs.85%29.aspx
 	# - We prefix the filename with the maximal amount of zeroes required to get proper sorting for the maximal possible trackcount on a CD which is 99. We do this because cuetag requires proper sort order of the input files and we just use "*.flac" for finding the input files
-
-	# For making the shntool output more readable we don't use absolute paths but changed the working directory
-	set_working_directory_or_die
-	if ! shntool split -P dot -d "${TEMP_DIRS[WAV_SINGLETRACK_SUBDIR]}" -f "$INPUT_CUE_LOG_WAV_BASENAME.cue" -m '<_>_:_"_/_\_|_?_*_' -n %02d -t "%n - %t" -- "$INPUT_CUE_LOG_WAV_BASENAME.wav" ; then
+	
+	if ! shntool split -q -d "${TEMP_DIRS_ABSOLUTE[WAV_SINGLETRACK_SUBDIR]}" -f "$INPUT_CUE_ABSOLUTE" -m '<_>_:_"_/_\_|_?_*_' -n %02d -t "%n - %t" -- "$INPUT_WAV_ABSOLUTE" ; then
 		echo "Splitting WAV image to singletracks failed!" >&2
 		exit 1
 	fi
@@ -302,20 +298,20 @@ split_wav_image_to_singletracks_or_die() {
 	if [ ${UNIT_TESTS["TEST_DAMAGE_TO_SPLIT_WAV_SINGLETRACKS"]} -eq 1 ]; then 
 		echo "Deliberately damaging a singletrack to test the AccurateRip checksum verification ..."
 		
-		local wav_singletracks=( "$wav_singletracks_dir_absolute"/*.wav )
+		local wav_singletracks=( "${TEMP_DIRS_ABSOLUTE[WAV_SINGLETRACK_SUBDIR]}"/*.wav )
+		local first_track_without_extension_absolute="${TEMP_DIRS_ABSOLUTE[WAV_SINGLETRACK_SUBDIR]}"/$(basename "${wav_singletracks[0]}" ".wav")
+		
+		if ! rm --preserve-root -f "${wav_singletracks[0]}" ; then
+			echo "Removing the original WAV track 1 failed!" >&2
+			exit 1
+		fi
 		
 		# accurateripchecksum will ignore trailing garbage in a WAV file and adding leading garbage would make it an invalid WAV which would cause the checksum computation to not even happen
 		# Luckily, while reading the manpage of shntool I saw that it is able to generate silent WAV files. So we just replace it with a silent file as "damage":
-		set_working_directory_or_die "$wav_singletracks_dir_absolute"
-		if ! shntool gen -l 1:23 ; then 
+		if ! shntool gen -l 1:23 -a "$first_track_without_extension_absolute"; then 	# .wav must not be in -a
 			echo "Generating silent WAV file failed!"
 			exit 1
 		fi
-		if ! mv "silence.wav" "${wav_singletracks[0]}" ; then
-			echo "Overwriting track 0 with silence failed!"
-			exit 1
-		fi
-		set_working_directory_or_die
 	fi
 }
 
