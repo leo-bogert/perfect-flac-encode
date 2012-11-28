@@ -478,8 +478,8 @@ test_checksum_of_rejoined_wav_image_or_die() {
 encode_wav_singletracks_to_flac_or_die() {
 	echo "Encoding singletrack WAVs to FLAC ..."
 	
-	local inputdir="$INPUT_DIR_ABSOLUTE/${TEMP_DIRS[WAV_SINGLETRACK_SUBDIR]}"
-	local outputdir="$INPUT_DIR_ABSOLUTE/${TEMP_DIRS[FLAC_SINGLETRACK_SUBDIR]}"
+	local inputdir="${TEMP_DIRS_ABSOLUTE[WAV_SINGLETRACK_SUBDIR]}"
+	local outputdir="${TEMP_DIRS_ABSOLUTE[FLAC_SINGLETRACK_SUBDIR]}"
 	
 	# used flac parameters:
 	# --silent	Silent mode (do not write runtime encode/decode statistics to stderr)
@@ -617,8 +617,7 @@ pretag_singletrack_flacs_from_cue_or_die()
 {
 	echo "Pre-tagging the singletrack FLACs with information from the CUE which is physically stored on the CD. Please use MusicBrainz Picard for the rest of the tags..."
 	
-	local inputdir_flac="$INPUT_DIR_ABSOLUTE/${TEMP_DIRS[FLAC_SINGLETRACK_SUBDIR]}"
-	local flac_files=( "$inputdir_flac/"*.flac )
+	local flac_files=( "${TEMP_DIRS_ABSOLUTE[FLAC_SINGLETRACK_SUBDIR]}/"*.flac )
 	
 	for file in "${flac_files[@]}"; do
 		local filename_without_path=`basename "$file"`
