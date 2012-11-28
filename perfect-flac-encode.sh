@@ -356,7 +356,7 @@ get_total_tracks_without_hiddentrack() {
 test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 	echo "Comparing AccurateRip checksums of split WAV singletracks to AccurateRip checksums from EAC LOG..."
 	
-	local inputdir_wav="$INPUT_DIR_ABSOLUTE/${TEMP_DIRS[WAV_SINGLETRACK_SUBDIR]}"
+	local inputdir_wav="${TEMP_DIRS_ABSOLUTE[WAV_SINGLETRACK_SUBDIR]}"
 	local wav_singletracks=( "$inputdir_wav"/*.wav )
 	local hidden_track="$inputdir_wav/00 - pregap.wav"
 	local totaltracks=`get_total_tracks_without_hiddentrack "$INPUT_CUE_ABSOLUTE"`
