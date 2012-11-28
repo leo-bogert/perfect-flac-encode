@@ -115,7 +115,7 @@ delete_temp_dirs() {
 			continue
 		fi
 		
-		if ! echo rm --preserve-root -rf "$tempdir" ; then	# FIXME: remove echo after it is tested
+		if ! rm --preserve-root -rf "$tempdir" ; then
 			echo "Deleting the temp files failed!" >&2
 			exit 1
 		fi	
