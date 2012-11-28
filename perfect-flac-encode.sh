@@ -245,7 +245,7 @@ test_eac_crc_or_die() {
 			exit 1
 		fi
 		
-		local input_wav_without_extension_absolute=$(basename "$INPUT_WAV_ABSOLUTE" ".wav")
+		local input_wav_without_extension_absolute="$INPUT_DIR_ABSOLUTE/$INPUT_CUE_LOG_WAV_BASENAME"
 		# We replace it with a silent WAV so we don't have to damage the original input image
 		if ! shntool gen -l 1:23 -a "$input_wav_without_extension_absolute"; then 	# .wav must not be in -a
 			echo "Generating silent WAV file failed!"
