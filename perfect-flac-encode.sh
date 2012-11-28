@@ -774,19 +774,18 @@ main() {
 	# obtain parameters
 	local original_working_dir="$(pwd)"	# store the working directory in case the parameters are relative paths
 	local original_cue_log_wav_basename="$1"
-	local original_input_dir="$2"
-	local original_output_dir="$3"
-	
-	echo "Album: $original_cue_log_wav_basename"
-	echo "Input directory: $original_input_dir"
-	echo "Output directory: $original_output_dir"
+	local input_dir="$2"
+	local output_dir="$3"
 	
 	# initialize globals
 	INPUT_CUE_LOG_WAV_BASENAME="$original_cue_log_wav_basename"
+	
+	# strip trailing slash
+	input_dir=${input_dir%/}
+	output_dir=${output_dir%/}
 	# make the directories absolute if they are not
-	[[ "$original_input_dir" = /* ]] && INPUT_DIR_ABSOLUTE="$original_input_dir" || INPUT_DIR_ABSOLUTE="$original_working_dir/$original_input_dir"
-	[[ "$original_output_dir" = /* ]] && OUTPUT_DIR_ABSOLUTE="$original_output_dir/$INPUT_CUE_LOG_WAV_BASENAME" || OUTPUT_DIR_ABSOLUTE="$original_working_dir/$original_output_dir/$INPUT_CUE_LOG_WAV_BASENAME"
-	# TODO: strip trailing slash
+	[[ "$input_dir" = /* ]] && INPUT_DIR_ABSOLUTE="$input_dir" || INPUT_DIR_ABSOLUTE="$original_working_dir/$input_dir"
+	[[ "$output_dir" = /* ]] && OUTPUT_DIR_ABSOLUTE="$output_dir/$INPUT_CUE_LOG_WAV_BASENAME" || OUTPUT_DIR_ABSOLUTE="$original_working_dir/$output_dir/$INPUT_CUE_LOG_WAV_BASENAME"
 	
 	INPUT_CUE_ABSOLUTE="$INPUT_DIR_ABSOLUTE/$INPUT_CUE_LOG_WAV_BASENAME.cue"
 	INPUT_LOG_ABSOLUTE="$INPUT_DIR_ABSOLUTE/$INPUT_CUE_LOG_WAV_BASENAME.log"
@@ -796,9 +795,14 @@ main() {
 		TEMP_DIRS_ABSOLUTE[$tempdir]="$OUTPUT_DIR_ABSOLUTE/${TEMP_DIRS[$tempdir]}"
 	done
 	
-	set_working_directory_or_die
+	# All variables are set up now, we are ready to go
+	echo "Album: $original_cue_log_wav_basename"
+	echo "Input directory: $INPUT_DIR_ABSOLUTE"	# TODO: remove after debugging is finished
+	echo "Output directory: $OUTPUT_DIR_ABSOLUTE" # TODO: remove after debugging is finished
+	
 	ask_to_delete_existing_output_and_temp_dirs_or_die
 	create_directories_or_die
+	set_working_directory_or_die
 	check_whether_input_is_accurately_ripped_or_die
 	check_shntool_wav_problem_diagnosis_or_die
 	test_whether_the_two_eac_crcs_match
