@@ -693,7 +693,7 @@ move_output_to_target_dir_or_die() {
 copy_cue_log_sha256_to_target_dir_or_die() {
 	echo "Copying CUE, LOG and SHA256 to output directory..."
 	
-	local input_files=( "$INPUT_CUE_ABSOLUTE" "$INPUT_LOG_ABSOLUTE" "$INPUT_DIR_ABSOLUTE/${TEMP_DIRS[WAV_JOINTEST_SUBDIR]}/$INPUT_CUE_LOG_WAV_BASENAME.sha256" )
+	local input_files=( "$INPUT_CUE_ABSOLUTE" "$INPUT_LOG_ABSOLUTE" "${TEMP_DIRS_ABSOLUTE[WAV_JOINTEST_SUBDIR]}/$INPUT_CUE_LOG_WAV_BASENAME.sha256" )
 	
 	# TODO: maybe use different filenames for cue/log? also update the README if we do so
 	
