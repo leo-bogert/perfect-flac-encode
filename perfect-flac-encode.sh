@@ -429,22 +429,18 @@ generate_checksum_of_original_wav_image_or_die() {
 test_checksum_of_rejoined_wav_image_or_die() {
 	echo "Joining singletrack WAVs temporarily for comparing their checksum with the original image's checksum..."
 	
-	local inputdir_relative="${TEMP_DIRS[WAV_SINGLETRACK_SUBDIR]}"
-	local outputdir_relative="${TEMP_DIRS[WAV_JOINTEST_SUBDIR]}"
-	local original_image_checksum_file_absolute="$INPUT_DIR_ABSOLUTE/$outputdir_relative/$INPUT_CUE_LOG_WAV_BASENAME.sha256"
-	local joined_image_absolute="$INPUT_DIR_ABSOLUTE/$outputdir_relative/joined.wav"
+	local original_image_checksum_file_absolute="${TEMP_DIRS_ABSOLUTE[WAV_JOINTEST_SUBDIR]}/$INPUT_CUE_LOG_WAV_BASENAME.sha256"
+	local joined_image_absolute="${TEMP_DIRS_ABSOLUTE[WAV_JOINTEST_SUBDIR]}/joined.wav"
 
 	# shntool syntax:
-	# -D = print debugging information
-	# -P type Specify progress indicator type. dot shows the progress of each operation by displaying a '.' after each 10% step toward completion.
+	# -q Suppress  non‐critical output (quiet mode).  Output that normally goes to stderr will not be displayed, other than errors or debugging information (if specified).
 	# -d dir Specify output directory 
 	# -- = indicates that everything following it is a filename
 	
 	# Ideas behind parameter decisions:
-	# - We specify a different progress indicator so redirecting the script output to a log file will not result in a bloated file"
+	# - We use quiet mode because otherwise shntool will print the full paths of the input/output files and we don't want those in the log file
 	# - We join into a subdirectory because we don't need the joined file afterwards and we can just delete the subdir to get rid of it
-	set_working_directory_or_die
-	if ! shntool join -P dot -d "$outputdir_relative" -- "$inputdir_relative"/*.wav ; then 
+	if ! shntool join -q -d "${TEMP_DIRS_ABSOLUTE[WAV_JOINTEST_SUBDIR]}" -- "${TEMP_DIRS_ABSOLUTE[WAV_SINGLETRACK_SUBDIR]}"/*.wav ; then 
 		echo "Joining WAV failed!" >&2
 		exit 1
 	fi
