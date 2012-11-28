@@ -669,6 +669,7 @@ test_checksums_of_decoded_flac_singletracks_or_die() {
 		echo "Generating input checksums failed!" &> 2
 		exit 1
 	fi
+	set_working_directory_or_die
 	
 	echo "Validating checksums of decoded WAV singletracks ..."
 	set_working_directory_or_die "$outputdir"
