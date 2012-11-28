@@ -422,11 +422,12 @@ generate_checksum_of_original_wav_image_or_die() {
 	local original_image_filename="$INPUT_CUE_LOG_WAV_BASENAME.wav"
 	local output_sha256="${TEMP_DIRS_ABSOLUTE[WAV_JOINTEST_SUBDIR]}/$INPUT_CUE_LOG_WAV_BASENAME.sha256" # TODO: make a global variable or pass this through since we also need it in test_checksum_of_rejoined_wav_image_or_die
 	
-	set_working_directory_or_die # We need to pass a relative filename to sha256 so the output does not contain the absolute path
+	set_working_directory_or_die "$INPUT_DIR_ABSOLUTE" # We need to pass a relative filename to sha256 so the output does not contain the absolute path
 	if ! sha256sum --binary "$original_image_filename" > "$output_sha256" ; then
 		echo "Generating checksum of original WAV image failed!" >&2
 		exit 1
 	fi
+	set_working_directory_or_die
 }
 
 test_checksum_of_rejoined_wav_image_or_die() {
