@@ -59,7 +59,7 @@ VERSION="BETA11"
 INPUT_DIR_ABSOLUTE=""	# Directory where the input WAV/LOG/CUE are placed. The temp directories will also reside in it.
 OUTPUT_DIR_ABSOLUTE=""	# Directory where the output FLACs are placed.
 INPUT_CUE_LOG_WAV_BASENAME=""	# Filename of input WAV/LOG/CUE without extension.
-INPUT_CUE_ABSOLUTE=""	# Full path of input CUE	# TODO: Use everywhere
+INPUT_CUE_ABSOLUTE=""	# Full path of input CUE
 INPUT_LOG_ABSOLUTE=""	# Full path of input WAV	# TODO: Use everywhere
 INPUT_WAV_ABSOLUTE=""	# Full path of input LOG	# TODO: Use everywhere
 
