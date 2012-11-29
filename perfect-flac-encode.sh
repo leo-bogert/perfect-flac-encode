@@ -74,7 +74,7 @@ TEMP_DIRS_ABSOLUTE[DECODED_WAV_SINGLETRACK_SUBDIR]=""
 ################################################################################
 
 
-# parameters: $1 = target working directory, absolute or relative to current working dir. if not specified, working directory is set to $INPUT_DIR_ABSOLUTE
+# parameters: $1 = target working directory, absolute or relative to current working dir. if not specified, working directory is set to $OUTPUT_DIR_ABSOLUTE
 set_working_directory_or_die() {
 	#echo "Changing working directory to $dir..."
 	if [ $# -eq 0 ] ; then
