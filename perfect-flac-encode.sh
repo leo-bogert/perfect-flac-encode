@@ -60,7 +60,7 @@ INPUT_DIR_ABSOLUTE=""	# Directory where the input WAV/LOG/CUE are placed. The te
 OUTPUT_DIR_ABSOLUTE=""	# Directory where the output (FLACs/LOG/CUE/README.txt) is placed. The temporary directories will be created here as well.
 INPUT_CUE_LOG_WAV_BASENAME=""	# Filename of input WAV/LOG/CUE without extension. . It must be a file in the directory $INPUT_DIR_ABSOLUTE.
 INPUT_CUE_ABSOLUTE=""	# Full path of input CUE. It must be a file in the directory $INPUT_DIR_ABSOLUTE.
-INPUT_LOG_ABSOLUTE=""	# Full path of input LOG. It must be a file in the directory $INPUT_DIR_ABSOLUTE.	# TODO: Use everywhere
+INPUT_LOG_ABSOLUTE=""	# Full path of input LOG. It must be a file in the directory $INPUT_DIR_ABSOLUTE.
 INPUT_WAV_ABSOLUTE=""	# Full path of input WAV. It must be a file in the directory $INPUT_DIR_ABSOLUTE.	# TODO: Use everywhere
 
 # Absolute paths to the temp directories. For documentation see above in the "Configuration" section.
