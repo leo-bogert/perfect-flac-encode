@@ -61,7 +61,7 @@ OUTPUT_DIR_ABSOLUTE=""	# Directory where the output (FLACs/LOG/CUE/README.txt) i
 INPUT_CUE_LOG_WAV_BASENAME=""	# Filename of input WAV/LOG/CUE without extension. . It must be a file in the directory $INPUT_DIR_ABSOLUTE.
 INPUT_CUE_ABSOLUTE=""	# Full path of input CUE. It must be a file in the directory $INPUT_DIR_ABSOLUTE.
 INPUT_LOG_ABSOLUTE=""	# Full path of input LOG. It must be a file in the directory $INPUT_DIR_ABSOLUTE.
-INPUT_WAV_ABSOLUTE=""	# Full path of input WAV. It must be a file in the directory $INPUT_DIR_ABSOLUTE.	# TODO: Use everywhere
+INPUT_WAV_ABSOLUTE=""	# Full path of input WAV. It must be a file in the directory $INPUT_DIR_ABSOLUTE.
 
 # Absolute paths to the temp directories. For documentation see above in the "Configuration" section.
 declare -A TEMP_DIRS_ABSOLUTE  # Attention: We have to explicitely declare the associative array or iteration over the keys will not work!
@@ -415,7 +415,7 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 generate_checksum_of_original_wav_image_or_die() {
 	echo "Generating checksum of original WAV image ..."
 
-	local original_image_filename="$INPUT_CUE_LOG_WAV_BASENAME.wav"
+	local original_image_filename=$(basename "$INPUT_WAV_ABSOLUTE")
 	local output_sha256="${TEMP_DIRS_ABSOLUTE[WAV_JOINTEST_SUBDIR]}/$INPUT_CUE_LOG_WAV_BASENAME.sha256" # TODO: make a global variable or pass this through since we also need it in test_checksum_of_rejoined_wav_image_or_die
 	
 	set_working_directory_or_die "$INPUT_DIR_ABSOLUTE" # We need to pass a relative filename to sha256 so the output does not contain the absolute path
