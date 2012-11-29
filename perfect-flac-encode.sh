@@ -60,8 +60,8 @@ INPUT_DIR_ABSOLUTE=""	# Directory where the input WAV/LOG/CUE are placed. The te
 OUTPUT_DIR_ABSOLUTE=""	# Directory where the output FLACs are placed.
 INPUT_CUE_LOG_WAV_BASENAME=""	# Filename of input WAV/LOG/CUE without extension.
 INPUT_CUE_ABSOLUTE=""	# Full path of input CUE
-INPUT_LOG_ABSOLUTE=""	# Full path of input WAV	# TODO: Use everywhere
-INPUT_WAV_ABSOLUTE=""	# Full path of input LOG	# TODO: Use everywhere
+INPUT_LOG_ABSOLUTE=""	# Full path of input LOG	# TODO: Use everywhere
+INPUT_WAV_ABSOLUTE=""	# Full path of input WAV	# TODO: Use everywhere
 
 # Absolute paths to the temp directories. For documentation see above in the "Configuration" section.
 declare -A TEMP_DIRS_ABSOLUTE  # Attention: We have to explicitely declare the associative array or iteration over the keys will not work!
