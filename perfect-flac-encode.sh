@@ -198,23 +198,20 @@ check_shntool_wav_problem_diagnosis_or_die() {
 }
 
 # parameters:
-# $1 = path of EAC LOG
-# $2 = "test" or "copy" = which crc to get, EAC provides 2
+# $1 = "test" or "copy" = which crc to get, EAC provides 2
 get_eac_crc_or_die() {
-	local eac_log_path="$1"
-
-	case $2 in
+	case $1 in
 		test)
 			local mode="Test" ;;
 		copy)
 			local mode="Copy" ;;
 		*)
-			echo "Invalid mode: $2"
+			echo "Invalid mode: $1"
 			exit 1
 	esac
 	
 	local regex="^([[:space:]]*)($mode CRC )([0-9A-F]*)([[:space:]]*)\$"
-	iconv --from-code utf-16 --to-code utf-8 "$eac_log_path" | grep -E "$regex" | sed -r s/"$regex"/\\3/
+	iconv --from-code utf-16 --to-code utf-8 "$INPUT_LOG_ABSOLUTE" | grep -E "$regex" | sed -r s/"$regex"/\\3/
 	
 	if  [[ ! $? -eq 0  ]]; then
 		echo "Regexp for getting the EAC CRC failed!" >&2
@@ -223,8 +220,8 @@ get_eac_crc_or_die() {
 }
 
 test_whether_the_two_eac_crcs_match() {
-	local test_crc=`get_eac_crc_or_die "$INPUT_LOG_ABSOLUTE" "test"`
-	local copy_crc=`get_eac_crc_or_die "$INPUT_LOG_ABSOLUTE" "copy"`
+	local test_crc=`get_eac_crc_or_die "test"`
+	local copy_crc=`get_eac_crc_or_die "copy"`
 	
 	echo "Checking whether EAC Test CRC matches EAC Copy CRC..."
 	if [ "$test_crc" != "$copy_crc" ] ; then
@@ -253,7 +250,7 @@ test_eac_crc_or_die() {
 		fi
 	fi
 	
-	local expected_crc=`get_eac_crc_or_die "$INPUT_LOG_ABSOLUTE" "copy"`
+	local expected_crc=`get_eac_crc_or_die "copy"`
 	
 	echo "Computing CRC of WAV image..."
 	local actual_crc=`~/eac-crc "$INPUT_WAV_ABSOLUTE"` # TODO: as soon as a packaged version is available, use the binary from the package
