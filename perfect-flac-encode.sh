@@ -796,7 +796,6 @@ main() {
 	check_shntool_wav_problem_diagnosis_or_die
 	test_whether_the_two_eac_crcs_match
 	test_eac_crc_or_die
-	exit 1	# FIXME: apply planned changes of this branch to all following functions
 	split_wav_image_to_singletracks_or_die
 	test_accuraterip_checksums_of_split_wav_singletracks_or_die
 	generate_checksum_of_original_wav_image_or_die
