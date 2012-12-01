@@ -339,11 +339,8 @@ get_tracknumber_of_singletrack() {
 	echo "$filename" | grep -E "$regex" | sed -r s/"$regex"/\\1/
 }
 
-
-# parameters:
-# $1 = full path of cuesheet
-get_total_tracks_without_hiddentrack() {
-	cueprint -d '%N' "$1"
+get_total_tracks_without_hiddentrack_from_cue() {
+	cueprint -d '%N' "$INPUT_CUE_ABSOLUTE"
 }
 
 test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
@@ -352,7 +349,7 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 	local inputdir_wav="${TEMP_DIRS_ABSOLUTE[WAV_SINGLETRACK_SUBDIR]}"
 	local wav_singletracks=( "$inputdir_wav"/*.wav )
 	local hidden_track="$inputdir_wav/00 - pregap.wav"
-	local totaltracks=`get_total_tracks_without_hiddentrack "$INPUT_CUE_ABSOLUTE"`
+	local totaltracks=`get_total_tracks_without_hiddentrack_from_cue`
 	
 	if [ -f "$hidden_track" ] ; then
 		echo "Hidden track one audio found."
