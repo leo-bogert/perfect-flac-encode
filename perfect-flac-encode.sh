@@ -253,7 +253,7 @@ test_eac_crc_or_die() {
 	local expected_crc=`get_eac_crc_or_die "copy"`
 	
 	echo "Computing CRC of WAV image..."
-	local actual_crc=`~/eac-crc "$INPUT_WAV_ABSOLUTE"` # TODO: as soon as a packaged version is available, use the binary from the package
+	local actual_crc=`eac-crc "$INPUT_WAV_ABSOLUTE"`
 	echo "Expected EAC CRC: $expected_crc"
 	echo "Actual CRC: $actual_crc"
 	
@@ -390,8 +390,8 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 		fi
 		
 		local expected_checksum="${expected_checksums[$accuraterip_version]^^}" # ^^ = convert to uppercase
-		local actual_checksum=`~/accuraterip-checksum --version$accuraterip_version "$filename" "$tracknumber" "$totaltracks"`	#TODO: obtain an ubuntu package for this and use the binary from PATH, not ~
-	
+		local actual_checksum=`accuraterip-checksum --version$accuraterip_version "$filename" "$tracknumber" "$totaltracks"`
+		
 		if [ "$actual_checksum" != "$expected_checksum" ]; then
 			echo "AccurateRip checksum mismatch for track $tracknumber: expected='$expected_checksum'; actual='$actual_checksum'" >&2
 			local do_exit=1	# Don't exit right now so we get an overview of all checksums so we have a better chance of finding out what's wrong
