@@ -404,7 +404,6 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 }
 
 # This genrates a .sha256 file with the SHA256-checksum of the original WAV image. We do not use the EAC CRC from the log because it is non-standard and does not cover the full WAV.
-# $1 = filename of wav image (without extension)
 # The SHA256 file will be placed in the ${TEMP_DIRS_ABSOLUTE[WAV_JOINTEST_SUBDIR]} so it can be used for checking the checksum of the joined file
 generate_checksum_of_original_wav_image_or_die() {
 	echo "Generating checksum of original WAV image ..."
