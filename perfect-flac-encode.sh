@@ -58,6 +58,7 @@ UNIT_TESTS["TEST_DAMAGE_TO_DECODED_FLAC_SINGLETRACKS"]=0
 VERSION="BETA11"
 INPUT_DIR_ABSOLUTE=""	# Directory where the input WAV/LOG/CUE are placed. The temp directories will also reside in it.
 OUTPUT_DIR_ABSOLUTE=""	# Directory where the output (FLACs/LOG/CUE/README.txt) is placed. The temporary directories will be created here as well.
+OUTPUT_SHA256_ABSOLUTE=""	# Full path of the output SHA256. It must a a file in $OUTPUT_DIR_ABSOLUTE
 INPUT_CUE_LOG_WAV_BASENAME=""	# Filename of input WAV/LOG/CUE without extension. . It must be a file in the directory $INPUT_DIR_ABSOLUTE.
 INPUT_CUE_ABSOLUTE=""	# Full path of input CUE. It must be a file in the directory $INPUT_DIR_ABSOLUTE.
 INPUT_LOG_ABSOLUTE=""	# Full path of input LOG. It must be a file in the directory $INPUT_DIR_ABSOLUTE.
@@ -404,15 +405,14 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 }
 
 # This genrates a .sha256 file with the SHA256-checksum of the original WAV image. We do not use the EAC CRC from the log because it is non-standard and does not cover the full WAV.
-# The SHA256 file will be placed in the ${TEMP_DIRS_ABSOLUTE[WAV_JOINTEST_SUBDIR]} so it can be used for checking the checksum of the joined file
+# Further, the sha256 will be part of the output directory: If the user ever needs to restore the original WAV image for restoring a physical copy of the CD, it can be used by perfect-flac-decode for checking whether decoding & re-joining the tracks worked properly.
 generate_checksum_of_original_wav_image_or_die() {
 	echo "Generating checksum of original WAV image ..."
 
 	local original_image_filename=$(basename "$INPUT_WAV_ABSOLUTE")
-	local output_sha256="${TEMP_DIRS_ABSOLUTE[WAV_JOINTEST_SUBDIR]}/$INPUT_CUE_LOG_WAV_BASENAME.sha256" # TODO: make a global variable or pass this through since we also need it in test_checksum_of_rejoined_wav_image_or_die
 	
 	set_working_directory_or_die "$INPUT_DIR_ABSOLUTE" # We need to pass a relative filename to sha256 so the output does not contain the absolute path
-	if ! sha256sum --binary "$original_image_filename" > "$output_sha256" ; then
+	if ! sha256sum --binary "$original_image_filename" > "$OUTPUT_SHA256_ABSOLUTE" ; then
 		echo "Generating checksum of original WAV image failed!" >&2
 		exit 1
 	fi
@@ -421,8 +421,7 @@ generate_checksum_of_original_wav_image_or_die() {
 
 test_checksum_of_rejoined_wav_image_or_die() {
 	echo "Joining singletrack WAVs temporarily for comparing their checksum with the original image's checksum..."
-	
-	local original_image_checksum_file_absolute="${TEMP_DIRS_ABSOLUTE[WAV_JOINTEST_SUBDIR]}/$INPUT_CUE_LOG_WAV_BASENAME.sha256"
+	local original_image_checksum_file_absolute="$OUTPUT_SHA256_ABSOLUTE"
 	local joined_image_absolute="${TEMP_DIRS_ABSOLUTE[WAV_JOINTEST_SUBDIR]}/joined.wav"
 
 	# shntool syntax:
@@ -677,15 +676,15 @@ move_output_to_target_dir_or_die() {
 	fi
 }
 
-copy_cue_log_sha256_to_target_dir_or_die() {
-	echo "Copying CUE, LOG and SHA256 to output directory..."
+copy_cue_and_log_to_target_dir_or_die() {
+	echo "Copying CUE and LOG to output directory..."
 	
-	local input_files=( "$INPUT_CUE_ABSOLUTE" "$INPUT_LOG_ABSOLUTE" "${TEMP_DIRS_ABSOLUTE[WAV_JOINTEST_SUBDIR]}/$INPUT_CUE_LOG_WAV_BASENAME.sha256" )
+	local input_files=( "$INPUT_CUE_ABSOLUTE" "$INPUT_LOG_ABSOLUTE" )
 	
 	# TODO: maybe use different filenames for cue/log? also update the README if we do so
 	
 	if ! cp --archive --no-clobber "${input_files[@]}" "$OUTPUT_DIR_ABSOLUTE" ; then
-		"Copying CUE, LOG and SHA256 to output directory failed!" >&2
+		"Copying CUE and LOG to output directory failed!" >&2
 		exit 1;
 	fi
 }
@@ -772,6 +771,8 @@ main() {
 	[[ "$input_dir" = /* ]] && INPUT_DIR_ABSOLUTE="$input_dir" || INPUT_DIR_ABSOLUTE="$original_working_dir/$input_dir"
 	[[ "$output_dir" = /* ]] && OUTPUT_DIR_ABSOLUTE="$output_dir/$INPUT_CUE_LOG_WAV_BASENAME" || OUTPUT_DIR_ABSOLUTE="$original_working_dir/$output_dir/$INPUT_CUE_LOG_WAV_BASENAME"
 	
+	OUTPUT_SHA256_ABSOLUTE="$OUTPUT_DIR_ABSOLUTE/$INPUT_CUE_LOG_WAV_BASENAME.sha256"
+	
 	INPUT_CUE_ABSOLUTE="$INPUT_DIR_ABSOLUTE/$INPUT_CUE_LOG_WAV_BASENAME.cue"
 	INPUT_LOG_ABSOLUTE="$INPUT_DIR_ABSOLUTE/$INPUT_CUE_LOG_WAV_BASENAME.log"
 	INPUT_WAV_ABSOLUTE="$INPUT_DIR_ABSOLUTE/$INPUT_CUE_LOG_WAV_BASENAME.wav"
@@ -801,7 +802,7 @@ main() {
 	test_flac_singletracks_or_die
 	test_checksums_of_decoded_flac_singletracks_or_die
 	move_output_to_target_dir_or_die
-	copy_cue_log_sha256_to_target_dir_or_die
+	copy_cue_and_log_to_target_dir_or_die
 	write_readme_txt_to_target_dir_or_die
 	# TODO: Check whether we can safely append the perfect-flac encode log to the EAC log and do so if we can. EAC adds a checksum to the end of its log, We should check whether the checksum validation tools allow us to add content to the file. If they don't, maybe we should just add another checksum to the end. If we do NOT implement merging of the log files, write our log to a separate file and upate the code which produces the README to reflect that change.
 	delete_temp_dirs
