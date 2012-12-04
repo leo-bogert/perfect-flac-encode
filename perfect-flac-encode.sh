@@ -501,13 +501,10 @@ encode_wav_singletracks_to_flac_or_die() {
 }
 
 # Because cuetools is bugged and won't print the catalog number we read it on our own
-#
-# parameters:
-# $1: path of cue
 cue_get_catalog() {
 	local regexp="^(CATALOG )(.+)\$"
 	# The tr will convert CRLF to LF and prevend trainling CR on the output catalog value
-	cat "$1" | tr -d '\r' | grep -E "$regexp" | sed -r s/"$regexp"/\\2/
+	cat "$INPUT_CUE_ABSOLUTE" | tr -d '\r' | grep -E "$regexp" | sed -r s/"$regexp"/\\2/
 }
 
 # This function was inspired by the cuetag script of cuetools, taken from https://github.com/svend/cuetools
@@ -562,7 +559,7 @@ pretag_singletrack_flac_from_cue_or_die()
 	
 	local -A fields	# Attention: We have to explicitely declare the associative array or iteration over the keys will not work!
 	# disc tags
-	fields["CATALOGNUMBER"]=`cue_get_catalog "$INPUT_CUE_ABSOLUTE"`						# album UPC/EAN. Debbuging showed that cueprint's %U is broken so we use our function.
+	fields["CATALOGNUMBER"]=`cue_get_catalog`									# album UPC/EAN. Debbuging showed that cueprint's %U is broken so we use our function.
 	fields["ENCODEDBY"]="perfect-flac-encode $VERSION with `flac --version`"	# own version :)
 	fields["TRACKTOTAL"]='%N'													# number of tracks
 	fields["TOTALTRACKS"]="${fields['TRACKTOTAL']}"								# musicbrainz lists both TRACKTOAL and TOTALTRACKS and for track count.
