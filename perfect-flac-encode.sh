@@ -713,7 +713,7 @@ print_readme_or_die() {
 	$e "\"$INPUT_CUE_LOG_WAV_BASENAME.cue\"" &&
 	$e "This file contains the layout of the original disc. It will be the file which you load with your CD burning software if you want to burn a backup of the disc. Please remember: Before burning it you have to decompress the audio with perfect-flac-decode. If you don't do this, burning the 'cue' will not work." &&
 	$e "" &&
-	$e "\"$INPUT_CUE_LOG_WAV_BASENAME.sha56\"" &&
+	$e "\"$INPUT_CUE_LOG_WAV_BASENAME.sha256\"" &&
 	$e "This contains a so-called checksum of the original, uncompressed disc image. If you want to burn the disc to a CD, you will have to decompress the FLAC files to a WAV image with perfect-flac-decode. The checksum file allows perfect-flac-decode to validate that the decompression did not produce any errors." &&
 	$e "" &&
 	$e "\"$INPUT_CUE_LOG_WAV_BASENAME.log\"" &&
