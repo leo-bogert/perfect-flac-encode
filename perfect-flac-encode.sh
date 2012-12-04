@@ -456,7 +456,7 @@ test_checksum_of_rejoined_wav_image_or_die() {
 	fi
 	
 	if [ "${original_sum[0]}" != "${joined_sum[0]}" ]; then
-		echo "Checksum of joined image does not match original checksum!"
+		echo "Checksum of joined image does not match original checksum!" >&2
 		exit 1
 	fi
 	
