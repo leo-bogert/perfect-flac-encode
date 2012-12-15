@@ -218,7 +218,7 @@ get_eac_crc_or_die() {
 	local regex="^([[:space:]]*)($mode CRC )([0-9A-F]*)([[:space:]]*)\$"
 	iconv --from-code utf-16 --to-code utf-8 "$INPUT_LOG_ABSOLUTE" | grep -E "$regex" | sed -r s/"$regex"/\\3/
 	
-	if  [[ ! $? -eq 0  ]]; then
+	if  [ $? -ne 0 ] ; then
 		echo "Regexp for getting the EAC CRC failed!" >&2
 		exit 1
 	fi
