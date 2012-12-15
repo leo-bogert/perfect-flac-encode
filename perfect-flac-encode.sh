@@ -51,6 +51,10 @@ UNIT_TESTS["TEST_DAMAGE_TO_DECODED_FLAC_SINGLETRACKS"]=0
 ################################################################################
 
 
+################################################################################
+# GLOBAL TODOs
+# TODO: replace all occurences of "echo <failure message> >&2 ; exit 1" with a function call
+################################################################################
 
 ################################################################################
 # Global variables (naming convention: all globals are uppercase)
