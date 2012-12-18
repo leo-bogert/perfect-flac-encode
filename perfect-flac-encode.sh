@@ -1,5 +1,6 @@
-#!/bin/bash -u
-# -u : exit with error upon access of unset variable
+#!/bin/bash
+set -o nounset	# exit with error upon access of unset variable
+set -o pipefail	# this is absolutely critical: make pipes exit with failure if any of the involved commands fails. the default is exit status of the last command.
 
 ################################################################################
 # NAME: perfect-flac-encode
