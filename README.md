@@ -30,6 +30,7 @@ For guaranteeing this, it does the following checks and aborts if any of them fa
 The secondary goal is providing a perfect backup of the original disc. For serving this purpose, it is ensured that it is technically possible to burn a disc of which every bit is identical to the original one. This is guaranteed by:
 
 * Copying the original CUE/LOG to the output directory. The CUE is needed for burning the disc. The LOG serves as a proof of quality.
+* Logging its own processing to a separate log file in the output. It will show proof that all the 9 steps mentioned above worked properly.
 * A .sha256 file is generated which contains the SHA256-checksum of the original WAV image. For being able to burn a bit-identical CD, the user will have to decode the FLACs to WAVs and re-join the WAVs to an image. For making sure that this produced an image which is identical to the original one, the SHA256-checksum can be used. Notice that the CRC from the EAC LOG is not suitable for this because it is a "custom" CRC which is not computed upon the full WAV file. The EAC CRC does guarantee integrity of the audio data but is not easy to verify with standard tools.
 * A README.txt is written to the output directory. It tries to explain in layman's terms how the rip was created, which software was used, that the rip should be high quality, which files are in the directory, and how to restore an identical CD.
 
@@ -72,7 +73,9 @@ Upon success, the script will create a subdirectory in the output directory whic
 This directory will contain:
 
 * Per-track FLACs called "(tracknumber) - (track title).flac". The tracknumber and title are taken from the CUE. 
-* A copy of the origian "(release name).log" and "(release name).cue" (with timestamps, permissions, etc. preserved)
+* A copy of the original "(release name).cue" (with timestamps, permissions, etc. preserved).
+* A "perfect-flac-encode.log" which contains detailled information about the encoding and verification process.
+* A copy of the original "(release name).log" - renamed to "Exact Audio Copy.log" because we have two log files. Timestamps, permissions, etc. are preserved.
 * A file "(release name).sha256" with the checksum of the original input WAV image (see the "Description" section for the purpose of this)
 * A "README.txt". It tries to explain in layman's terms how the rip was created, which software was used, that the rip should be high quality, which files are in the directory, and how to restore an identical CD.
 
