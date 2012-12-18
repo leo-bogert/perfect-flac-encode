@@ -594,8 +594,10 @@ pretag_singletrack_flac_from_cue_or_die()
 			continue	# Skip empty field
 		fi
 		
-		if ! echo "$field=$value" | metaflac --import-tags-from=- "$flac_file" ; then
-			echo "Setting tag $field=$value failed!" >&2
+		local tag="$field=$value"
+		
+		if ! metaflac --set-tag="$tag" "$flac_file" ; then
+			echo "Setting tag $tag failed!" >&2
 			exit 1
 		fi
 	done
