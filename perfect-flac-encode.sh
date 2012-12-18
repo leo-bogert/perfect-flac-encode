@@ -557,7 +557,6 @@ pretag_singletrack_flac_from_cue_or_die()
 	# sorting of the variables is equal to cueprint manpage
 	# TODO: find out the exact list of CUE-tags which cueprint CANNOT read and decide what to do about them
 	# TODO: do a reverse check of the mapping list: read the musicbrainz tag mapping table and try to find a proper CUE-tag for each musicbrainz tag. ideally, as the CUE-tag-table, do not use the cueprint manpage but a list of all CUE tags which EAC will ever generate
-	# TODO: when no per-track information is available, it might be a good idea to fallback to the album information. check whether cueprint does this. if not, do it manually maybe. think about possible side effects of falling back.
 
 	# We only use the fields which are actually stored on the disc.
 	# TODO: find out whether this is actually everything which is stored on a CD
