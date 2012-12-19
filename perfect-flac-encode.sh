@@ -24,6 +24,12 @@ set -o pipefail	# this is absolutely critical: make pipes exit with failure if a
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ################################################################################
 
+################################################################################
+# GLOBAL TODOs - please consider them before actually using the script!
+################################################################################
+# TODO: replace all occurences of "echo <failure message> >&2 ; exit 1" with a function call
+# TODO FIXME XXX: I have been misusing bash command substitution, i.e. $() and ``. I had assumed that "exit" inside of the substituted function would kill the outer script, but it will only exit the subshell which executes the command substituion! => Review all $() and `` and check $? for sucess/failure of the called function/program where necessary.
+################################################################################
 
 ################################################################################
 # Configuration:
@@ -49,13 +55,6 @@ UNIT_TESTS["TEST_DAMAGE_TO_FLAC_SINGLETRACKS"]=0
 UNIT_TESTS["TEST_DAMAGE_TO_DECODED_FLAC_SINGLETRACKS"]=0
 ################################################################################
 # End of configuration
-################################################################################
-
-
-################################################################################
-# GLOBAL TODOs
-# TODO: replace all occurences of "echo <failure message> >&2 ; exit 1" with a function call
-# TODO FIXME XXX: I have been misusing bash command substitution, i.e. $() and ``. I had assumed that "exit" inside of the substituted function would kill the outer script, but it will only exit the subshell which executes the command substituion! => Review all $() and `` and check $? for sucess/failure of the called function/program where necessary.
 ################################################################################
 
 ################################################################################
