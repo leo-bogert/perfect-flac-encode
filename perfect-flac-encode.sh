@@ -63,6 +63,7 @@ UNIT_TESTS["TEST_DAMAGE_TO_DECODED_FLAC_SINGLETRACKS"]=0
 # Global variables (naming convention: all globals are uppercase)
 ################################################################################
 VERSION="BETA11"
+FULL_VERSION=""			# Full version string which also contains the versions of the used helper programs.
 INPUT_DIR_ABSOLUTE=""	# Directory where the input WAV/LOG/CUE are placed. The temp directories will also reside in it.
 OUTPUT_DIR_ABSOLUTE=""	# Directory where the output (FLACs/LOG/CUE/README.txt) is placed. The temporary directories will be created here as well.
 OUTPUT_SHA256_ABSOLUTE=""	# Full path of the output SHA256. It must a a file in $OUTPUT_DIR_ABSOLUTE
@@ -395,7 +396,7 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 		fi
 		
 		local expected_checksum="${expected_checksums[$accuraterip_version]^^}" # ^^ = convert to uppercase
-		local actual_checksum=`accuraterip-checksum --version$accuraterip_version "$filename" "$tracknumber" "$totaltracks"`
+		local actual_checksum=`accuraterip-checksum --accuraterip-v$accuraterip_version "$filename" "$tracknumber" "$totaltracks"`
 		
 		if [ "$actual_checksum" != "$expected_checksum" ]; then
 			echo "AccurateRip checksum mismatch for track $tracknumber: expected='$expected_checksum'; actual='$actual_checksum'" >&2
@@ -514,6 +515,65 @@ cue_get_catalog() {
 	cat "$INPUT_CUE_ABSOLUTE" | tr -d '\r' | grep -E "$regexp" | sed -r s/"$regexp"/\\2/
 }
 
+get_version_string() {
+	# defining & assigning them at once would overwrite $?
+	local accurateripchecksum_version
+	local cuetools_installation_state
+	local cuetools_version
+	local eaccrc_version
+	local flac_version
+	local shntool_version
+	
+	if ! accurateripchecksum_version="$(accuraterip-checksum --version)" ; then
+		echo "Obtaining accuraterip-checksum version failed! Please check whether it is installed." >&2
+		exit 1
+	fi
+	
+	# As of 2012-12-23, cueprint does not support printing its version number. So we instead add the package version of cuetools
+	# TODO: Add cueprint version once cueprint supports printing it.
+	
+	# The behavior of dpkg-query version number printing seems to be the following as of 2012-12-19:
+	# 1. If the package is NOT installed, the highest available version number in the repository is printed.
+	# 2. If the package is installed, the installed version is printed.
+	# 3. If there is an update to the package available and even downloaded, it still prints the installed version.
+	# This is not documented, I have found it out by testing.
+	# As you can see, this contains the glitch of being ambious between the version number of not installed packages and installed ones.
+	#
+	# So we first have to check whether cuetools is installed and only use the version number if it actually is installed.
+	# (Of course the script would fail anyway if cuetools was not installed but in case someone recycles this function then it will at least not have bugs)
+	if ! cuetools_installation_state="$(dpkg-query --show --showformat='${Status}' cuetools)" ; then
+		echo "Checking cuetools installation state failed!" >&2
+		exit 1
+	fi
+	
+	if [ "$cuetools_installation_state" != "install ok installed" ] ; then 
+		echo "cuetools is not installed! cuetools_installation_state=$cuetools_installation_state" >&2
+		exit 1
+	fi
+	
+	if ! cuetools_version="$(dpkg-query --show --showformat='cuetools version ${Version}' cuetools)" ; then
+		echo "Obtaining cuetools version failed!" >&2
+		exit 1
+	fi
+
+	
+	if ! eaccrc_version="$(eac-crc --version)" ; then
+		echo "Obtaining eac-crc version failed! Please check whether it is installed." >&2
+		exit 1
+	fi
+	
+	if ! flac_version="$(flac --version)" ; then
+		echo "Obtaining flac version failed! Please check whether it is installed." >&2
+		exit 1
+	fi
+	
+	if ! shntool_version="$(shntool -v 2>&1 | head -1)" ; then
+		echo "Obtaining shntool version failed! Please check whether it is installed." >&2
+		exit 1
+	fi
+	
+	echo "perfect-flac-encode $VERSION with $accurateripchecksum_version, $cuetools_version, $eaccrc_version, $flac_version, $shntool_version" 
+}
 # This function was inspired by the cuetag script of cuetools, taken from https://github.com/svend/cuetools
 # It's license is GPL so this function is GPL as well. 
 #
@@ -566,7 +626,7 @@ pretag_singletrack_flac_from_cue_or_die()
 	local -A fields	# Attention: We have to explicitely declare the associative array or iteration over the keys will not work!
 	# disc tags
 	fields["CATALOGNUMBER"]=`cue_get_catalog`									# album UPC/EAN. Debbuging showed that cueprint's %U is broken so we use our function.
-	fields["ENCODEDBY"]="perfect-flac-encode $VERSION with `flac --version`"	# own version :)
+	fields["ENCODEDBY"]="$FULL_VERSION"							# own version :)
 	fields["TRACKTOTAL"]='%N'													# number of tracks
 	fields["TOTALTRACKS"]="${fields['TRACKTOTAL']}"								# musicbrainz lists both TRACKTOAL and TOTALTRACKS and for track count.
 
@@ -704,7 +764,7 @@ print_readme_or_die() {
 	
 	$e "About the quality of this CD copy:" &&
 	$e "----------------------------------" &&
-	$e "These audio files were produced with perfect-flac-encode version $VERSION, using `flac --version`."  &&
+	$e "These audio files were produced with perfect-flac-encode."  &&
 	$e "They are stored in \"FLAC\" format, which is lossless. This means that they can have the same quality as an audio CD." &&
 	$e "This is much better than MP3 for example: MP3 leaves out some tones because some people cannot hear them." &&
 	$e "" &&
@@ -764,7 +824,12 @@ die_if_unit_tests_failed() {
 }
 
 main() {
-	echo -e "\n\nperfect-flac-encode.sh Version $VERSION running ... "
+	if ! FULL_VERSION="$(get_version_string)" ; then
+		echo "Obtaining version identificator failed. Check whether all required tools are installed!" >&2
+		exit 1
+	fi
+	
+	echo "$FULL_VERSION running ... "
 	echo -e "BETA VERSION - NOT for productive use!\n\n"
 	
 	# obtain parameters
