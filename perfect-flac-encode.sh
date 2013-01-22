@@ -841,9 +841,9 @@ main() {
 	# initialize globals
 	INPUT_CUE_LOG_WAV_BASENAME="$original_cue_log_wav_basename"
 	
-	# strip trailing slash
-	input_dir=${input_dir%/}
-	output_dir=${output_dir%/}
+	# strip trailing slash as long as the dir is not "/"
+	[[ "$input_dir" != "/" ]] && input_dir="${input_dir%/}"
+	[[ "$output_dir" != "/" ]] && output_dir="${output_dir%/}"
 	# make the directories absolute if they are not
 	[[ "$input_dir" = /* ]] && INPUT_DIR_ABSOLUTE="$input_dir" || INPUT_DIR_ABSOLUTE="$original_working_dir/$input_dir"
 	[[ "$output_dir" = /* ]] && OUTPUT_DIR_ABSOLUTE="$output_dir/$INPUT_CUE_LOG_WAV_BASENAME" || OUTPUT_DIR_ABSOLUTE="$original_working_dir/$output_dir/$INPUT_CUE_LOG_WAV_BASENAME"
