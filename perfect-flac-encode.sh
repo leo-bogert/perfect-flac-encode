@@ -185,9 +185,10 @@ check_shntool_wav_problem_diagnosis_or_die() {
 		exit 1
 	fi
 	
-	local cdr_column=$(echo "$len_output" | sed -r s/"$regex"/\\1/)
-	local wave_column=$(echo "$len_output" | sed -r s/"$regex"/\\2/)
-	local problems_column=$(echo "$len_output" | sed -r s/"$regex"/\\3/)
+	# We don't need to check for errors with those regexps because len_output is well-defined since it was obtained from a regexp
+	local cdr_column="$(echo "$len_output" | sed -r s/"$regex"/\\1/)"
+	local wave_column="$(echo "$len_output" | sed -r s/"$regex"/\\2/)"
+	local problems_column="$(echo "$len_output" | sed -r s/"$regex"/\\3/)"
 	
 	if [ "$cdr_column" != "---" ] ; then
 		echo "CD-quality column of 'shntool len' indicates problems: $cdr_column" >&2
