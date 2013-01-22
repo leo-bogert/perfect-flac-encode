@@ -180,8 +180,7 @@ check_shntool_wav_problem_diagnosis_or_die() {
 	local regex="^\s*\S*\s*\S*\s*\S*\s*(\S*)\s*(\S*)\s*(\S*)\s*\S*\s*\S*\s*(.*)$"
 	local len_output # defining & assigning it at once would overwrite $?
 	
-	len_output=$(shntool len -c -t "$INPUT_WAV_ABSOLUTE" | grep -E "$regex")
-	if  [ $? -ne 0  ] ; then
+	if ! len_output="$(shntool len -c -t "$INPUT_WAV_ABSOLUTE" | grep -E "$regex")" ; then
 		echo "Regexp for getting the 'shntool len' output failed!" >&2
 		exit 1
 	fi
