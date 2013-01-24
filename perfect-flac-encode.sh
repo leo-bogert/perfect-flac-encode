@@ -208,7 +208,7 @@ check_shntool_wav_problem_diagnosis_or_die() {
 
 # parameters:
 # $1 = "test" or "copy" = which crc to get, EAC provides 2
-get_eac_crc_or_die() {
+get_eac_crc() {
 	case $1 in
 		test)
 			local mode="Test" ;;
@@ -221,16 +221,27 @@ get_eac_crc_or_die() {
 	
 	local regex="^([[:space:]]*)($mode CRC )([0-9A-F]*)([[:space:]]*)\$"
 	iconv --from-code utf-16 --to-code utf-8 "$INPUT_LOG_ABSOLUTE" | grep -E "$regex" | sed -r s/"$regex"/\\3/
-	
-	if  [ $? -ne 0 ] ; then
-		echo "Regexp for getting the EAC CRC failed!" >&2
-		exit 1
-	fi
 }
 
 test_whether_the_two_eac_crcs_match() {
-	local test_crc=`get_eac_crc_or_die "test"`
-	local copy_crc=`get_eac_crc_or_die "copy"`
+	# defining & assigning them at once would overwrite $?
+	local test_crc
+	local copy_crc
+
+	if ! test_crc="$(get_eac_crc 'test')" ; then
+		echo "Getting the EAC Test CRC failed!" >&2
+		exit 1
+	fi
+	
+	if ! copy_crc="$(get_eac_crc 'copy')" ; then
+		echo "Getting the EAC Copy CRC failed!" >&2
+		exit 1
+	fi
+	
+	if [[ -z "$test_crc" || -z "$copy_crc" ]] ; then
+		echo "Test or copy CRC is empty!" >&2
+		exit 1
+	fi
 	
 	echo "Checking whether EAC Test CRC matches EAC Copy CRC..."
 	if [ "$test_crc" != "$copy_crc" ] ; then
@@ -259,12 +270,29 @@ test_eac_crc_or_die() {
 		fi
 	fi
 	
-	local expected_crc=`get_eac_crc_or_die "copy"`
+	# defining & assigning them at once would overwrite $?
+	local expected_crc
+	local actual_crc
 	
-	echo "Computing CRC of WAV image..."
-	local actual_crc=`eac-crc "$INPUT_WAV_ABSOLUTE"`
+	if ! expected_crc="$(get_eac_crc 'copy')" ; then
+		echo "Getting the EAC CRC failed!" >&2
+		exit 1
+	fi
+	
+	echo "Computing EAC CRC of WAV image..."
+	
+	if ! actual_crc="$(eac-crc "$INPUT_WAV_ABSOLUTE")" ; then
+		echo "Computing EAC CRC of WAV image failed!" >&2
+		exit 1
+	fi
+	
 	echo "Expected EAC CRC: $expected_crc"
-	echo "Actual CRC: $actual_crc"
+	echo "Actual EAC CRC: $actual_crc"
+	
+	if [[ -z "$expected_crc" || -z "$actual_crc" ]] ; then
+		echo "Expected or actual CRC is empty!" >&2
+		exit 1
+	fi
 	
 	if [ "$actual_crc" != "$expected_crc" ] ; then
 		echo "EAC CRC mismatch!" >&2
