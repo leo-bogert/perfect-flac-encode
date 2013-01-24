@@ -305,7 +305,7 @@ split_wav_image_to_singletracks_or_die() {
 		echo "Deliberately damaging a singletrack to test the AccurateRip checksum verification ..."
 		
 		local wav_singletracks=( "${TEMP_DIRS_ABSOLUTE[WAV_SINGLETRACK_SUBDIR]}"/*.wav )
-		local first_track_without_extension_absolute="${TEMP_DIRS_ABSOLUTE[WAV_SINGLETRACK_SUBDIR]}"/$(basename "${wav_singletracks[0]}" ".wav")
+		local first_track_without_extension_absolute="${TEMP_DIRS_ABSOLUTE[WAV_SINGLETRACK_SUBDIR]}"/"$(basename "${wav_singletracks[0]}" ".wav")"
 		
 		if ! rm --preserve-root -f "${wav_singletracks[0]}" ; then
 			echo "Removing the original WAV track 1 failed!" >&2
