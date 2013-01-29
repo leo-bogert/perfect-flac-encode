@@ -352,14 +352,19 @@ split_wav_image_to_singletracks_or_die() {
 # parameters:
 # $1 = tracknumber
 # $2 = accuraterip version, 1 or 2
-get_accuraterip_checksum_of_singletrack_or_die() {
+get_accuraterip_checksum_of_singletrack() {
 	local tracknumber="$1"
 	local accuraterip_version="$2"
-	tracknumber=`echo "$tracknumber" | sed 's/^[0]//'`	# remove leading zero (we use 2-digit tracknumbers)
+	
+	# remove leading zero (we use 2-digit tracknumbers)
+	if ! tracknumber="$(echo "$tracknumber" | sed 's/^[0]//')" ; then 
+		echo "Invalid tracknumber: $1" >&2
+		return 1
+	fi
 	
 	if [ "$accuraterip_version" != "1" -a "$accuraterip_version" != "2" ] ; then
 		echo "Invalid AccurateRip version: $accuraterip_version!" >&2
-		exit 1
+		return 1
 	fi
 	
 	local regex="^Track( {1,2})($tracknumber)( {2})accurately ripped \\(confidence ([[:digit:]]+)\\)  \\[([0-9A-Fa-f]+)\\]  \\(AR v$accuraterip_version\\)(.*)\$"
@@ -411,8 +416,22 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 			continue
  		fi
 		
-		local expected_checksums[1]=`get_accuraterip_checksum_of_singletrack_or_die "$tracknumber" "1"`
-		local expected_checksums[2]=`get_accuraterip_checksum_of_singletrack_or_die "$tracknumber" "2"`
+		local expected_checksums[1]
+		local expected_checksums[2]
+		
+		if ! expected_checksums[1]="$(get_accuraterip_checksum_of_singletrack "$tracknumber" "1")" ; then
+			expected_checksums[1]=""
+			# No error handling because one of the two checksum queries will fail.
+			# TODO: Instead have a get_accuraterip_checksum_version_of_singletrack to first find out which version checksum we are using. 
+			# This will also allow us to set -o errexit
+		fi
+
+		if ! expected_checksums[2]="$(get_accuraterip_checksum_of_singletrack "$tracknumber" "2")" ; then
+			expected_checksums[2]=""
+			# No error handling because one of the two checksum queries will fail.
+			# TODO: Instead have a get_accuraterip_checksum_version_of_singletrack to first find out which version checksum we are using. 
+			# This will also allow us to set -o errexit
+		fi
 		
 		if [ "${expected_checksums[2]}" != "" ] ; then
 			local accuraterip_version="2"
