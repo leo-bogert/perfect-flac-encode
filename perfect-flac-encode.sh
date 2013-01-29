@@ -464,7 +464,7 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 generate_checksum_of_original_wav_image_or_die() {
 	echo "Generating checksum of original WAV image ..."
 
-	local original_image_filename=$(basename "$INPUT_WAV_ABSOLUTE")
+	local original_image_filename="$(basename "$INPUT_WAV_ABSOLUTE")"
 	
 	set_working_directory_or_die "$INPUT_DIR_ABSOLUTE" # We need to pass a relative filename to sha256 so the output does not contain the absolute path
 	if ! sha256sum --binary "$original_image_filename" > "$OUTPUT_SHA256_ABSOLUTE" ; then
