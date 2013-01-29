@@ -878,7 +878,21 @@ die_if_unit_tests_failed() {
 	done
 }
 
+err_handler() {
+	echo "error at line $1" "last exit code is $2" >&2
+	exit 1
+}
+
+enable_errexit_and_errtrace() {
+	set -o errexit
+	set -o errtrace
+	trap 'err_handler "$LINENO" "$?"' ERR
+}
+
 main() {
+# TODO FIXME XXX: Enable the following. This is a TODO because the script will need some modifications to not execute any commands which trigger errexit unnecessarily
+#	enable_errexit_and_errtrace
+
 	if ! FULL_VERSION="$(get_version_string)" ; then
 		echo "Obtaining version identificator failed. Check whether all required tools are installed!" >&2
 		exit 1
