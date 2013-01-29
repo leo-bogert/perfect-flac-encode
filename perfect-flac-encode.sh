@@ -672,8 +672,15 @@ pretag_singletrack_flac_from_cue_or_die()
 	# TODO: find out whether this is actually everything which is stored on a CD
 	
 	local -A fields	# Attention: We have to explicitely declare the associative array or iteration over the keys will not work!
+	
 	# disc tags
-	fields["CATALOGNUMBER"]=`cue_get_catalog`									# album UPC/EAN. Debbuging showed that cueprint's %U is broken so we use our function.
+	
+	# album UPC/EAN. Debbuging showed that cueprint's %U is broken so we use our function.	
+	if ! fields["CATALOGNUMBER"]="$(cue_get_catalog)" ; then
+		echo "cue_get_catalog failed!" >&2
+		exit 1
+	fi
+	
 	fields["ENCODEDBY"]="$FULL_VERSION"							# own version :)
 	fields["TRACKTOTAL"]='%N'													# number of tracks
 	fields["TOTALTRACKS"]="${fields['TRACKTOTAL']}"								# musicbrainz lists both TRACKTOAL and TOTALTRACKS and for track count.
