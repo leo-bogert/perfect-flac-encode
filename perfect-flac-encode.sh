@@ -27,7 +27,6 @@ set -o pipefail	# this is absolutely critical: make pipes exit with failure if a
 ################################################################################
 # GLOBAL TODOs - please consider them before actually using the script!
 ################################################################################
-# TODO: replace all occurences of "echo <failure message> >&2 ; exit 1" with a function call
 # TODO: review all uses of "echo" and decide whether to use stdout or stderr. Use the "log" function and add another one for stdout.
 # TODO FIXME XXX: I have been misusing bash command substitution, i.e. $() and ``. I had assumed that "exit" inside of the substituted function would kill the outer script, but it will only exit the subshell which executes the command substituion! => Review all $() and `` and check $? for sucess/failure of the called function/program where necessary.
 # TODO FIXME XXX: All uses of `` command substituion should be replaced with $() because it is more robust.
@@ -102,8 +101,7 @@ set_working_directory_or_die() {
 	fi
 	
 	if ! cd "$dir" ; then
-		echo "Setting working directory failed!" >&2
-		exit 1
+		die "Setting working directory failed!"
 	fi
 }
 
@@ -121,8 +119,7 @@ ask_to_delete_existing_output_and_temp_dirs_or_die() {
 	if [ "$confirmed" == "y" ]; then
 		rm --preserve-root -rf "$OUTPUT_DIR_ABSOLUTE"
 	else
-		echo "Quitting because you want to keep the existing output." >&2
-		exit 1
+		die "Quitting because you want to keep the existing output."
 	fi
 }
 
@@ -134,9 +131,8 @@ delete_temp_dirs() {
 		fi
 		
 		if ! rm --preserve-root -rf "$tempdir" ; then
-			echo "Deleting the temp files failed!" >&2
-			exit 1
-		fi	
+			die "Deleting the temp files failed!"
+		fi
 	done
 }
 
@@ -146,13 +142,11 @@ create_directories_or_die() {
 	echo "Creating output and temp directories..."
 	for dir in "${output_dir_and_temp_dirs[@]}" ; do
 		if [ -d "$dir" ]; then
-			echo "Dir exists already: $dir" >&2
-			exit 1
+			die "Dir exists already: $dir"
 		fi
 		
 		if ! mkdir -p "$dir" ; then
-			echo "Making directory \"$dir\" in input directory failed!" >&2
-			exit 1
+			die "Making directory \"$dir\" in input directory failed!"
 		fi
 	done
 }
@@ -161,8 +155,7 @@ check_whether_input_is_accurately_ripped_or_die() {
 	echo "Checking EAC LOG for whether AccurateRip reports a perfect rip..."
 	
 	if ! iconv --from-code utf-16 --to-code utf-8 "$INPUT_LOG_ABSOLUTE" | grep --quiet "All tracks accurately ripped" ; then
-		echo "AccurateRip reported that the disk was not ripped properly - aborting!"
-		exit 1
+		die "AccurateRip reported that the disk was not ripped properly - aborting!"
 	else
 		echo "AccurateRip reports a perfect rip."
 	fi
@@ -190,8 +183,7 @@ check_shntool_wav_problem_diagnosis_or_die() {
 	local len_output # defining & assigning it at once would overwrite $?
 	
 	if ! len_output="$(shntool len -c -t "$INPUT_WAV_ABSOLUTE" | grep -E "$regex")" ; then
-		echo "Regexp for getting the 'shntool len' output failed!" >&2
-		exit 1
+		die "Regexp for getting the 'shntool len' output failed!"
 	fi
 	
 	# We don't need to check for errors with those regexps because len_output is well-defined since it was obtained from a regexp
@@ -200,18 +192,15 @@ check_shntool_wav_problem_diagnosis_or_die() {
 	local problems_column="$(echo "$len_output" | sed -r s/"$regex"/\\3/)"
 	
 	if [ "$cdr_column" != "---" ] ; then
-		echo "CD-quality column of 'shntool len' indicates problems: $cdr_column" >&2
-		exit 1
+		die "CD-quality column of 'shntool len' indicates problems: $cdr_column"
 	fi
 	
 	if [ "$wave_column" != "--" ] ; then
-		echo "WAVE column of 'shntool len' shows problems: $wave_column" >&2
-		exit 1
+		die "WAVE column of 'shntool len' shows problems: $wave_column"
 	fi
 	
 	if [ "$problems_column" != "-----" ] ; then
-		echo "Problems column of 'shntool len' shows problems: $problems_column" >&2
-		exit 1
+		die "Problems column of 'shntool len' shows problems: $problems_column"
 	fi
 }
 
@@ -238,24 +227,20 @@ test_whether_the_two_eac_crcs_match() {
 	local copy_crc
 
 	if ! test_crc="$(get_eac_crc 'test')" ; then
-		echo "Getting the EAC Test CRC failed!" >&2
-		exit 1
+		die "Getting the EAC Test CRC failed!"
 	fi
 	
 	if ! copy_crc="$(get_eac_crc 'copy')" ; then
-		echo "Getting the EAC Copy CRC failed!" >&2
-		exit 1
+		die "Getting the EAC Copy CRC failed!"
 	fi
 	
 	if [[ -z "$test_crc" || -z "$copy_crc" ]] ; then
-		echo "Test or copy CRC is empty!" >&2
-		exit 1
+		die "Test or copy CRC is empty!"
 	fi
 	
 	echo "Checking whether EAC Test CRC matches EAC Copy CRC..."
 	if [ "$test_crc" != "$copy_crc" ] ; then
-		echo "EAC Test CRC does not match EAC Copy CRC!" >&2
-		exit 1
+		die "EAC Test CRC does not match EAC Copy CRC!"
 	fi
 	echo "Test and Copy CRC match."
 }
@@ -267,15 +252,13 @@ test_eac_crc_or_die() {
 		echo "Deliberately damaging the input WAV image (original is renamed to *.original) to test the EAC checksum verification ..."
 		
 		if ! mv --no-clobber "$INPUT_WAV_ABSOLUTE" "$INPUT_WAV_ABSOLUTE.original" ; then
-			echo "Renaming the original WAV image failed!" >&2
-			exit 1
+			die "Renaming the original WAV image failed!"
 		fi
 		
 		local input_wav_without_extension_absolute="$INPUT_DIR_ABSOLUTE/$INPUT_CUE_LOG_WAV_BASENAME"
 		# We replace it with a silent WAV so we don't have to damage the original input image
 		if ! shntool gen -l 1:23 -a "$input_wav_without_extension_absolute"; then 	# .wav must not be in -a
-			echo "Generating silent WAV file failed!"
-			exit 1
+			die "Generating silent WAV file failed!"
 		fi
 	fi
 	
@@ -284,28 +267,24 @@ test_eac_crc_or_die() {
 	local actual_crc
 	
 	if ! expected_crc="$(get_eac_crc 'copy')" ; then
-		echo "Getting the EAC CRC failed!" >&2
-		exit 1
+		die "Getting the EAC CRC failed!"
 	fi
 	
 	echo "Computing EAC CRC of WAV image..."
 	
 	if ! actual_crc="$(eac-crc "$INPUT_WAV_ABSOLUTE")" ; then
-		echo "Computing EAC CRC of WAV image failed!" >&2
-		exit 1
+		die "Computing EAC CRC of WAV image failed!"
 	fi
 	
 	echo "Expected EAC CRC: $expected_crc"
 	echo "Actual EAC CRC: $actual_crc"
 	
 	if [[ -z "$expected_crc" || -z "$actual_crc" ]] ; then
-		echo "Expected or actual CRC is empty!" >&2
-		exit 1
+		die "Expected or actual CRC is empty!"
 	fi
 	
 	if [ "$actual_crc" != "$expected_crc" ] ; then
-		echo "EAC CRC mismatch!" >&2
-		exit 1
+		die "EAC CRC mismatch!"
 	fi
 	
 	echo "EAC CRC of input WAV image is OK."
@@ -334,8 +313,7 @@ split_wav_image_to_singletracks_or_die() {
 	# - We prefix the filename with the maximal amount of zeroes required to get proper sorting for the maximal possible trackcount on a CD which is 99. We do this because cuetag requires proper sort order of the input files and we just use "*.flac" for finding the input files
 	
 	if ! shntool split -q -d "${TEMP_DIRS_ABSOLUTE[WAV_SINGLETRACK_SUBDIR]}" -f "$INPUT_CUE_ABSOLUTE" -m '<_>_:_"_/_\_|_?_*_' -n %02d -t "%n - %t" -- "$INPUT_WAV_ABSOLUTE" ; then
-		echo "Splitting WAV image to singletracks failed!" >&2
-		exit 1
+		die "Splitting WAV image to singletracks failed!"
 	fi
 	
 	if [ ${UNIT_TESTS["TEST_DAMAGE_TO_SPLIT_WAV_SINGLETRACKS"]} -eq 1 ]; then 
@@ -345,15 +323,13 @@ split_wav_image_to_singletracks_or_die() {
 		local first_track_without_extension_absolute="${TEMP_DIRS_ABSOLUTE[WAV_SINGLETRACK_SUBDIR]}"/"$(basename "${wav_singletracks[0]}" ".wav")"
 		
 		if ! rm --preserve-root -f "${wav_singletracks[0]}" ; then
-			echo "Removing the original WAV track 1 failed!" >&2
-			exit 1
+			die "Removing the original WAV track 1 failed!"
 		fi
 		
 		# accurateripchecksum will ignore trailing garbage in a WAV file and adding leading garbage would make it an invalid WAV which would cause the checksum computation to not even happen
 		# Luckily, while reading the manpage of shntool I saw that it is able to generate silent WAV files. So we just replace it with a silent file as "damage":
 		if ! shntool gen -l 1:23 -a "$first_track_without_extension_absolute"; then 	# .wav must not be in -a
-			echo "Generating silent WAV file failed!"
-			exit 1
+			die "Generating silent WAV file failed!"
 		fi
 	fi
 }
@@ -367,12 +343,12 @@ get_accuraterip_checksum_of_singletrack() {
 	
 	# remove leading zero (we use 2-digit tracknumbers)
 	if ! tracknumber="$(echo "$tracknumber" | sed 's/^[0]//')" ; then 
-		echo "Invalid tracknumber: $1" >&2
+		log "Invalid tracknumber: $1"
 		return 1
 	fi
 	
 	if [ "$accuraterip_version" != "1" -a "$accuraterip_version" != "2" ] ; then
-		echo "Invalid AccurateRip version: $accuraterip_version!" >&2
+		log "Invalid AccurateRip version: $accuraterip_version!"
 		return 1
 	fi
 	
@@ -447,15 +423,14 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 		elif [ "${expected_checksums[1]}" != "" ] ; then
 			local accuraterip_version="1"
 		else
-			echo "AccurateRip checksum not found in LOG!" >&2
-			exit 1
+			die "AccurateRip checksum not found in LOG!"
 		fi
 		
 		local expected_checksum="${expected_checksums[$accuraterip_version]^^}" # ^^ = convert to uppercase
 		local actual_checksum=`accuraterip-checksum --accuraterip-v$accuraterip_version "$filename" "$tracknumber" "$totaltracks"`
 		
 		if [ "$actual_checksum" != "$expected_checksum" ]; then
-			echo "AccurateRip checksum mismatch for track $tracknumber: expected='$expected_checksum'; actual='$actual_checksum'" >&2
+			log "AccurateRip checksum mismatch for track $tracknumber: expected='$expected_checksum'; actual='$actual_checksum'"
 			local do_exit=1	# Don't exit right now so we get an overview of all checksums so we have a better chance of finding out what's wrong
 		else
 			echo "AccurateRip checksum of track $tracknumber: $actual_checksum, expected $expected_checksum. OK."
@@ -463,8 +438,7 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 	done
 	
 	if [ "$do_exit" = "1" ] ; then
-		echo "AccurateRip checksum mismatch for at least one track!" >&2
-		exit 1
+		die "AccurateRip checksum mismatch for at least one track!"
 	fi
 }
 
@@ -477,8 +451,7 @@ generate_checksum_of_original_wav_image_or_die() {
 	
 	set_working_directory_or_die "$INPUT_DIR_ABSOLUTE" # We need to pass a relative filename to sha256 so the output does not contain the absolute path
 	if ! sha256sum --binary "$original_image_filename" > "$OUTPUT_SHA256_ABSOLUTE" ; then
-		echo "Generating checksum of original WAV image failed!" >&2
-		exit 1
+		die "Generating checksum of original WAV image failed!"
 	fi
 	set_working_directory_or_die
 }
@@ -497,8 +470,7 @@ test_checksum_of_rejoined_wav_image_or_die() {
 	# - We use quiet mode because otherwise shntool will print the full paths of the input/output files and we don't want those in the log file
 	# - We join into a subdirectory because we don't need the joined file afterwards and we can just delete the subdir to get rid of it
 	if ! shntool join -q -d "${TEMP_DIRS_ABSOLUTE[WAV_JOINTEST_SUBDIR]}" -- "${TEMP_DIRS_ABSOLUTE[WAV_SINGLETRACK_SUBDIR]}"/*.wav ; then 
-		echo "Joining WAV failed!" >&2
-		exit 1
+		die "Joining WAV failed!"
 	fi
 	
 	if [ ${UNIT_TESTS["TEST_DAMAGE_TO_REJOINED_WAV_IMAGE"]} -eq 1 ]; then 
@@ -516,13 +488,11 @@ test_checksum_of_rejoined_wav_image_or_die() {
 	echo -e "Checksum of joined image:\t${joined_sum[0]}"
 
 	if [ -z "${original_sum[0]}" ] || [ -z "${joined_sum[0]}" ] ; then
-		echo "Checksum is empty!" >&2
-		exit 1
+		die "Checksum is empty!"
 	fi
 	
 	if [ "${original_sum[0]}" != "${joined_sum[0]}" ]; then
-		echo "Checksum of joined image does not match original checksum!" >&2
-		exit 1
+		die "Checksum of joined image does not match original checksum!"
 	fi
 	
 	echo "Checksum of joined image OK."
@@ -553,8 +523,7 @@ encode_wav_singletracks_to_flac_or_die() {
 	
 	set_working_directory_or_die "$inputdir"	# We need input filenames to be relative for --output-prefix to work
 	if ! flac --silent --warnings-as-errors --output-prefix="$outputdir/" --verify --replay-gain --best *.wav ; then
-		echo "Encoding WAV to FLAC singletracks failed!" >&2
-		exit 1
+		die "Encoding WAV to FLAC singletracks failed!"
 	fi
 	set_working_directory_or_die
 	
@@ -582,8 +551,7 @@ get_version_string() {
 	local shntool_version
 	
 	if ! accurateripchecksum_version="$(accuraterip-checksum --version)" ; then
-		echo "Obtaining accuraterip-checksum version failed! Please check whether it is installed." >&2
-		exit 1
+		die "Obtaining accuraterip-checksum version failed! Please check whether it is installed."
 	fi
 	
 	# As of 2012-12-23, cueprint does not support printing its version number. So we instead add the package version of cuetools
@@ -599,34 +567,28 @@ get_version_string() {
 	# So we first have to check whether cuetools is installed and only use the version number if it actually is installed.
 	# (Of course the script would fail anyway if cuetools was not installed but in case someone recycles this function then it will at least not have bugs)
 	if ! cuetools_installation_state="$(dpkg-query --show --showformat='${Status}' cuetools)" ; then
-		echo "Checking cuetools installation state failed!" >&2
-		exit 1
+		die "Checking cuetools installation state failed!"
 	fi
 	
 	if [ "$cuetools_installation_state" != "install ok installed" ] ; then 
-		echo "cuetools is not installed! cuetools_installation_state=$cuetools_installation_state" >&2
-		exit 1
+		die "cuetools is not installed! cuetools_installation_state=$cuetools_installation_state"
 	fi
 	
 	if ! cuetools_version="$(dpkg-query --show --showformat='cuetools version ${Version}' cuetools)" ; then
-		echo "Obtaining cuetools version failed!" >&2
-		exit 1
+		die "Obtaining cuetools version failed!"
 	fi
 
 	
 	if ! eaccrc_version="$(eac-crc --version)" ; then
-		echo "Obtaining eac-crc version failed! Please check whether it is installed." >&2
-		exit 1
+		die "Obtaining eac-crc version failed! Please check whether it is installed."
 	fi
 	
 	if ! flac_version="$(flac --version)" ; then
-		echo "Obtaining flac version failed! Please check whether it is installed." >&2
-		exit 1
+		die "Obtaining flac version failed! Please check whether it is installed."
 	fi
 	
 	if ! shntool_version="$(shntool -v 2>&1 | head -1)" ; then
-		echo "Obtaining shntool version failed! Please check whether it is installed." >&2
-		exit 1
+		die "Obtaining shntool version failed! Please check whether it is installed."
 	fi
 	
 	echo "perfect-flac-encode $VERSION with $accurateripchecksum_version, $cuetools_version, $eaccrc_version, $flac_version, $shntool_version" 
@@ -686,8 +648,7 @@ pretag_singletrack_flac_from_cue_or_die()
 	
 	# album UPC/EAN. Debbuging showed that cueprint's %U is broken so we use our function.	
 	if ! fields["CATALOGNUMBER"]="$(cue_get_catalog)" ; then
-		echo "cue_get_catalog failed!" >&2
-		exit 1
+		die "cue_get_catalog failed!"
 	fi
 	
 	fields["ENCODEDBY"]="$FULL_VERSION"							# own version :)
@@ -701,15 +662,13 @@ pretag_singletrack_flac_from_cue_or_die()
 	
 	# We use our own homebrew regexp for obtaining the CATALOG from the CUE so we should be careful
 	if [ "${fields['CATALOGNUMBER']}" = "" ]; then
-		echo "Obtaining CATALOG failed!" >&2
-		exit 1
+		die "Obtaining CATALOG failed!"
 	fi
 	
 	for field in "${!fields[@]}"; do
 		# remove pre-existing tags. we do not use --remove-all-tags because it would remove the replaygain info. and besides it is also cleaner to only remove stuff we know about
 		if ! metaflac --remove-tag="$field" "$flac_file" ; then
-			echo "Removing existing tag $field failed!" >&2
-			exit 1
+			die "Removing existing tag $field failed!"
 		fi
 		
 		local conversion="${fields[$field]}"
@@ -722,8 +681,7 @@ pretag_singletrack_flac_from_cue_or_die()
 		local tag="$field=$value"
 		
 		if ! metaflac --set-tag="$tag" "$flac_file" ; then
-			echo "Setting tag $tag failed!" >&2
-			exit 1
+			die "Setting tag $tag failed!"
 		fi
 	done
 }
@@ -741,8 +699,7 @@ pretag_singletrack_flacs_from_cue_or_die()
 		local tracknumber=`get_tracknumber_of_singletrack "$filename_without_path"`
 
 		if ! pretag_singletrack_flac_from_cue_or_die "$file" "$tracknumber" ; then
-			echo "Tagging $file failed!" >&2
-			exit 1
+			die "Tagging $file failed!"
 		fi
 	done
 }
@@ -753,8 +710,7 @@ test_flac_singletracks_or_die() {
 	local flac_files=( "${TEMP_DIRS_ABSOLUTE[FLAC_SINGLETRACK_SUBDIR]}"/*.flac )
 	
 	if ! flac --test --silent --warnings-as-errors "${flac_files[@]}"; then
-		echo "Testing FLAC singletracks failed!" >&2
-		exit 1
+		die "Testing FLAC singletracks failed!"
 	fi
 }
 
@@ -767,8 +723,7 @@ test_checksums_of_decoded_flac_singletracks_or_die() {
 	
 	set_working_directory_or_die "$inputdir_flac"	# We need input filenames to be relative for --output-prefix to work
 	if ! flac --decode --silent --warnings-as-errors --output-prefix="$outputdir/" *.flac ; then
-		echo "Decoding FLAC singletracks failed!" >&2
-		exit 1
+		die "Decoding FLAC singletracks failed!"
 	fi
 	set_working_directory_or_die
 	
@@ -783,16 +738,14 @@ test_checksums_of_decoded_flac_singletracks_or_die() {
 	# This is absolutely crucical because when validating the checksums we don't want to accidentiall check the sums of the input files instead of the output files.
 	set_working_directory_or_die "$inputdir_wav"
 	if ! sha256sum --binary *.wav > "checksums.sha256" ; then
-		echo "Generating input checksums failed!" &> 2
-		exit 1
+		die "Generating input checksums failed!"
 	fi
 	set_working_directory_or_die
 	
 	echo "Validating checksums of decoded WAV singletracks ..."
 	set_working_directory_or_die "$outputdir"
 	if ! sha256sum --check --strict "$inputdir_wav/checksums.sha256" ; then
-		echo "Validating checksums of decoded WAV singletracks failed!" >&2
-		exit 1
+		die "Validating checksums of decoded WAV singletracks failed!"
 	else
 		echo "All checksums OK."
 	fi
@@ -803,8 +756,7 @@ move_output_to_target_dir_or_die() {
 	echo "Moving FLACs to output directory..."
 	
 	if ! mv --no-clobber "${TEMP_DIRS_ABSOLUTE[FLAC_SINGLETRACK_SUBDIR]}"/*.flac "$OUTPUT_DIR_ABSOLUTE" ; then
-		echo "Moving FLAC files to output dir failed!" >&2
-		exit 1
+		die "Moving FLAC files to output dir failed!"
 	fi
 }
 
@@ -812,13 +764,11 @@ copy_cue_and_log_to_target_dir_or_die() {
 	echo "Copying CUE and LOG to output directory..."
 	
 	if ! cp --archive --no-clobber "$INPUT_CUE_ABSOLUTE" "$OUTPUT_DIR_ABSOLUTE" ; then
-		echo "Copying CUE to output directory failed!" >&2
-		exit 1
+		die "Copying CUE to output directory failed!"
 	fi
 	
 	if ! cp --archive --no-clobber "$INPUT_LOG_ABSOLUTE" "$OUTPUT_DIR_ABSOLUTE/Exact Audio Copy.log" ; then
-		echo "Copying LOG to output directory failed!" >&2
-		exit 1
+		die "Copying LOG to output directory failed!"
 	fi
 }
 
@@ -873,23 +823,20 @@ write_readme_txt_to_target_dir_or_die() {
 		( while read line; do echo -n -e "$line\r\n"; done ) \
 		> "$OUTPUT_DIR_ABSOLUTE/README.txt"	
 	then
-		echo "Generating README.txt failed!"
-		exit 1
+		die "Generating README.txt failed!"
 	fi
 }
 
 die_if_unit_tests_failed() {
 	for test in "${!UNIT_TESTS[@]}"; do
 		if [ "${UNIT_TESTS[$test]}" != "0" ] ; then
-			echo "Unit test $test failed: perfect-flac-encode should have indicated checksum failure due to the deliberate damage of the unit test but did not do so!" >&2
-			exit 1
+			die "Unit test $test failed: perfect-flac-encode should have indicated checksum failure due to the deliberate damage of the unit test but did not do so!"
 		fi
 	done
 }
 
 err_handler() {
-	echo "error at line $1" "last exit code is $2" >&2
-	exit 1
+	die "error at line $1" "last exit code is $2" 
 }
 
 enable_errexit_and_errtrace() {
@@ -903,8 +850,7 @@ main() {
 #	enable_errexit_and_errtrace
 
 	if ! FULL_VERSION="$(get_version_string)" ; then
-		echo "Obtaining version identificator failed. Check whether all required tools are installed!" >&2
-		exit 1
+		die "Obtaining version identificator failed. Check whether all required tools are installed!"
 	fi
 	
 	echo "$FULL_VERSION running ... "
