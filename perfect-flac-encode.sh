@@ -28,6 +28,7 @@ set -o pipefail	# this is absolutely critical: make pipes exit with failure if a
 # GLOBAL TODOs - please consider them before actually using the script!
 ################################################################################
 # TODO: replace all occurences of "echo <failure message> >&2 ; exit 1" with a function call
+# TODO: review all uses of "echo" and decide whether to use stdout or stderr. Use the "log" function and add another one for stdout.
 # TODO FIXME XXX: I have been misusing bash command substitution, i.e. $() and ``. I had assumed that "exit" inside of the substituted function would kill the outer script, but it will only exit the subshell which executes the command substituion! => Review all $() and `` and check $? for sucess/failure of the called function/program where necessary.
 # TODO FIXME XXX: All uses of `` command substituion should be replaced with $() because it is more robust.
 # TODO FIXME XXX: All uses of command substituion should be put within double quotes. I had assumed that command subtitution prevents globbing but it does not! This is very dangerous because we use the output of command subtitution for generating filenames in some places!
@@ -82,6 +83,14 @@ TEMP_DIRS_ABSOLUTE[DECODED_WAV_SINGLETRACK_SUBDIR]=""
 # End of global variables
 ################################################################################
 
+log() {
+	echo "$@" >&2
+}
+
+die() {
+	log "$@"
+	exit 1
+}
 
 # parameters: $1 = target working directory, absolute or relative to current working dir. if not specified, working directory is set to $OUTPUT_DIR_ABSOLUTE
 set_working_directory_or_die() {
