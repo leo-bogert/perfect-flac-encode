@@ -376,7 +376,11 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 	local inputdir_wav="${TEMP_DIRS_ABSOLUTE[WAV_SINGLETRACK_SUBDIR]}"
 	local wav_singletracks=( "$inputdir_wav"/*.wav )
 	local hidden_track="$inputdir_wav/00 - pregap.wav"
-	local totaltracks=`get_total_tracks_without_hiddentrack_from_cue`
+	local totaltracks
+
+	if ! totaltracks="$(get_total_tracks_without_hiddentrack_from_cue)" ; then
+		die "get_total_tracks_without_hiddentrack_from_cue failed!"
+	fi
 	
 	if [ -f "$hidden_track" ] ; then
 		echo "Hidden track one audio found."
