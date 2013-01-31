@@ -397,8 +397,12 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 	local do_exit="0"
 	echo "Total tracks$hidden_track_excluded_message: $totaltracks"
 	for filename in "${wav_singletracks[@]}"; do
-		local filename_without_path=`basename "$filename"`
-		local tracknumber=`get_tracknumber_of_singletrack "$filename_without_path"`
+		local filename_without_path="$(basename "$filename")"	# no checking of the exit code since get_tracknumber_... will fail if the filename is malformed
+		local tracknumber
+		if ! tracknumber="$(get_tracknumber_of_singletrack "$filename_without_path")" ; then
+			die "get_tracknumber_of_singletrack failed!"
+		fi
+		
 		
 		if  [ "$tracknumber" = "00" ] ; then
 			echo "Skipping tracknumber 0 as this is a hidden track, EAC won't list AccurateRip checksums of hidden track one audio"
