@@ -435,7 +435,15 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 		fi
 		
 		local expected_checksum="${expected_checksums[$accuraterip_version]^^}" # ^^ = convert to uppercase
-		local actual_checksum=`accuraterip-checksum --accuraterip-v$accuraterip_version "$filename" "$tracknumber" "$totaltracks"`
+		local actual_checksum
+		
+		if ! actual_checksum="$(accuraterip-checksum --accuraterip-v$accuraterip_version "$filename" "$tracknumber" "$totaltracks")" ; then
+			die "accuraterip-checksum failed!"
+		fi
+		
+		if [[ -z "$actual_checksum" || -z "$expected_checksum" ]] ; then
+			die "actual_checksum or expected_checksum is empty!"
+		fi
 		
 		if [ "$actual_checksum" != "$expected_checksum" ]; then
 			log "AccurateRip checksum mismatch for track $tracknumber: expected='$expected_checksum'; actual='$actual_checksum'"
