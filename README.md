@@ -42,7 +42,7 @@ Additional features are:
 
 
 # Installation:
-This script was written & tested on Ubuntu 12.04 x86_64. It should work on any Ubuntu or Debian-based distribution.
+This script was written & tested on Ubuntu 12.10 x86_64. It should work on any Ubuntu or Debian-based distribution.
 To obtain its dependancies, do the following:
 
 * Install these packages:
