@@ -494,11 +494,12 @@ test_checksum_of_rejoined_wav_image_or_die() {
 		echo "FAIL" >> "$joined_image_absolute"
 	fi
 	
-	local original_sum=( `cat "$original_image_checksum_file_absolute"` )	# it will also print the filename so we split the output by spaces to an array and the first slot will be the actual checksum
+	local -a original_sum
+	read -r -a original_sum < "$original_image_checksum_file_absolute"	# it will also print the filename so we split the output by spaces to an array and the first slot will be the actual checksum
 	
 	echo "Computing checksum of joined WAV image..."
-	# TODO FIXME XXX: this will glob (expand * etc). instead use: read -ra sha_array <<< "$(sha256sum -b ...)"
-	local joined_sum=( `sha256sum --binary "$joined_image_absolute"` ) # it will also print the filename so we split the output by spaces to an array and the first slot will be the actual checksum
+	local -a joined_sum
+	read -r -a joined_sum <<< "$(sha256sum --binary "$joined_image_absolute")" # it will also print the filename so we split the output by spaces to an array and the first slot will be the actual checksum
 	
 	echo -e "Original checksum: \t\t${original_sum[0]}"
 	echo -e "Checksum of joined image:\t${joined_sum[0]}"
