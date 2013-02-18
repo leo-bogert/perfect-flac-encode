@@ -667,7 +667,12 @@ pretag_singletrack_flac_from_cue_or_die()
 	if ! fields["CATALOGNUMBER"]="$(cue_get_catalog)" ; then
 		die "cue_get_catalog failed!"
 	fi
-	
+
+	# We use our own homebrew regexp for obtaining the CATALOG from the CUE so we should be careful
+	if [ "${fields['CATALOGNUMBER']}" = "" ]; then
+		die "Obtaining CATALOG failed!"
+	fi
+
 	fields["ENCODEDBY"]="$FULL_VERSION"							# own version :)
 	fields["TRACKTOTAL"]='%N'													# number of tracks
 	fields["TOTALTRACKS"]="${fields['TRACKTOTAL']}"								# musicbrainz lists both TRACKTOAL and TOTALTRACKS and for track count.
@@ -676,12 +681,7 @@ pretag_singletrack_flac_from_cue_or_die()
 	fields["ISRC"]='%i'			# track ISRC
 	fields["COMMENT"]='%m'		# track message. TODO: is this stored on the CD?
 	fields["TRACKNUMBER"]='%n'	# %n = track number
-	
-	# We use our own homebrew regexp for obtaining the CATALOG from the CUE so we should be careful
-	if [ "${fields['CATALOGNUMBER']}" = "" ]; then
-		die "Obtaining CATALOG failed!"
-	fi
-	
+		
 	for field in "${!fields[@]}"; do
 		# remove pre-existing tags. we do not use --remove-all-tags because it would remove the replaygain info. and besides it is also cleaner to only remove stuff we know about
 		if ! metaflac --remove-tag="$field" "$flac_file" ; then
