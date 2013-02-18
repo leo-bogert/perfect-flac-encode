@@ -689,7 +689,11 @@ pretag_singletrack_flac_from_cue_or_die()
 		fi
 		
 		local conversion="${fields[$field]}"
-		local value=`cueprint -n $trackno -t "$conversion\n" "$INPUT_CUE_ABSOLUTE"`
+		local value
+		
+		if ! value="$(cueprint -n $trackno -t "$conversion\n" "$INPUT_CUE_ABSOLUTE")" ; then
+			die "cueprint failed!"
+		fi
 		
 		if [ -z "$value" ] ; then
 			continue	# Skip empty field
