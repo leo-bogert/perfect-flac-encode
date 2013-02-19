@@ -186,6 +186,7 @@ check_shntool_wav_problem_diagnosis_or_die() {
 	fi
 	
 	# We don't need to check for errors with those regexps because len_output is well-defined since it was obtained from a regexp
+	# Also, each there variables are expected to hold an unique value in following checks, so their content getting mixed up would not be a problem.
 	local cdr_column="$(echo "$len_output" | sed -r s/"$regex"/\\1/)"
 	local wave_column="$(echo "$len_output" | sed -r s/"$regex"/\\2/)"
 	local problems_column="$(echo "$len_output" | sed -r s/"$regex"/\\3/)"
