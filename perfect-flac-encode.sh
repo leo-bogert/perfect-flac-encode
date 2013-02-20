@@ -524,8 +524,15 @@ test_checksum_of_rejoined_wav_image_or_die() {
 	fi
 	
 	echo "Computing checksum of joined WAV image..."
+	local sha_output
+	if ! sha_output="$(sha256sum --binary "$joined_image_absolute")" ; then
+		die "sha256sum failed!"
+	fi
+	
 	local -a joined_sum
-	read -r -a joined_sum <<< "$(sha256sum --binary "$joined_image_absolute")" # it will also print the filename so we split the output by spaces to an array and the first slot will be the actual checksum
+	if ! read -r -a joined_sum <<< "$sha_output" ; then	# We cannot put $(sha256sum ..) into the input of <<< because the exit code will not hit the "if" then.
+		die "Parsing sha256sum failed!"
+	fi
 	
 	echo -e "Original checksum: \t\t${original_sum[0]}"
 	echo -e "Checksum of joined image:\t${joined_sum[0]}"
