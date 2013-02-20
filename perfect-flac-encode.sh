@@ -518,7 +518,10 @@ test_checksum_of_rejoined_wav_image_or_die() {
 	fi
 	
 	local -a original_sum
-	read -r -a original_sum < "$original_image_checksum_file_absolute"	# it will also print the filename so we split the output by spaces to an array and the first slot will be the actual checksum
+	# sha256sum will also print the filename so we split the output by spaces to an array and the first slot will be the actual checksum
+	if ! read -r -a original_sum < "$original_image_checksum_file_absolute" ; then
+		die "Reading the original image checksum file failed!"
+	fi
 	
 	echo "Computing checksum of joined WAV image..."
 	local -a joined_sum
