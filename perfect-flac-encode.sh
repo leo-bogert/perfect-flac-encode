@@ -749,7 +749,12 @@ pretag_singletrack_flacs_from_cue_or_die()
 	local flac_files=( "${TEMP_DIRS_ABSOLUTE[FLAC_SINGLETRACK_SUBDIR]}/"*.flac )
 	
 	for file in "${flac_files[@]}"; do
-		local filename_without_path="$(basename "$file")"	# no checking of the exit code since get_tracknumber_... will fail if the filename is malformed
+		local filename_without_path
+
+		if ! filename_without_path="$(basename "$file")" ; then
+			die "basename failed!"
+		fi
+
 		local tracknumber
 
 		if ! tracknumber="$(get_tracknumber_of_singletrack "$filename_without_path")" ; then
