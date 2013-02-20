@@ -185,11 +185,21 @@ check_shntool_wav_problem_diagnosis_or_die() {
 		die "Regexp for getting the 'shntool len' output failed!"
 	fi
 	
-	# We don't need to check for errors with those regexps because len_output is well-defined since it was obtained from a regexp
-	# Also, each there variables are expected to hold an unique value in following checks, so their content getting mixed up would not be a problem.
-	local cdr_column="$(echo "$len_output" | sed -r s/"$regex"/\\1/)"
-	local wave_column="$(echo "$len_output" | sed -r s/"$regex"/\\2/)"
-	local problems_column="$(echo "$len_output" | sed -r s/"$regex"/\\3/)"
+	local cdr_column
+	local wave_column
+	local problems_column
+
+	if ! cdr_column="$(echo "$len_output" | sed -r s/"$regex"/\\1/)" ; then
+		die "Regexp for getting the 'shntool len' output failed!"
+	fi
+
+	if ! wave_column="$(echo "$len_output" | sed -r s/"$regex"/\\2/)" ; then
+		die "Regexp for getting the 'shntool len' output failed!"
+	fi
+
+	if ! problems_column="$(echo "$len_output" | sed -r s/"$regex"/\\3/)" ; then
+		die "Regexp for getting the 'shntool len' output failed!"
+	fi
 	
 	if [ "$cdr_column" != "---" ] ; then
 		die "CD-quality column of 'shntool len' indicates problems: $cdr_column"
@@ -401,7 +411,12 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 	local do_exit="0"
 	echo "Total tracks$hidden_track_excluded_message: $totaltracks"
 	for filename in "${wav_singletracks[@]}"; do
-		local filename_without_path="$(basename "$filename")"	# no checking of the exit code since get_tracknumber_... will fail if the filename is malformed
+		local filename_without_path
+		
+		if ! filename_without_path="$(basename "$filename")" ; then
+			die "basename failed!"
+		fi
+
 		local tracknumber
 		if ! tracknumber="$(get_tracknumber_of_singletrack "$filename_without_path")" ; then
 			die "get_tracknumber_of_singletrack failed!"
@@ -467,7 +482,11 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 generate_checksum_of_original_wav_image_or_die() {
 	echo "Generating checksum of original WAV image ..."
 
-	local original_image_filename="$(basename "$INPUT_WAV_ABSOLUTE")"
+	local original_image_filename
+
+	if ! original_image_filename="$(basename "$INPUT_WAV_ABSOLUTE")" ; then
+		die "basename failed!"
+	fi
 	
 	set_working_directory_or_die "$INPUT_DIR_ABSOLUTE" # We need to pass a relative filename to sha256 so the output does not contain the absolute path
 	if ! sha256sum --binary "$original_image_filename" > "$OUTPUT_SHA256_ABSOLUTE" ; then
