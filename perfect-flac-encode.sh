@@ -920,7 +920,13 @@ main() {
 	echo -e "BETA VERSION - NOT for productive use!\n\n"
 	
 	# obtain parameters
-	local original_working_dir="$(pwd)"	# store the working directory in case the parameters are relative paths
+
+	local original_working_dir # store the working directory in case the parameters are relative paths
+
+	if ! original_working_dir="$(pwd)" ; then
+		die "pwd failed!"
+	fi
+
 	local original_cue_log_wav_basename="$1"
 	local input_dir="$2"
 	local output_dir="$3"
