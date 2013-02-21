@@ -231,7 +231,7 @@ get_eac_crc() {
 	iconv --from-code utf-16 --to-code utf-8 "$INPUT_LOG_ABSOLUTE" | grep -E "$regex" | sed -r s/"$regex"/\\3/
 }
 
-test_whether_the_two_eac_crcs_match() {
+test_whether_the_two_eac_crcs_match_or_die() {
 	# defining & assigning them at once would overwrite $?
 	local test_crc
 	local copy_crc
@@ -961,7 +961,7 @@ main() {
 	set_working_directory_or_die
 	check_whether_input_is_accurately_ripped_or_die
 	check_shntool_wav_problem_diagnosis_or_die
-	test_whether_the_two_eac_crcs_match
+	test_whether_the_two_eac_crcs_match_or_die
 	test_eac_crc_or_die
 	split_wav_image_to_singletracks_or_die
 	test_accuraterip_checksums_of_split_wav_singletracks_or_die
