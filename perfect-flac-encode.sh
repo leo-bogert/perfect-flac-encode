@@ -877,7 +877,8 @@ print_readme_or_die() {
 write_readme_txt_to_target_dir_or_die() {
 	echo "Generating README.txt ..."
 
-	# We wrap at 80 characters so the full file will fit into a standard Windows Notepad window. TODO: Find out the actual line width of default Notepad. I don't have Windows at hand right now
+	# We wrap at standard 80 chars terminal-style width so we have a better chance of fititng into a standard Notepad window.
+	# Notice that the width of Notepad seems to be configured from the screen resolution at first startup so we ought to be conservative.
 	# We use Windows linebreaks since they will work on any plattform. Unix linebreaks would not wrap the line with many Windows editors.
 	if ! print_readme_or_die |
 		fold --spaces --width=80 | 	
