@@ -27,7 +27,7 @@ set -o pipefail	# this is absolutely critical: make pipes exit with failure if a
 ################################################################################
 # GLOBAL TODOs - please consider them before actually using the script!
 ################################################################################
-# TODO: review all uses of "echo" and decide whether to use stdout or stderr. Use the "log" function and add another one for stdout.
+# - global TODO list is empty :)
 ################################################################################
 
 ################################################################################
@@ -80,11 +80,30 @@ TEMP_DIRS_ABSOLUTE[DECODED_WAV_SINGLETRACK_SUBDIR]=""
 ################################################################################
 
 log() {
+	# FIXME: Implement writing to log file
 	echo "$@" >&2
 }
 
-die() {
+stdout() {
+	echo "$@" >&1
+}
+
+stderr() {
+	echo "$@" >&2
+}
+
+log_and_stdout() {
 	log "$@"
+	stdout "$@"
+}
+
+log_and_stderr() {
+	log "ERROR: " "$@"
+	stderr "ERROR: " "$@"
+}
+
+die() {
+	log_and_stderr "ERROR: " "$@"
 	exit 1
 }
 
@@ -108,7 +127,7 @@ ask_to_delete_existing_output_and_temp_dirs_or_die() {
 		return 0
 	fi
 	
-	echo "Output directory: $OUTPUT_DIR_ABSOLUTE"
+	stdout "Output directory: $OUTPUT_DIR_ABSOLUTE"
 	
 	local confirmed=n
 	read -p "The output directory exists already. Delete it and ALL contained files? (y/n)" confirmed
@@ -121,7 +140,7 @@ ask_to_delete_existing_output_and_temp_dirs_or_die() {
 }
 
 delete_temp_dirs() {
-	echo "Deleting temp directories..."
+	stdout "Deleting temp directories..."
 	for tempdir in "${TEMP_DIRS_ABSOLUTE[@]}" ; do
 		if [ ! -d "$tempdir" ]; then
 			continue
@@ -136,7 +155,7 @@ delete_temp_dirs() {
 create_directories_or_die() {
 	local output_dir_and_temp_dirs=( "$OUTPUT_DIR_ABSOLUTE" "${TEMP_DIRS_ABSOLUTE[@]}" )
 	
-	echo "Creating output and temp directories..."
+	stdout "Creating output and temp directories..."
 	for dir in "${output_dir_and_temp_dirs[@]}" ; do
 		if [ -d "$dir" ]; then
 			die "Dir exists already: $dir"
@@ -149,12 +168,12 @@ create_directories_or_die() {
 }
 
 check_whether_input_is_accurately_ripped_or_die() {
-	echo "Checking EAC LOG for whether AccurateRip reports a perfect rip..."
+	log "Checking EAC LOG for whether AccurateRip reports a perfect rip..."
 	
 	if ! iconv --from-code utf-16 --to-code utf-8 "$INPUT_LOG_ABSOLUTE" | grep --quiet "All tracks accurately ripped" ; then
 		die "AccurateRip reported that the disk was not ripped properly - aborting!"
 	else
-		echo "AccurateRip reports a perfect rip."
+		log "AccurateRip reports a perfect rip."
 	fi
 }
 
@@ -170,7 +189,7 @@ check_whether_input_is_accurately_ripped_or_die() {
 # - File is truncated
 # - File has junk appended to it
 check_shntool_wav_problem_diagnosis_or_die() {
-	echo "Using 'shntool len' to check the input WAV image for quality and file format problems..."
+	log "Using 'shntool len' to check the input WAV image for quality and file format problems..."
 	
     #       length         expanded size                 cdr         WAVE        problems       fmt         ratio         filename
 	#       54:04.55       572371004         B           ---         --          -----          wav         1.0000        Paul Weller - 1994 - Wild Wood.wav"
@@ -221,7 +240,7 @@ get_eac_crc() {
 		copy)
 			local mode="Copy" ;;
 		*)
-			echo "Invalid mode: $1"
+			log_and_stderr "Invalid mode: $1"
 			exit 1
 	esac
 	
@@ -246,18 +265,18 @@ test_whether_the_two_eac_crcs_match_or_die() {
 		die "Test or copy CRC is empty!"
 	fi
 	
-	echo "Checking whether EAC Test CRC matches EAC Copy CRC..."
+	log "Checking whether EAC Test CRC matches EAC Copy CRC..."
 	if [ "$test_crc" != "$copy_crc" ] ; then
 		die "EAC Test CRC does not match EAC Copy CRC!"
 	fi
-	echo "Test and Copy CRC match."
+	log "Test and Copy CRC match."
 }
 
 test_eac_crc_or_die() {
-	echo "Comparing EAC CRC from EAC LOG to CRC of the input WAV image..."
+	log "Comparing EAC CRC from EAC LOG to CRC of the input WAV image..."
 	
 	if [ ${UNIT_TESTS["TEST_DAMAGE_TO_INPUT_WAV_IMAGE"]} -eq 1 ]; then 
-		echo "Deliberately damaging the input WAV image (original is renamed to *.original) to test the EAC checksum verification ..."
+		log_and_stderr "Deliberately damaging the input WAV image (original is renamed to *.original) to test the EAC checksum verification ..."
 		
 		if ! mv --no-clobber "$INPUT_WAV_ABSOLUTE" "$INPUT_WAV_ABSOLUTE.original" ; then
 			die "Renaming the original WAV image failed!"
@@ -278,14 +297,14 @@ test_eac_crc_or_die() {
 		die "Getting the EAC CRC failed!"
 	fi
 	
-	echo "Computing EAC CRC of WAV image..."
+	log "Computing EAC CRC of WAV image..."
 	
 	if ! actual_crc="$(eac-crc "$INPUT_WAV_ABSOLUTE")" ; then
 		die "Computing EAC CRC of WAV image failed!"
 	fi
 	
-	echo "Expected EAC CRC: $expected_crc"
-	echo "Actual EAC CRC: $actual_crc"
+	log "Expected EAC CRC: $expected_crc"
+	log "Actual EAC CRC: $actual_crc"
 	
 	if [[ -z "$expected_crc" || -z "$actual_crc" ]] ; then
 		die "Expected or actual CRC is empty!"
@@ -295,11 +314,11 @@ test_eac_crc_or_die() {
 		die "EAC CRC mismatch!"
 	fi
 	
-	echo "EAC CRC of input WAV image is OK."
+	log "EAC CRC of input WAV image is OK."
 }
 
 split_wav_image_to_singletracks_or_die() {
-	echo "Splitting WAV image to singletrack WAVs..."
+	log "Splitting WAV image to singletrack WAVs..."
 	
 	# shntool syntax:
 	# -q Suppress  non‐critical output (quiet mode).  Output that normally goes to stderr will not be displayed, other than errors or debugging information (if specified).
@@ -325,7 +344,7 @@ split_wav_image_to_singletracks_or_die() {
 	fi
 	
 	if [ ${UNIT_TESTS["TEST_DAMAGE_TO_SPLIT_WAV_SINGLETRACKS"]} -eq 1 ]; then 
-		echo "Deliberately damaging a singletrack to test the AccurateRip checksum verification ..."
+		log_and_stderr "Deliberately damaging a singletrack to test the AccurateRip checksum verification ..."
 		
 		local wav_singletracks=( "${TEMP_DIRS_ABSOLUTE[WAV_SINGLETRACK_SUBDIR]}"/*.wav )
 		local first_track_without_extension_absolute
@@ -355,12 +374,12 @@ get_accuraterip_checksum_of_singletrack() {
 	
 	# remove leading zero (we use 2-digit tracknumbers)
 	if ! tracknumber="$(echo "$tracknumber" | sed 's/^[0]//')" ; then 
-		log "Invalid tracknumber: $1"
+		log_and_stderr "Invalid tracknumber: $1"
 		return 1
 	fi
 	
 	if [ "$accuraterip_version" != "1" -a "$accuraterip_version" != "2" ] ; then
-		log "Invalid AccurateRip version: $accuraterip_version!"
+		log_and_stderr "Invalid AccurateRip version: $accuraterip_version!"
 		return 1
 	fi
 	
@@ -383,7 +402,7 @@ get_total_tracks_without_hiddentrack_from_cue() {
 }
 
 test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
-	echo "Comparing AccurateRip checksums of split WAV singletracks to AccurateRip checksums from EAC LOG..."
+	log "Comparing AccurateRip checksums of split WAV singletracks to AccurateRip checksums from EAC LOG..."
 	
 	local inputdir_wav="${TEMP_DIRS_ABSOLUTE[WAV_SINGLETRACK_SUBDIR]}"
 	local wav_singletracks=( "$inputdir_wav"/*.wav )
@@ -395,19 +414,19 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 	fi
 	
 	if [ -f "$hidden_track" ] ; then
-		echo "Hidden track one audio found."
+		log "Hidden track one audio found."
 		local hidden_track_excluded_message=" (excluding hidden track)"
 		
 		# TODO: evaluate what musicbrainz says about joined hidden track vs hidden track as track0
 		#shntool join "$inputdir_wav/00 - pregap.wav" "$inputdir_wav/01"*.wav
 		#mv "joined.wav" "$inputdir_wav/01"*.wav
 	else
-		echo "Hidden track one audio not found."
+		log "Hidden track one audio not found."
 		local hidden_track_excluded_message=""
 	fi
 	
 	local do_exit="0"
-	echo "Total tracks$hidden_track_excluded_message: $totaltracks"
+	log "Total tracks$hidden_track_excluded_message: $totaltracks"
 	for filename in "${wav_singletracks[@]}"; do
 		local filename_without_path
 		
@@ -422,7 +441,7 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 		
 		
 		if  [ "$tracknumber" = "00" ] ; then
-			echo "Skipping tracknumber 0 as this is a hidden track, EAC won't list AccurateRip checksums of hidden track one audio"
+			log "Skipping tracknumber 0 as this is a hidden track, EAC won't list AccurateRip checksums of hidden track one audio"
 			continue
  		fi
 		
@@ -463,10 +482,10 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 		fi
 		
 		if [ "$actual_checksum" != "$expected_checksum" ]; then
-			log "AccurateRip checksum mismatch for track $tracknumber: expected='$expected_checksum'; actual='$actual_checksum'"
+			log_and_stderr "AccurateRip checksum mismatch for track $tracknumber: expected='$expected_checksum'; actual='$actual_checksum'"
 			local do_exit=1	# Don't exit right now so we get an overview of all checksums so we have a better chance of finding out what's wrong
 		else
-			echo "AccurateRip checksum of track $tracknumber: $actual_checksum, expected $expected_checksum. OK."
+			log "AccurateRip checksum of track $tracknumber: $actual_checksum, expected $expected_checksum. OK."
 		fi
 	done
 	
@@ -478,7 +497,7 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 # This genrates a .sha256 file with the SHA256-checksum of the original WAV image. We do not use the EAC CRC from the log because it is non-standard and does not cover the full WAV.
 # Further, the sha256 will be part of the output directory: If the user ever needs to restore the original WAV image for restoring a physical copy of the CD, it can be used by perfect-flac-decode for checking whether decoding & re-joining the tracks worked properly.
 generate_checksum_of_original_wav_image_or_die() {
-	echo "Generating checksum of original WAV image ..."
+	log "Generating checksum of original WAV image ..."
 
 	local original_image_filename
 
@@ -494,7 +513,7 @@ generate_checksum_of_original_wav_image_or_die() {
 }
 
 test_checksum_of_rejoined_wav_image_or_die() {
-	echo "Joining singletrack WAVs temporarily for comparing their checksum with the original image's checksum..."
+	log "Joining singletrack WAVs temporarily for comparing their checksum with the original image's checksum..."
 	local original_image_checksum_file_absolute="$OUTPUT_SHA256_ABSOLUTE"
 	local joined_image_absolute="${TEMP_DIRS_ABSOLUTE[WAV_JOINTEST_SUBDIR]}/joined.wav"
 
@@ -511,7 +530,7 @@ test_checksum_of_rejoined_wav_image_or_die() {
 	fi
 	
 	if [ ${UNIT_TESTS["TEST_DAMAGE_TO_REJOINED_WAV_IMAGE"]} -eq 1 ]; then 
-		echo "Deliberately damaging the joined image to test the checksum verification ..."
+		log_and_stderr "Deliberately damaging the joined image to test the checksum verification ..."
 		echo "FAIL" >> "$joined_image_absolute"
 	fi
 	
@@ -521,7 +540,7 @@ test_checksum_of_rejoined_wav_image_or_die() {
 		die "Reading the original image checksum file failed!"
 	fi
 	
-	echo "Computing checksum of joined WAV image..."
+	log "Computing checksum of joined WAV image..."
 	local sha_output
 	if ! sha_output="$(sha256sum --binary "$joined_image_absolute")" ; then
 		die "sha256sum failed!"
@@ -532,8 +551,8 @@ test_checksum_of_rejoined_wav_image_or_die() {
 		die "Parsing sha256sum failed!"
 	fi
 	
-	echo -e "Original checksum: \t\t${original_sum[0]}"
-	echo -e "Checksum of joined image:\t${joined_sum[0]}"
+	log $'Original checksum: \t\t' "${original_sum[0]}"
+	log $'Checksum of joined image:\t' "${joined_sum[0]}"
 
 	if [ -z "${original_sum[0]}" ] || [ -z "${joined_sum[0]}" ] ; then
 		die "Checksum is empty!"
@@ -543,11 +562,11 @@ test_checksum_of_rejoined_wav_image_or_die() {
 		die "Checksum of joined image does not match original checksum!"
 	fi
 	
-	echo "Checksum of joined image OK."
+	log "Checksum of joined image OK."
 }
 
 encode_wav_singletracks_to_flac_or_die() {
-	echo "Encoding singletrack WAVs to FLAC ..."
+	log "Encoding singletrack WAVs to FLAC ..."
 	
 	local inputdir="${TEMP_DIRS_ABSOLUTE[WAV_SINGLETRACK_SUBDIR]}"
 	local outputdir="${TEMP_DIRS_ABSOLUTE[FLAC_SINGLETRACK_SUBDIR]}"
@@ -576,7 +595,7 @@ encode_wav_singletracks_to_flac_or_die() {
 	set_working_directory_or_die
 	
 	if [ ${UNIT_TESTS["TEST_DAMAGE_TO_FLAC_SINGLETRACKS"]} -eq 1 ]; then 
-		echo "Deliberately damaging a FLAC singletrack to test flac --test verification..."
+		log_and_stderr "Deliberately damaging a FLAC singletrack to test flac --test verification..."
 		local flac_files=( "$outputdir/"*.flac )
 		truncate --size=-1 "${flac_files[0]}" # We truncate the file instead of appending garbage because FLAC won't detect trailing garbage. TODO: File a bug report
 	fi
@@ -742,7 +761,7 @@ pretag_singletrack_flac_from_cue_or_die()
 # It's license is GPL so this function is GPL as well. 
 pretag_singletrack_flacs_from_cue_or_die()
 {
-	echo "Pre-tagging the singletrack FLACs with information from the CUE which is physically stored on the CD. Please use MusicBrainz Picard for the rest of the tags..."
+	log "Pre-tagging the singletrack FLACs with information from the CUE which is physically stored on the CD. Please use MusicBrainz Picard for the rest of the tags..."
 	
 	local flac_files=( "${TEMP_DIRS_ABSOLUTE[FLAC_SINGLETRACK_SUBDIR]}/"*.flac )
 	
@@ -766,7 +785,7 @@ pretag_singletrack_flacs_from_cue_or_die()
 }
 
 test_flac_singletracks_or_die() {
-	echo "Running flac --test on singletrack FLACs..."
+	log "Running flac --test on singletrack FLACs..."
 	
 	local flac_files=( "${TEMP_DIRS_ABSOLUTE[FLAC_SINGLETRACK_SUBDIR]}"/*.flac )
 	
@@ -776,7 +795,7 @@ test_flac_singletracks_or_die() {
 }
 
 test_checksums_of_decoded_flac_singletracks_or_die() {
-	echo "Decoding singletrack FLACs to WAVs to validate checksums ..."
+	log "Decoding singletrack FLACs to WAVs to validate checksums ..."
 	
 	local inputdir_wav="${TEMP_DIRS_ABSOLUTE[WAV_SINGLETRACK_SUBDIR]}"
 	local inputdir_flac="${TEMP_DIRS_ABSOLUTE[FLAC_SINGLETRACK_SUBDIR]}"
@@ -790,11 +809,11 @@ test_checksums_of_decoded_flac_singletracks_or_die() {
 	
 	local wav_files=( "$outputdir/"*.wav )
 	if [ ${UNIT_TESTS["TEST_DAMAGE_TO_DECODED_FLAC_SINGLETRACKS"]} -eq 1 ]; then 
-		echo "Deliberately damaging a decoded WAV singletrack to test checksum verification..."
+		log_and_stderr "Deliberately damaging a decoded WAV singletrack to test checksum verification..."
 		echo "FAIL" >> "${wav_files[0]}"
 	fi
 
-	echo "Generating checksums of original WAV files..."
+	log "Generating checksums of original WAV files..."
 	# We do NOT use absolute paths when calling sha256sum to make sure that the checksum file contains relative paths.
 	# This is absolutely crucical because when validating the checksums we don't want to accidentiall check the sums of the input files instead of the output files.
 	set_working_directory_or_die "$inputdir_wav"
@@ -803,18 +822,18 @@ test_checksums_of_decoded_flac_singletracks_or_die() {
 	fi
 	set_working_directory_or_die
 	
-	echo "Validating checksums of decoded WAV singletracks ..."
+	log "Validating checksums of decoded WAV singletracks ..."
 	set_working_directory_or_die "$outputdir"
 	if ! sha256sum --check --strict "$inputdir_wav/checksums.sha256" ; then
 		die "Validating checksums of decoded WAV singletracks failed!"
 	else
-		echo "All checksums OK."
+		log "All checksums OK."
 	fi
 	set_working_directory_or_die
 }
 
 move_output_to_target_dir_or_die() {
-	echo "Moving FLACs to output directory..."
+	log "Moving FLACs to output directory..."
 	
 	if ! mv --no-clobber "${TEMP_DIRS_ABSOLUTE[FLAC_SINGLETRACK_SUBDIR]}"/*.flac "$OUTPUT_DIR_ABSOLUTE" ; then
 		die "Moving FLAC files to output dir failed!"
@@ -822,7 +841,7 @@ move_output_to_target_dir_or_die() {
 }
 
 copy_cue_and_log_to_target_dir_or_die() {
-	echo "Copying CUE and LOG to output directory..."
+	log "Copying CUE and LOG to output directory..."
 	
 	if ! cp --archive --no-clobber "$INPUT_CUE_ABSOLUTE" "$OUTPUT_DIR_ABSOLUTE" ; then
 		die "Copying CUE to output directory failed!"
@@ -875,7 +894,7 @@ print_readme_or_die() {
 }
 
 write_readme_txt_to_target_dir_or_die() {
-	echo "Generating README.txt ..."
+	log "Generating README.txt ..."
 
 	# We wrap at standard 80 chars terminal-style width so we have a better chance of fititng into a standard Notepad window.
 	# Notice that the width of Notepad seems to be configured from the screen resolution at first startup so we ought to be conservative.
@@ -915,8 +934,8 @@ main() {
 		die "Obtaining version identificator failed. Check whether all required tools are installed!"
 	fi
 	
-	echo "$FULL_VERSION running ... "
-	echo -e "BETA VERSION - NOT for productive use!\n\n"
+	log_and_stdout "$FULL_VERSION running ... "
+	log_and_stderr $'BETA VERSION - NOT for productive use!\n\n'
 	
 	# obtain parameters
 
@@ -951,9 +970,9 @@ main() {
 	done
 	
 	# All variables are set up now, we are ready to go
-	echo "Album: $original_cue_log_wav_basename"
-	echo "Input directory: $INPUT_DIR_ABSOLUTE"	# TODO: remove after debugging is finished
-	echo "Output directory: $OUTPUT_DIR_ABSOLUTE" # TODO: remove after debugging is finished
+	log_and_stdout "Album: $original_cue_log_wav_basename"
+	stdout "Input directory: $INPUT_DIR_ABSOLUTE"
+	stdout "Output directory: $OUTPUT_DIR_ABSOLUTE"
 	
 	ask_to_delete_existing_output_and_temp_dirs_or_die
 	create_directories_or_die
@@ -977,7 +996,7 @@ main() {
 	delete_temp_dirs
 	die_if_unit_tests_failed
 	
-	echo "SUCCESS."
+	log_and_stdout "SUCCESS."
 	exit 0 # SUCCESS
 }
 
