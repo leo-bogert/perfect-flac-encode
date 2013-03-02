@@ -63,6 +63,7 @@ VERSION="BETA11"
 FULL_VERSION=""			# Full version string which also contains the versions of the used helper programs.
 INPUT_DIR_ABSOLUTE=""	# Directory where the input WAV/LOG/CUE are placed. The temp directories will also reside in it.
 OUTPUT_DIR_ABSOLUTE=""	# Directory where the output (FLACs/LOG/CUE/README.txt) is placed. The temporary directories will be created here as well.
+OUTPUT_OWN_LOG_ABSOLUTE=""	# Full path of the perfect-flac-encode log file
 OUTPUT_SHA256_ABSOLUTE=""	# Full path of the output SHA256. It must a a file in $OUTPUT_DIR_ABSOLUTE
 INPUT_CUE_LOG_WAV_BASENAME=""	# Filename of input WAV/LOG/CUE without extension. . It must be a file in the directory $INPUT_DIR_ABSOLUTE.
 INPUT_CUE_ABSOLUTE=""	# Full path of input CUE. It must be a file in the directory $INPUT_DIR_ABSOLUTE.
@@ -80,8 +81,7 @@ TEMP_DIRS_ABSOLUTE[DECODED_WAV_SINGLETRACK_SUBDIR]=""
 ################################################################################
 
 log() {
-	# FIXME: Implement writing to log file
-	echo "$@" >&2
+	echo "$@" >> "$OUTPUT_OWN_LOG_ABSOLUTE"
 }
 
 stdout() {
@@ -98,8 +98,11 @@ log_and_stdout() {
 }
 
 log_and_stderr() {
-	log "ERROR: " "$@"
+	# log() won't work during early startup since the directory where the log file is located won't exist yet.
+	# This can cause the call to log() to kill the script if we have errexit enabled.
+	# So we should first do stderr() to ensure that the user gets the actual error message.
 	stderr "ERROR: " "$@"
+	log "ERROR: " "$@"
 }
 
 die() {
@@ -163,6 +166,14 @@ create_directories_or_die() {
 			die "Making directory \"$dir\" in input directory failed!"
 		fi
 	done
+}
+
+create_log_file_or_die() {
+	stdout "Logging to file: $OUTPUT_OWN_LOG_ABSOLUTE"
+
+	if ! touch "$OUTPUT_OWN_LOG_ABSOLUTE" ; then
+		die "Creating log file failed: $OUTPUT_OWN_LOG_ABSOLUTE"
+	fi
 }
 
 check_whether_input_is_accurately_ripped_or_die() {
@@ -822,9 +833,12 @@ test_checksums_of_decoded_flac_singletracks_or_die() {
 	
 	log "Validating checksums of decoded WAV singletracks ..."
 	set_working_directory_or_die "$outputdir"
-	if ! sha256sum --check --strict "$inputdir_wav/checksums.sha256" ; then
+	local sha_output
+	if ! sha_output="$(sha256sum --check --strict "$inputdir_wav/checksums.sha256")" ; then
+		log_and_stderr "$sha_output"
 		die "Validating checksums of decoded WAV singletracks failed!"
 	else
+		log "$sha_output"
 		log "All checksums OK."
 	fi
 	set_working_directory_or_die
@@ -932,9 +946,6 @@ main() {
 		die "Obtaining version identificator failed. Check whether all required tools are installed!"
 	fi
 	
-	log_and_stdout "$FULL_VERSION running ... "
-	log_and_stderr $'BETA VERSION - NOT for productive use!\n\n'
-	
 	# obtain parameters
 
 	local original_working_dir # store the working directory in case the parameters are relative paths
@@ -957,6 +968,8 @@ main() {
 	[[ "$input_dir" = /* ]] && INPUT_DIR_ABSOLUTE="$input_dir" || INPUT_DIR_ABSOLUTE="$original_working_dir/$input_dir"
 	[[ "$output_dir" = /* ]] && OUTPUT_DIR_ABSOLUTE="$output_dir/$INPUT_CUE_LOG_WAV_BASENAME" || OUTPUT_DIR_ABSOLUTE="$original_working_dir/$output_dir/$INPUT_CUE_LOG_WAV_BASENAME"
 	
+	OUTPUT_OWN_LOG_ABSOLUTE="$OUTPUT_DIR_ABSOLUTE/Perfect-FLAC-Encode.log"
+
 	OUTPUT_SHA256_ABSOLUTE="$OUTPUT_DIR_ABSOLUTE/$INPUT_CUE_LOG_WAV_BASENAME.sha256"
 	
 	INPUT_CUE_ABSOLUTE="$INPUT_DIR_ABSOLUTE/$INPUT_CUE_LOG_WAV_BASENAME.cue"
@@ -967,14 +980,23 @@ main() {
 		TEMP_DIRS_ABSOLUTE[$tempdir]="$OUTPUT_DIR_ABSOLUTE/${TEMP_DIRS[$tempdir]}"
 	done
 	
-	# All variables are set up now, we are ready to go
-	log_and_stdout "Album: $original_cue_log_wav_basename"
+	# All variables are set up now
+	# We need to make the output directory available now so log() works
+
 	stdout "Input directory: $INPUT_DIR_ABSOLUTE"
 	stdout "Output directory: $OUTPUT_DIR_ABSOLUTE"
 	
 	ask_to_delete_existing_output_and_temp_dirs_or_die
 	create_directories_or_die
 	set_working_directory_or_die
+	create_log_file_or_die
+
+	# The output directory exists, we are inside of it, logging works. Now we can actually deal with the audio part.
+	
+	log_and_stdout "$FULL_VERSION running ... "
+	log_and_stderr $'BETA VERSION - NOT for productive use!\n\n'
+	log_and_stdout "Album: $original_cue_log_wav_basename"
+	
 	check_whether_input_is_accurately_ripped_or_die
 	check_shntool_wav_problem_diagnosis_or_die
 	test_whether_the_two_eac_crcs_match_or_die
@@ -990,7 +1012,6 @@ main() {
 	move_output_to_target_dir_or_die
 	copy_cue_and_log_to_target_dir_or_die
 	write_readme_txt_to_target_dir_or_die
-	# TODO: Check whether we can safely append the perfect-flac encode log to the EAC log and do so if we can. EAC adds a checksum to the end of its log, We should check whether the checksum validation tools allow us to add content to the file. If they don't, maybe we should just add another checksum to the end. If we do NOT implement merging of the log files, write our log to a separate file and upate the code which produces the README to reflect that change.
 	delete_temp_dirs
 	die_if_unit_tests_failed
 	
