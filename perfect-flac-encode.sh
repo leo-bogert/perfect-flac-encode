@@ -994,7 +994,7 @@ main() {
 	# The output directory exists, we are inside of it, logging works. Now we can actually deal with the audio part.
 	
 	log_and_stdout "$FULL_VERSION running ... "
-	log_and_stderr $'BETA VERSION - NOT for productive use!\n\n'
+	log_and_stderr "BETA VERSION - NOT for productive use!"
 	log_and_stdout "Album: $original_cue_log_wav_basename"
 	
 	check_whether_input_is_accurately_ripped_or_die
