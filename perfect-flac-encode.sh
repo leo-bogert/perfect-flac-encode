@@ -27,7 +27,7 @@ set -o pipefail	# this is absolutely critical: make pipes exit with failure if a
 ################################################################################
 # GLOBAL TODOs - please consider them before actually using the script!
 ################################################################################
-# - global TODO list is empty :)
+# TODO: Review uses of command substitution $() and decide whether we should clone their stderr to the log file.
 ################################################################################
 
 ################################################################################
