@@ -106,7 +106,7 @@ log_and_stderr() {
 }
 
 die() {
-	log_and_stderr "ERROR: " "$@"
+	log_and_stderr "$@"
 	exit 1
 }
 
