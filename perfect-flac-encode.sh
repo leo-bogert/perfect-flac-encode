@@ -895,7 +895,7 @@ print_readme_or_die() {
 	$e "\"Exact Audio Copy.log\"" &&
 	$e "This file is a 'proof of quality'. It contains the output of Exact Audio Copy - the software which was used to extract the physical CD to a computer. It allows you to see the conditions of the copying and the version of Exact Audio Copy. You can check it to see that there were no errors. Further, if someone finds bugs in certain versions of Exact Audio Copy you will be able to check whether your audio files are affected by examining the version number." &&
 	$e "" &&
-	$e "\"perfect-flac-encode.log\"" &&
+	$e "\"Perfect-FLAC-Encode.log\"" &&
 	$e "This file is a 'proof of quality'. It contains the output of perfect-flac-encode and the version of it and the versions of all used helper programs. It allows you to see the conditions of the encoding process. You can check it to see that there were no errors. Further, if someone finds bugs in certain versions of perfect-flac-encode or the helper programs you will be able to check whether your audio files are affected by examining the version numbers." &&
 	$e "" &&
 	$e "" &&
