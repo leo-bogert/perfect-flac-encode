@@ -248,7 +248,7 @@ check_shntool_wav_problem_diagnosis_or_die() {
 # parameters:
 # $1 = "test" or "copy" = which crc to get, EAC provides 2
 get_eac_crc() {
-	case $1 in
+	case "$1" in
 		test)
 			local mode="Test" ;;
 		copy)
