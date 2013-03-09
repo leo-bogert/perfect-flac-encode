@@ -459,8 +459,8 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 			continue
  		fi
 		
-		local expected_checksums[1]
-		local expected_checksums[2]
+		local 'expected_checksums[1]'
+		local 'expected_checksums[2]'
 		
 		if ! expected_checksums[1]="$(get_accuraterip_checksum_of_singletrack "$tracknumber" "1")" ; then
 			expected_checksums[1]=""
