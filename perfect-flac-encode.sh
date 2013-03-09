@@ -821,8 +821,8 @@ test_checksums_of_decoded_flac_singletracks_or_die() {
 	fi
 	set_working_directory_or_die
 	
-	local wav_files=( "$outputdir/"*.wav )
 	if [ ${UNIT_TESTS["TEST_DAMAGE_TO_DECODED_FLAC_SINGLETRACKS"]} -eq 1 ]; then 
+		local wav_files=( "$outputdir/"*.wav )
 		log_and_stderr "Deliberately damaging a decoded WAV singletrack to test checksum verification..."
 		echo "FAIL" >> "${wav_files[0]}"
 	fi
