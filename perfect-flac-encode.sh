@@ -3,6 +3,8 @@ set -o nounset	# exit with error upon access of unset variable
 set -o pipefail	# this is absolutely critical: make pipes exit with failure if any of the involved commands fails. the default is exit status of the last command.
 #set -o errexit # see enable_errexit_and_errtrace() / main()
 #set -o errtrace # see enable_errexit_and_errtrace() / main()
+shopt -s nullglob # We use * for finding files but do no checking for the globbing pitfall which can happen if no files are found. See http://mywiki.wooledge.org/NullGlob
+shopt -s failglob # Nullglob can have many side effects (see http://mywiki.wooledge.org/NullGlob) and we don't need any globs which return no files so it is a good idea to have this. I see that this seems to make the nullglob option redundant but I'd like to have them both: In case someone removes the failglob option because he needs failing globs, the nullglob will be needed so we can just already put it there.
 
 ################################################################################
 # NAME: perfect-flac-encode
