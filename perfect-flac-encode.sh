@@ -73,6 +73,7 @@ INPUT_LOG_ABSOLUTE=""	# Full path of input LOG. It must be a file in the directo
 INPUT_WAV_ABSOLUTE=""	# Full path of input WAV. It must be a file in the directory $INPUT_DIR_ABSOLUTE.
 
 # Absolute paths to the temp directories. For documentation see above in the "Configuration" section.
+# Must be subdirectories of the output directory, see ask_to_delete_existing_output_and_temp_dirs_or_die() for an explanation.
 declare -A TEMP_DIRS_ABSOLUTE  # Attention: We have to explicitely declare the associative array or iteration over the keys will not work!
 TEMP_DIRS_ABSOLUTE[WAV_SINGLETRACK_SUBDIR]=""
 TEMP_DIRS_ABSOLUTE[WAV_JOINTEST_SUBDIR]=""
