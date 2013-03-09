@@ -63,11 +63,11 @@ UNIT_TESTS["TEST_DAMAGE_TO_DECODED_FLAC_SINGLETRACKS"]=0
 ################################################################################
 VERSION="BETA11"
 FULL_VERSION=""			# Full version string which also contains the versions of the used helper programs.
-INPUT_DIR_ABSOLUTE=""	# Directory where the input WAV/LOG/CUE are placed. The temp directories will also reside in it.
-OUTPUT_DIR_ABSOLUTE=""	# Directory where the output (FLACs/LOG/CUE/README.txt) is placed. The temporary directories will be created here as well.
-OUTPUT_OWN_LOG_ABSOLUTE=""	# Full path of the perfect-flac-encode log file
-OUTPUT_SHA256_ABSOLUTE=""	# Full path of the output SHA256. It must a a file in $OUTPUT_DIR_ABSOLUTE
-INPUT_CUE_LOG_WAV_BASENAME=""	# Filename of input WAV/LOG/CUE without extension. . It must be a file in the directory $INPUT_DIR_ABSOLUTE.
+INPUT_DIR_ABSOLUTE=""	# Directory where the input WAV/LOG/CUE can be found. Must not be written to by the script in any way.
+OUTPUT_DIR_ABSOLUTE=""	# Directory where the output (FLACs/EAC LOG/PFE LOG/CUE/README.txt) is created. The temporary directories will be created here as well.
+OUTPUT_OWN_LOG_ABSOLUTE=""	# Full path of the perfect-flac-encode log file. It must be a file in $OUTPUT_DIR_ABSOLUTE.
+OUTPUT_SHA256_ABSOLUTE=""	# Full path of the output SHA256. It must be a file in $OUTPUT_DIR_ABSOLUTE
+INPUT_CUE_LOG_WAV_BASENAME=""	# Filename of input WAV/LOG/CUE without extension. It must be a file in the directory $INPUT_DIR_ABSOLUTE.
 INPUT_CUE_ABSOLUTE=""	# Full path of input CUE. It must be a file in the directory $INPUT_DIR_ABSOLUTE.
 INPUT_LOG_ABSOLUTE=""	# Full path of input LOG. It must be a file in the directory $INPUT_DIR_ABSOLUTE.
 INPUT_WAV_ABSOLUTE=""	# Full path of input WAV. It must be a file in the directory $INPUT_DIR_ABSOLUTE.
