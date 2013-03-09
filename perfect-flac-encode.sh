@@ -1,6 +1,8 @@
 #!/bin/bash
 set -o nounset	# exit with error upon access of unset variable
 set -o pipefail	# this is absolutely critical: make pipes exit with failure if any of the involved commands fails. the default is exit status of the last command.
+#set -o errexit # see enable_errexit_and_errtrace() / main()
+#set -o errtrace # see enable_errexit_and_errtrace() / main()
 
 ################################################################################
 # NAME: perfect-flac-encode
