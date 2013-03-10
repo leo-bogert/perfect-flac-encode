@@ -392,7 +392,7 @@ get_accuraterip_checksum_of_singletrack() {
 		return 1
 	fi
 	
-	if [ "$accuraterip_version" != "1" -a "$accuraterip_version" != "2" ] ; then
+	if [ "$accuraterip_version" != "1" ] && [ "$accuraterip_version" != "2" ] ; then
 		log_and_stderr "Invalid AccurateRip version: $accuraterip_version!"
 		return 1
 	fi
