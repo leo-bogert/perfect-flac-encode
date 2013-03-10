@@ -139,7 +139,7 @@ ask_to_delete_existing_output_and_temp_dirs_or_die() {
 	read -p "The output directory exists already. Delete it and ALL contained files? (y/n)" confirmed
 	
 	if [ "$confirmed" == "y" ]; then
-		rm --preserve-root -rf "$OUTPUT_DIR_ABSOLUTE"
+		rm --preserve-root -rf -- "$OUTPUT_DIR_ABSOLUTE"
 	else
 		die "Quitting because you want to keep the existing output."
 	fi
@@ -152,7 +152,7 @@ delete_temp_dirs() {
 			continue
 		fi
 		
-		if ! rm --preserve-root -rf "$tempdir" ; then
+		if ! rm --preserve-root -rf -- "$tempdir" ; then
 			die "Deleting the temp files failed!"
 		fi
 	done
@@ -292,7 +292,7 @@ test_eac_crc_or_die() {
 	if [ ${UNIT_TESTS["TEST_DAMAGE_TO_INPUT_WAV_IMAGE"]} -eq 1 ]; then 
 		log_and_stderr "Deliberately damaging the input WAV image (original is renamed to *.original) to test the EAC checksum verification ..."
 		
-		if ! mv --no-clobber "$INPUT_WAV_ABSOLUTE" "$INPUT_WAV_ABSOLUTE.original" ; then
+		if ! mv --no-clobber -- "$INPUT_WAV_ABSOLUTE" "$INPUT_WAV_ABSOLUTE.original" ; then
 			die "Renaming the original WAV image failed!"
 		fi
 		
@@ -367,7 +367,7 @@ split_wav_image_to_singletracks_or_die() {
 			die "basename failed!"
 		fi
 		
-		if ! rm --preserve-root -f "${wav_singletracks[0]}" ; then
+		if ! rm --preserve-root -f -- "${wav_singletracks[0]}" ; then
 			die "Removing the original WAV track 1 failed!"
 		fi
 		
@@ -520,7 +520,7 @@ generate_checksum_of_original_wav_image_or_die() {
 	fi
 	
 	set_working_directory_or_die "$INPUT_DIR_ABSOLUTE" # We need to pass a relative filename to sha256 so the output does not contain the absolute path
-	if ! sha256sum --binary "$original_image_filename" > "$OUTPUT_SHA256_ABSOLUTE" ; then
+	if ! sha256sum --binary -- "$original_image_filename" > "$OUTPUT_SHA256_ABSOLUTE" ; then
 		die "Generating checksum of original WAV image failed!"
 	fi
 	set_working_directory_or_die
@@ -611,7 +611,7 @@ encode_wav_singletracks_to_flac_or_die() {
 	if [ ${UNIT_TESTS["TEST_DAMAGE_TO_FLAC_SINGLETRACKS"]} -eq 1 ]; then 
 		log_and_stderr "Deliberately damaging a FLAC singletrack to test flac --test verification..."
 		local flac_files=( "$outputdir/"*.flac )
-		truncate --size=-1 "${flac_files[0]}" # We truncate the file instead of appending garbage because FLAC won't detect trailing garbage. TODO: File a bug report
+		truncate --size=-1 -- "${flac_files[0]}" # We truncate the file instead of appending garbage because FLAC won't detect trailing garbage. TODO: File a bug report
 	fi
 }
 
@@ -852,7 +852,7 @@ test_checksums_of_decoded_flac_singletracks_or_die() {
 move_output_to_target_dir_or_die() {
 	log "Moving FLACs to output directory..."
 	
-	if ! mv --no-clobber "${TEMP_DIRS_ABSOLUTE[FLAC_SINGLETRACK_SUBDIR]}"/*.flac "$OUTPUT_DIR_ABSOLUTE" ; then
+	if ! mv --no-clobber -- "${TEMP_DIRS_ABSOLUTE[FLAC_SINGLETRACK_SUBDIR]}"/*.flac "$OUTPUT_DIR_ABSOLUTE" ; then
 		die "Moving FLAC files to output dir failed!"
 	fi
 }
@@ -860,11 +860,11 @@ move_output_to_target_dir_or_die() {
 copy_cue_and_log_to_target_dir_or_die() {
 	log "Copying CUE and LOG to output directory..."
 	
-	if ! cp --archive --no-clobber "$INPUT_CUE_ABSOLUTE" "$OUTPUT_DIR_ABSOLUTE" ; then
+	if ! cp --archive --no-clobber -- "$INPUT_CUE_ABSOLUTE" "$OUTPUT_DIR_ABSOLUTE" ; then
 		die "Copying CUE to output directory failed!"
 	fi
 	
-	if ! cp --archive --no-clobber "$INPUT_LOG_ABSOLUTE" "$OUTPUT_DIR_ABSOLUTE/Exact Audio Copy.log" ; then
+	if ! cp --archive --no-clobber -- "$INPUT_LOG_ABSOLUTE" "$OUTPUT_DIR_ABSOLUTE/Exact Audio Copy.log" ; then
 		die "Copying LOG to output directory failed!"
 	fi
 }
