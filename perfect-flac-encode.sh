@@ -433,7 +433,8 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 		
 		# TODO: evaluate what musicbrainz says about joined hidden track vs hidden track as track0
 		#shntool join "$inputdir_wav/00 - pregap.wav" "$inputdir_wav/01"*.wav
-		#mv "joined.wav" "$inputdir_wav/01"*.wav
+		#mv -- "joined.wav" "$inputdir_wav/01"*.wav
+		#rm --preserve-root -f -- "00 - pregap.wav"
 	else
 		log "Hidden track one audio not found."
 		local hidden_track_excluded_message=""
