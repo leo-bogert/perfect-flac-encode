@@ -118,7 +118,7 @@ die() {
 # parameters: $1 = target working directory, absolute or relative to current working dir. if not specified, working directory is set to $OUTPUT_DIR_ABSOLUTE
 set_working_directory_or_die() {
 	#echo "Changing working directory to $dir..."
-	if [ $# -eq 0 ] ; then
+	if [ "$#" -eq 0 ] ; then
 		local dir="$OUTPUT_DIR_ABSOLUTE" # We default to the output dir so the probability of accidentially damaging something is lower
 	else
 		local dir="$1"
@@ -289,7 +289,7 @@ test_whether_the_two_eac_crcs_match_or_die() {
 test_eac_crc_or_die() {
 	log "Comparing EAC CRC from EAC LOG to CRC of the input WAV image..."
 	
-	if [ ${UNIT_TESTS["TEST_DAMAGE_TO_INPUT_WAV_IMAGE"]} -eq 1 ]; then 
+	if [ "${UNIT_TESTS[TEST_DAMAGE_TO_INPUT_WAV_IMAGE]}" -eq 1 ]; then 
 		log_and_stderr "Deliberately damaging the input WAV image (original is renamed to *.original) to test the EAC checksum verification ..."
 		
 		if ! mv --no-clobber -- "$INPUT_WAV_ABSOLUTE" "$INPUT_WAV_ABSOLUTE.original" ; then
@@ -357,7 +357,7 @@ split_wav_image_to_singletracks_or_die() {
 		die "Splitting WAV image to singletracks failed!"
 	fi
 	
-	if [ ${UNIT_TESTS["TEST_DAMAGE_TO_SPLIT_WAV_SINGLETRACKS"]} -eq 1 ]; then 
+	if [ "${UNIT_TESTS[TEST_DAMAGE_TO_SPLIT_WAV_SINGLETRACKS]}" -eq 1 ]; then 
 		log_and_stderr "Deliberately damaging a singletrack to test the AccurateRip checksum verification ..."
 		
 		local wav_singletracks=( "${TEMP_DIRS_ABSOLUTE[WAV_SINGLETRACK_SUBDIR]}"/*.wav )
@@ -544,7 +544,7 @@ test_checksum_of_rejoined_wav_image_or_die() {
 		die "Joining WAV failed!"
 	fi
 	
-	if [ ${UNIT_TESTS["TEST_DAMAGE_TO_REJOINED_WAV_IMAGE"]} -eq 1 ]; then 
+	if [ "${UNIT_TESTS[TEST_DAMAGE_TO_REJOINED_WAV_IMAGE]}" -eq 1 ]; then 
 		log_and_stderr "Deliberately damaging the joined image to test the checksum verification ..."
 		echo "FAIL" >> "$joined_image_absolute"
 	fi
@@ -609,7 +609,7 @@ encode_wav_singletracks_to_flac_or_die() {
 	fi
 	set_working_directory_or_die
 	
-	if [ ${UNIT_TESTS["TEST_DAMAGE_TO_FLAC_SINGLETRACKS"]} -eq 1 ]; then 
+	if [ "${UNIT_TESTS[TEST_DAMAGE_TO_FLAC_SINGLETRACKS]}" -eq 1 ]; then 
 		log_and_stderr "Deliberately damaging a FLAC singletrack to test flac --test verification..."
 		local flac_files=( "$outputdir/"*.flac )
 		truncate --size=-1 -- "${flac_files[0]}" # We truncate the file instead of appending garbage because FLAC won't detect trailing garbage. TODO: File a bug report
@@ -822,7 +822,7 @@ test_checksums_of_decoded_flac_singletracks_or_die() {
 	fi
 	set_working_directory_or_die
 	
-	if [ ${UNIT_TESTS["TEST_DAMAGE_TO_DECODED_FLAC_SINGLETRACKS"]} -eq 1 ]; then 
+	if [ "${UNIT_TESTS[TEST_DAMAGE_TO_DECODED_FLAC_SINGLETRACKS]}" -eq 1 ]; then 
 		local wav_files=( "$outputdir/"*.wav )
 		log_and_stderr "Deliberately damaging a decoded WAV singletrack to test checksum verification..."
 		echo "FAIL" >> "${wav_files[0]}"
