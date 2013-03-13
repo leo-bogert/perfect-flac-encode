@@ -919,7 +919,7 @@ write_readme_txt_to_target_dir_or_die() {
 	# We use Windows linebreaks since they will work on any plattform. Unix linebreaks would not wrap the line with many Windows editors.
 	if ! print_readme_or_die |
 		fold --spaces --width=80 | 	
-		( while read line; do echo -n -e "$line\r\n"; done ) \
+		( while read -r line; do echo -n -e "$line\r\n"; done ) \
 		> "$OUTPUT_DIR_ABSOLUTE/README.txt"	
 	then
 		die "Generating README.txt failed!"
