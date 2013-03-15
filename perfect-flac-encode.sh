@@ -318,7 +318,7 @@ test_eac_crc_or_die() {
 	fi
 	
 	log "Expected EAC CRC: $expected_crc"
-	log "Actual EAC CRC: $actual_crc"
+	log "Actual EAC CRC:   $actual_crc"
 	
 	if [[ -z "$expected_crc" || -z "$actual_crc" ]] ; then
 		die "Expected or actual CRC is empty!"
@@ -566,8 +566,8 @@ test_checksum_of_rejoined_wav_image_or_die() {
 		die "Parsing sha256sum failed!"
 	fi
 	
-	log $'Original checksum: \t\t' "${original_sum[0]}"
-	log $'Checksum of joined image:\t' "${joined_sum[0]}"
+	log "Original checksum:        ${original_sum[0]}"
+	log "Checksum of joined image: ${joined_sum[0]}"
 
 	if [ -z "${original_sum[0]}" ] || [ -z "${joined_sum[0]}" ] ; then
 		die "Checksum is empty!"
