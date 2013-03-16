@@ -85,16 +85,22 @@ TEMP_DIRS_ABSOLUTE[DECODED_WAV_SINGLETRACK_SUBDIR]=""
 # End of global variables
 ################################################################################
 
+# Safe echo - we cannot terminate the argument list of standard echo so we need to use printf instead
+# See http://mywiki.wooledge.org/BashPitfalls#echo_.24foo
+secho() {
+	printf "%s\n" "$*"
+}
+
 log() {
-	echo "$@" >> "$OUTPUT_OWN_LOG_ABSOLUTE"
+	secho "$@" >> "$OUTPUT_OWN_LOG_ABSOLUTE"
 }
 
 stdout() {
-	echo "$@" >&1
+	secho "$@" >&1
 }
 
 stderr() {
-	echo "$@" >&2
+	secho "$@" >&2
 }
 
 log_and_stdout() {
@@ -106,8 +112,8 @@ log_and_stderr() {
 	# log() won't work during early startup since the directory where the log file is located won't exist yet.
 	# This can cause the call to log() to kill the script if we have errexit enabled.
 	# So we should first do stderr() to ensure that the user gets the actual error message.
-	stderr "ERROR: " "$@"
-	log "ERROR: " "$@"
+	stderr "ERROR:" "$@"
+	log "ERROR:" "$@"
 }
 
 die() {
@@ -117,7 +123,7 @@ die() {
 
 # parameters: $1 = target working directory, absolute or relative to current working dir. if not specified, working directory is set to $OUTPUT_DIR_ABSOLUTE
 set_working_directory_or_die() {
-	#echo "Changing working directory to $dir..."
+	#secho "Changing working directory to $dir..."
 	if [ "$#" -eq 0 ] ; then
 		local dir="$OUTPUT_DIR_ABSOLUTE" # We default to the output dir so the probability of accidentially damaging something is lower
 	else
@@ -220,15 +226,15 @@ check_shntool_wav_problem_diagnosis_or_die() {
 	local wave_column
 	local problems_column
 
-	if ! cdr_column="$(echo "$len_output" | sed -r s/"$regex"/\\1/)" ; then
+	if ! cdr_column="$(secho "$len_output" | sed -r s/"$regex"/\\1/)" ; then
 		die "Regexp for getting the 'shntool len' output failed!"
 	fi
 
-	if ! wave_column="$(echo "$len_output" | sed -r s/"$regex"/\\2/)" ; then
+	if ! wave_column="$(secho "$len_output" | sed -r s/"$regex"/\\2/)" ; then
 		die "Regexp for getting the 'shntool len' output failed!"
 	fi
 
-	if ! problems_column="$(echo "$len_output" | sed -r s/"$regex"/\\3/)" ; then
+	if ! problems_column="$(secho "$len_output" | sed -r s/"$regex"/\\3/)" ; then
 		die "Regexp for getting the 'shntool len' output failed!"
 	fi
 	
@@ -387,7 +393,7 @@ get_accuraterip_checksum_of_singletrack() {
 	local accuraterip_version="$2"
 	
 	# remove leading zero (we use 2-digit tracknumbers)
-	if ! tracknumber="$(echo "$tracknumber" | sed 's/^[0]//')" ; then 
+	if ! tracknumber="$(secho "$tracknumber" | sed 's/^[0]//')" ; then 
 		log_and_stderr "Invalid tracknumber: $1"
 		return 1
 	fi
@@ -408,7 +414,7 @@ get_tracknumber_of_singletrack() {
 	local filename="$1"
 	local regex='^([[:digit:]]{2}) - (.+)([.])(.+)$'
 	
-	echo "$filename" | grep -E "$regex" | sed -r s/"$regex"/\\1/
+	secho "$filename" | grep -E "$regex" | sed -r s/"$regex"/\\1/
 }
 
 get_total_tracks_without_hiddentrack_from_cue() {
@@ -546,7 +552,7 @@ test_checksum_of_rejoined_wav_image_or_die() {
 	
 	if [ "${UNIT_TESTS[TEST_DAMAGE_TO_REJOINED_WAV_IMAGE]}" -eq 1 ]; then 
 		log_and_stderr "Deliberately damaging the joined image to test the checksum verification ..."
-		echo "FAIL" >> "$joined_image_absolute"
+		secho "FAIL" >> "$joined_image_absolute"
 	fi
 	
 	local -a original_sum
@@ -673,7 +679,7 @@ get_version_string() {
 		die "Obtaining shntool version failed! Please check whether it is installed."
 	fi
 	
-	echo "perfect-flac-encode $VERSION with $accurateripchecksum_version, $cuetools_version, $eaccrc_version, $flac_version, $shntool_version" 
+	secho "perfect-flac-encode $VERSION with $accurateripchecksum_version, $cuetools_version, $eaccrc_version, $flac_version, $shntool_version" 
 }
 # This function was inspired by the cuetag script of cuetools, taken from https://github.com/svend/cuetools
 # It's license is GPL so this function is GPL as well. 
@@ -825,7 +831,7 @@ test_checksums_of_decoded_flac_singletracks_or_die() {
 	if [ "${UNIT_TESTS[TEST_DAMAGE_TO_DECODED_FLAC_SINGLETRACKS]}" -eq 1 ]; then 
 		local wav_files=( "$outputdir/"*.wav )
 		log_and_stderr "Deliberately damaging a decoded WAV singletrack to test checksum verification..."
-		echo "FAIL" >> "${wav_files[0]}"
+		secho "FAIL" >> "${wav_files[0]}"
 	fi
 
 	log "Generating checksums of original WAV files..."
@@ -872,7 +878,7 @@ copy_cue_and_log_to_target_dir_or_die() {
 
 # Prints the README to stdout.
 print_readme_or_die() {
-	local e="echo"
+	local e="secho"
 	
 	$e "About the quality of this CD copy:" &&
 	$e "----------------------------------" &&
@@ -919,7 +925,7 @@ write_readme_txt_to_target_dir_or_die() {
 	# We use Windows linebreaks since they will work on any plattform. Unix linebreaks would not wrap the line with many Windows editors.
 	if ! print_readme_or_die |
 		fold --spaces --width=80 | 	
-		( while read -r line; do echo -n -e "$line\r\n"; done ) \
+		( while read -r line; do printf "%s\r\n" "$line"; done ) \
 		> "$OUTPUT_DIR_ABSOLUTE/README.txt"	
 	then
 		die "Generating README.txt failed!"
