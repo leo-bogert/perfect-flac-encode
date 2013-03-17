@@ -144,7 +144,7 @@ ask_to_delete_existing_output_and_temp_dirs_or_die() {
 	local confirmed=n
 	read -p "The output directory exists already. Delete it and ALL contained files? (y/n)" confirmed
 	
-	if [ "$confirmed" == "y" ]; then
+	if [ "$confirmed" = "y" ]; then
 		rm --preserve-root -rf -- "$OUTPUT_DIR_ABSOLUTE"
 	else
 		die "Quitting because you want to keep the existing output."
