@@ -746,7 +746,7 @@ pretag_singletrack_flac_from_cue_or_die()
 
 	fields["ENCODEDBY"]="$FULL_VERSION"							# own version :)
 	fields["TRACKTOTAL"]='%N'													# number of tracks
-	fields["TOTALTRACKS"]="${fields['TRACKTOTAL']}"								# musicbrainz lists both TRACKTOAL and TOTALTRACKS and for track count.
+	fields["TOTALTRACKS"]="${fields['TRACKTOTAL']}"								# musicbrainz lists both TRACKTOTAL and TOTALTRACKS and for track count.
 
 	# track tags
 	fields["ISRC"]='%i'			# track ISRC
