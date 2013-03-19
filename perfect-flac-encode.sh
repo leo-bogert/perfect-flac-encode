@@ -212,7 +212,7 @@ check_shntool_wav_problem_diagnosis_or_die() {
 	log "Using 'shntool len' to check the input WAV image for quality and file format problems..."
 	
     #       length         expanded size                 cdr         WAVE        problems       fmt         ratio         filename
-	#       54:04.55       572371004         B           ---         --          -----          wav         1.0000        Paul Weller - 1994 - Wild Wood.wav"
+	#       54:04.55       572371004         B           ---         --          -----          wav         1.0000        Paul Weller - 1994 - Wild Wood.wav
 	# ^ \s*    \S*    \s*     \S*     \s*   \S*   \s*   (\S*)  \s*  (\S*)  \s*   (\S*)   \s*    \S*    \s*    \S*    \s*    (.*)$
 	
 	local regex="^\s*\S*\s*\S*\s*\S*\s*(\S*)\s*(\S*)\s*(\S*)\s*\S*\s*\S*\s*(.*)$"
