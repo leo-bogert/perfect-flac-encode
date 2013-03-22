@@ -970,11 +970,23 @@ main() {
 	INPUT_CUE_LOG_WAV_BASENAME="$original_cue_log_wav_basename"
 	
 	# strip trailing slash as long as the dir is not "/"
-	[[ "$input_dir" != '/' ]] && input_dir="${input_dir%/}"
-	[[ "$output_dir" != '/' ]] && output_dir="${output_dir%/}"
+	if [[ "$input_dir" != '/' ]] ; then
+		input_dir="${input_dir%/}"
+	fi
+	if [[ "$output_dir" != '/' ]] ; then
+		output_dir="${output_dir%/}"
+	fi
 	# make the directories absolute if they are not
-	[[ "$input_dir" = /* ]] && INPUT_DIR_ABSOLUTE="$input_dir" || INPUT_DIR_ABSOLUTE="$original_working_dir/$input_dir"
-	[[ "$output_dir" = /* ]] && OUTPUT_DIR_ABSOLUTE="$output_dir/$INPUT_CUE_LOG_WAV_BASENAME" || OUTPUT_DIR_ABSOLUTE="$original_working_dir/$output_dir/$INPUT_CUE_LOG_WAV_BASENAME"
+	if [[ "$input_dir" = /* ]] ; then
+		INPUT_DIR_ABSOLUTE="$input_dir"
+	else
+		INPUT_DIR_ABSOLUTE="$original_working_dir/$input_dir"
+	fi
+	if [[ "$output_dir" = /* ]] ; then
+		OUTPUT_DIR_ABSOLUTE="$output_dir/$INPUT_CUE_LOG_WAV_BASENAME"
+	else
+		OUTPUT_DIR_ABSOLUTE="$original_working_dir/$output_dir/$INPUT_CUE_LOG_WAV_BASENAME"
+	fi
 	
 	OUTPUT_OWN_LOG_ABSOLUTE="$OUTPUT_DIR_ABSOLUTE/Perfect-FLAC-Encode.log"
 
