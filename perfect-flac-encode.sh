@@ -461,7 +461,7 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 		fi
 		
 		
-		if  [ "$tracknumber" = '00' ] ; then
+		if [ "$tracknumber" = '00' ] ; then
 			log "Skipping tracknumber 0 as this is a hidden track, EAC won't list AccurateRip checksums of hidden track one audio"
 			continue
  		fi
