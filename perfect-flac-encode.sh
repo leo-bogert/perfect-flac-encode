@@ -762,7 +762,7 @@ pretag_singletrack_flac_from_cue_or_die()
 		local conversion="${fields[$field]}"
 		local value
 		
-		if ! value="$(cueprint -n $trackno -t "$conversion\n" "$INPUT_CUE_ABSOLUTE")" ; then
+		if ! value="$(cueprint -n $trackno -t "$conversion" "$INPUT_CUE_ABSOLUTE")" ; then
 			die 'cueprint failed!'
 		fi
 		
