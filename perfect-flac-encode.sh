@@ -643,8 +643,7 @@ get_version_string() {
 	fi
 	
 	# As of 2012-12-23, cueprint does not support printing its version number. So we instead add the package version of cuetools
-	# TODO: Add cueprint version once cueprint supports printing it.
-	
+
 	# The behavior of dpkg-query version number printing seems to be the following as of 2012-12-19:
 	# 1. If the package is NOT installed, the highest available version number in the repository is printed.
 	# 2. If the package is installed, the installed version is printed.
