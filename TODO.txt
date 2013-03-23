@@ -3,6 +3,7 @@ We don't want to rely upon Github as a single point of failure.
 
 Critical TODOs:
 - Process all TODO/FIXME/XXX entries in the actual perfect-flac-encode.sh or move them to this file if they cannot be resolved yet.
+- I suspect that the code which asks the user of whether to delete an existing output dir or quit will write to the log file in that dir if the user selects "no" to quit. This should be fixed.
 - Once we are in the release-candidate-phase, try ShellCheck: http://www.vidarholen.net/contents/shellcheck/
 
 Non-critical TODOs:
