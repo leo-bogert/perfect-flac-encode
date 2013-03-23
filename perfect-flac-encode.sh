@@ -950,9 +950,8 @@ enable_errexit_and_errtrace() {
 }
 
 main() {
-# TODO FIXME XXX: Enable the following. This is a TODO because the script will need some modifications to not execute any commands which trigger errexit unnecessarily
-#	enable_errexit_and_errtrace
-
+	enable_errexit_and_errtrace
+	
 	if ! FULL_VERSION="$(get_version_string)" ; then
 		die 'Obtaining version identificator failed. Check whether all required tools are installed!'
 	fi
