@@ -605,7 +605,7 @@ encode_wav_singletracks_to_flac_or_die() {
 	# --warnings-as-errors	This is clear - we want perfect output.
 	# --output-prefix	We use it to put files into a subdirectory. We put them into a subdirectory so we can just use "*.flac" in further processing wtihout the risk of colliding with an eventually generated FLAC image or other files.
 	# --verify	It is always a good idea to validate the output to make sure that it is good.
-	# --replay-gain	Replaygain is generally something you should want. Go read up on it. TODO: We should use EBU-R128 instead, but as of Kubuntu12.04 there seems to be no package which can do it.
+	# --replay-gain	Replaygain is generally something you should want. Go read up on it.
 	# --best	Because we do PERFECT rips, we only need to do them once in our life and can just invest the time of maximal compression.
 	# TODO: proof-read option list again
 	
