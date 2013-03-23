@@ -3,6 +3,7 @@ We don't want to rely upon Github as a single point of failure.
 
 Critical TODOs:
 - Process all TODO/FIXME/XXX entries in the actual perfect-flac-encode.sh or move them to this file if they cannot be resolved yet.
+- Once we are in the release-candidate-phase, try ShellCheck: http://www.vidarholen.net/contents/shellcheck/
 
 Non-critical TODOs:
 - We should use EBU-R128 instead of standard Replaygain, but as of Kubuntu12.04 there seems to be no package which can do it.
