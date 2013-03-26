@@ -385,6 +385,20 @@ split_wav_image_to_singletracks_or_die() {
 	fi
 }
 
+get_accuraterip_version_of_singletrack() {
+	local tracknumber="$1"
+	
+	# remove leading zero (we use 2-digit tracknumbers)
+	if ! tracknumber="$(secho "$tracknumber" | sed 's/^[0]//')" ; then
+		log_and_stderr "Invalid tracknumber: $1"
+		return 1
+	fi
+	
+	local regex="^Track( {1,2})($tracknumber)( {2})accurately ripped \\(confidence ([[:digit:]]+)\\)  \\[([0-9A-Fa-f]+)\\]  \\(AR v([12])\\)(.*)\$"
+	
+	iconv --from-code utf-16 --to-code utf-8 "$INPUT_LOG_ABSOLUTE" | grep -E "$regex" | sed -r s/"$regex"/\\6/
+}
+
 # parameters:
 # $1 = tracknumber
 # $2 = accuraterip version, 1 or 2
@@ -466,34 +480,19 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 			continue
  		fi
 		
-		local 'expected_checksums[1]'
-		local 'expected_checksums[2]'
-		
-		if ! expected_checksums[1]="$(get_accuraterip_checksum_of_singletrack "$tracknumber" '1')" ; then
-			expected_checksums[1]=''
-			# No error handling because one of the two checksum queries will fail.
-			# TODO: Instead have a get_accuraterip_checksum_version_of_singletrack to first find out which version checksum we are using. 
-			# This will also allow us to set -o errexit
+		local accuraterip_version
+		if ! accuraterip_version="$(get_accuraterip_version_of_singletrack "$tracknumber")" ; then
+			die 'get_accuraterip_version_of_singletrack failed!'
 		fi
+		
+		local expected_checksum
+		if ! expected_checksum="$(get_accuraterip_checksum_of_singletrack "$tracknumber" "$accuraterip_version")" ; then
+			die 'get_accuraterip_checksum_of_singletrack failed!'
+		fi
+		
+		expected_checksum="${expected_checksum^^}" # ^^ = convert to uppercase
 
-		if ! expected_checksums[2]="$(get_accuraterip_checksum_of_singletrack "$tracknumber" '2')" ; then
-			expected_checksums[2]=''
-			# No error handling because one of the two checksum queries will fail.
-			# TODO: Instead have a get_accuraterip_checksum_version_of_singletrack to first find out which version checksum we are using. 
-			# This will also allow us to set -o errexit
-		fi
-		
-		if [ "${expected_checksums[2]}" != '' ] ; then
-			local accuraterip_version='2'
-		elif [ "${expected_checksums[1]}" != '' ] ; then
-			local accuraterip_version='1'
-		else
-			die 'AccurateRip checksum not found in LOG!'
-		fi
-		
-		local expected_checksum="${expected_checksums[$accuraterip_version]^^}" # ^^ = convert to uppercase
 		local actual_checksum
-		
 		if ! actual_checksum="$(accuraterip-checksum --accuraterip-v$accuraterip_version "$filename" "$tracknumber" "$totaltracks")" ; then
 			die 'accuraterip-checksum failed!'
 		fi
@@ -503,10 +502,10 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 		fi
 		
 		if [ "$actual_checksum" != "$expected_checksum" ]; then
-			log_and_stderr "AccurateRip checksum mismatch for track $tracknumber: expected='$expected_checksum'; actual='$actual_checksum'"
+			log_and_stderr "AccurateRip v$accuraterip_version checksum mismatch for track $tracknumber: expected='$expected_checksum'; actual='$actual_checksum'"
 			local do_exit=1	# Don't exit right now so we get an overview of all checksums so we have a better chance of finding out what's wrong
 		else
-			log "AccurateRip checksum of track $tracknumber: $actual_checksum, expected $expected_checksum. OK."
+			log "AccurateRip v$accuraterip_version checksum of track $tracknumber: $actual_checksum, expected $expected_checksum. OK."
 		fi
 	done
 	
