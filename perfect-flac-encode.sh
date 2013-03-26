@@ -147,7 +147,9 @@ ask_to_delete_existing_output_and_temp_dirs_or_die() {
 	if [ "$confirmed" = 'y' ]; then
 		rm --preserve-root -rf -- "$OUTPUT_DIR_ABSOLUTE"
 	else
-		die 'Quitting because you want to keep the existing output.'
+		# Do not use die() because it would write to the log file in the existing output dir
+		stderr 'Quitting because you want to keep the existing output.'
+		exit 1
 	fi
 }
 
@@ -952,7 +954,9 @@ main() {
 	enable_errexit_and_errtrace
 	
 	if ! FULL_VERSION="$(get_version_string)" ; then
-		die 'Obtaining version identificator failed. Check whether all required tools are installed!'
+		# Do not use die() because it would modify the log file of an existing output dir even though we yet have not asked the user whether he wants to keep it.
+		stderr 'ERROR: Obtaining version identificator failed. Check whether all required tools are installed!'
+		exit 1
 	fi
 	
 	# obtain parameters
