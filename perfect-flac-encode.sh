@@ -31,7 +31,7 @@ shopt -s failglob # Nullglob can have many side effects (see http://mywiki.woole
 ################################################################################
 # GLOBAL TODOs - please consider them before actually using the script!
 ################################################################################
-# TODO: Review uses of command substitution $() and decide whether we should clone their stderr to the log file.
+# Global TODO list is empty :)
 ################################################################################
 
 ################################################################################
