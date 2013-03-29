@@ -170,7 +170,7 @@ create_directories_or_die() {
 		fi
 		
 		if ! mkdir -p "$dir" ; then
-			die "Making directory \"$dir\" in input directory failed!"
+			die "Making output directory \"$dir\" failed!"
 		fi
 	done
 }
