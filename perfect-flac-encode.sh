@@ -345,7 +345,6 @@ split_wav_image_to_singletracks_or_die() {
 	# -t fmt Name output files in user‐specified format based on CUE sheet fields. %t Track title, %n Track number
 	# -- = indicates that everything following it is a filename
 	
-	# TODO: ask someone to proof read options. i did proof read them again already.
 	# TODO: shntool generates a "00 - pregap.wav" for HTOA. Decide what to do about this and check MusicBrainz for what they prefer. Options are: Keep as track 0? Merge with track 1? Shift all tracks by 1?
 	
 	# Ideas behind parameter decisions:
@@ -355,7 +354,7 @@ split_wav_image_to_singletracks_or_die() {
 	# - We replace Windows' reserved filename characters with "_". We do this because we recommend MusicBrainz Picard for tagging and it does the same. List of reserved characters was taken from http://msdn.microsoft.com/en-us/library/windows/desktop/aa365247%28v=vs.85%29.aspx
 	# - We prefix the filename with the maximal amount of zeroes required to get proper sorting for the maximal possible trackcount on a CD which is 99. We do this because cuetag requires proper sort order of the input files and we just use "*.flac" for finding the input files
 	
-	if ! shntool split -q -d "${TEMP_DIRS_ABSOLUTE[WAV_SINGLETRACK_SUBDIR]}" -f "$INPUT_CUE_ABSOLUTE" -m '<_>_:_"_/_\_|_?_*_' -n %02d -t '%n - %t' -- "$INPUT_WAV_ABSOLUTE" ; then
+	if ! shntool split -q -d "${TEMP_DIRS_ABSOLUTE[WAV_SINGLETRACK_SUBDIR]}" -f "$INPUT_CUE_ABSOLUTE" -m '<_>_:_"_/_\_|_?_*_' -n '%02d' -t '%n - %t' -- "$INPUT_WAV_ABSOLUTE" ; then
 		die 'Splitting WAV image to singletracks failed!'
 	fi
 	
