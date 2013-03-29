@@ -601,7 +601,6 @@ encode_wav_singletracks_to_flac_or_die() {
 	# --verify	It is always a good idea to validate the output to make sure that it is good.
 	# --replay-gain	Replaygain is generally something you should want. Go read up on it.
 	# --best	Because we do PERFECT rips, we only need to do them once in our life and can just invest the time of maximal compression.
-	# TODO: proof-read option list again
 	
 	set_working_directory_or_die "$inputdir"	# We need input filenames to be relative for --output-prefix to work
 	if ! flac --silent --warnings-as-errors --output-prefix="$outputdir/" --verify --replay-gain --best *.wav ; then
