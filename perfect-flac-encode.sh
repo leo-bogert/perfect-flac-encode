@@ -258,6 +258,7 @@ get_eac_crc() {
 		*)
 			log_and_stderr "Invalid mode: $1"
 			exit 1
+			;;
 	esac
 	
 	local regex="^([[:space:]]*)($mode CRC )([0-9A-F]*)([[:space:]]*)\$"
