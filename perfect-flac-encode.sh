@@ -874,7 +874,7 @@ copy_cue_and_log_to_target_dir_or_die() {
 }
 
 # Prints the README to stdout.
-print_readme_or_die() {
+print_readme() {
 	local e='secho'
 	
 	$e 'About the quality of this CD copy:' &&
@@ -920,7 +920,7 @@ write_readme_txt_to_target_dir_or_die() {
 	# We wrap at standard 80 chars terminal-style width so we have a better chance of fititng into a standard Notepad window.
 	# Notice that the width of Notepad seems to be configured from the screen resolution at first startup so we ought to be conservative.
 	# We use Windows linebreaks since they will work on any plattform. Unix linebreaks would not wrap the line with many Windows editors.
-	if ! print_readme_or_die |
+	if ! print_readme |
 		fold --spaces --width=80 |
 		( while read -r line; do printf '%s\r\n' "$line"; done ) \
 		> "$OUTPUT_DIR_ABSOLUTE/README.txt"
