@@ -722,22 +722,23 @@ pretag_singletrack_flac_from_cue_or_die()
 
 	# We only use the fields which are actually stored on the disc.
 	# TODO: find out whether this is actually everything which is stored on a CD
-	
+
+	# NOTICE: Fields of the array whose name ends with "_LITERAL" will not be passed to cueprint but tagged literally instead. The "_LITERAL" will be removed form the tag name. We do this because it is not a good idea to pass arbitrary strings to cueprint as a format string, they might contain control characters.
 	local -A fields	# Attention: We have to explicitely declare the associative array or iteration over the keys will not work!
 	
 	# disc tags
 	
 	# album UPC/EAN. Debbuging showed that cueprint's %U is broken so we use our function.	
-	if ! fields['CATALOGNUMBER']="$(cue_get_catalog)" ; then
+	if ! fields['CATALOGNUMBER_LITERAL']="$(cue_get_catalog)" ; then
 		die 'cue_get_catalog failed!'
 	fi
 
 	# We use our own homebrew regexp for obtaining the CATALOG from the CUE so we should be careful
-	if [ "${fields['CATALOGNUMBER']}" = '' ]; then
+	if [ "${fields['CATALOGNUMBER_LITERAL']}" = '' ]; then
 		die 'Obtaining CATALOG failed!'
 	fi
 
-	fields['ENCODEDBY']="$FULL_VERSION"							# own version :)
+	fields['ENCODEDBY_LITERAL']="$FULL_VERSION"							# own version :)
 	fields['TRACKTOTAL']='%N'													# number of tracks
 	fields['TOTALTRACKS']="${fields['TRACKTOTAL']}"								# musicbrainz lists both TRACKTOTAL and TOTALTRACKS and for track count.
 
@@ -747,16 +748,19 @@ pretag_singletrack_flac_from_cue_or_die()
 	fields['TRACKNUMBER']='%n'	# %n = track number
 		
 	for field in "${!fields[@]}"; do
-		# remove pre-existing tags. we do not use --remove-all-tags because it would remove the replaygain info. and besides it is also cleaner to only remove stuff we know about
-		if ! metaflac --remove-tag="$field" "$flac_file" ; then
-			die "Removing existing tag $field failed!"
-		fi
-		
 		local conversion="${fields[$field]}"
 		local value
 		
-		if ! value="$(cueprint -n $trackno -t "$conversion" "$INPUT_CUE_ABSOLUTE")" ; then
+		if [[ "$field" = *_LITERAL ]] ; then
+			field="${field%_LITERAL}"
+			value="$conversion"
+		elif ! value="$(cueprint -n "$trackno" -t "$conversion" "$INPUT_CUE_ABSOLUTE")" ; then
 			die 'cueprint failed!'
+		fi
+		
+		# remove pre-existing tags. we do not use --remove-all-tags because it would remove the replaygain info. and besides it is also cleaner to only remove stuff we know about
+		if ! metaflac --remove-tag="$field" "$flac_file" ; then
+			die "Removing existing tag $field failed!"
 		fi
 		
 		if [ -z "$value" ] ; then
