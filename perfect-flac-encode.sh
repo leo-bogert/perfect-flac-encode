@@ -938,7 +938,7 @@ die_if_unit_tests_failed() {
 }
 
 err_handler() {
-	die "error at line $1" "last exit code is $2" 
+	die "error at line $1" "last exit code is $2"
 }
 
 enable_errexit_and_errtrace() {
