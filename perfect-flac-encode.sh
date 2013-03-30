@@ -558,7 +558,7 @@ test_checksum_of_rejoined_wav_image_or_die() {
 	
 	log 'Computing checksum of joined WAV image...'
 	local sha_output
-	if ! sha_output="$(sha256sum --binary "$joined_image_absolute")" ; then
+	if ! sha_output="$(sha256sum --binary -- "$joined_image_absolute")" ; then
 		die 'sha256sum failed!'
 	fi
 	
@@ -831,7 +831,7 @@ test_checksums_of_decoded_flac_singletracks_or_die() {
 	# We do NOT use absolute paths when calling sha256sum to make sure that the checksum file contains relative paths.
 	# This is absolutely crucical because when validating the checksums we don't want to accidentiall check the sums of the input files instead of the output files.
 	set_working_directory_or_die "$inputdir_wav"
-	if ! sha256sum --binary *.wav > 'checksums.sha256' ; then
+	if ! sha256sum --binary -- *.wav > 'checksums.sha256' ; then
 		die 'Generating input checksums failed!'
 	fi
 	set_working_directory_or_die
@@ -839,7 +839,7 @@ test_checksums_of_decoded_flac_singletracks_or_die() {
 	log 'Validating checksums of decoded WAV singletracks ...'
 	set_working_directory_or_die "$outputdir"
 	local sha_output
-	if ! sha_output="$(sha256sum --check --strict "$inputdir_wav/checksums.sha256")" ; then
+	if ! sha_output="$(sha256sum --check --strict -- "$inputdir_wav/checksums.sha256")" ; then
 		log_and_stderr "$sha_output"
 		die 'Validating checksums of decoded WAV singletracks failed!'
 	else
