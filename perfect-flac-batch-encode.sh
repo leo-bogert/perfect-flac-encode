@@ -8,7 +8,7 @@ INPUT_DIR_ABSOLUTE=''
 OUTPUT_DIR_ABSOLUTE=''
 
 
-unpack() {
+encode() {
 	album="$(basename "$1")"
 	stdout "Encoding: $album"
 	
