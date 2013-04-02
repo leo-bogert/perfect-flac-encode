@@ -390,17 +390,18 @@ get_accuraterip_version_of_singletrack() {
 		return 1
 	fi
 	
-	local regex="^Track( {1,2})($tracknumber)( {2})accurately ripped \\(confidence ([[:digit:]]+)\\)  \\[([0-9A-Fa-f]+)\\]  \\(AR v([12])\\)(.*)\$"
+	local regex="^Track( {1,2})($tracknumber)( {2})accurately ripped \\(confidence ([[:digit:]]+)\\)  \\[([0-9A-Fa-f]{8})\\]  \\(AR v([12])\\)(.*)\$"
 	
-	iconv --from-code utf-16 --to-code utf-8 "$INPUT_LOG_ABSOLUTE" | grep -E "$regex" | sed -r s/"$regex"/\\6/
+	# Prior to EAC V1.0 beta 2, the AccurateRip version is not specified in the log.
+	if ! iconv --from-code utf-16 --to-code utf-8 "$INPUT_LOG_ABSOLUTE" | grep -E "$regex" | sed -r s/"$regex"/\\6/ ; then
+		secho '1'
+	fi
 }
 
 # parameters:
 # $1 = tracknumber
-# $2 = accuraterip version, 1 or 2
 get_accuraterip_checksum_of_singletrack() {
 	local tracknumber="$1"
-	local accuraterip_version="$2"
 	
 	# remove leading zero (we use 2-digit tracknumbers)
 	if ! tracknumber="$(secho "$tracknumber" | sed 's/^[0]//')" ; then 
@@ -408,12 +409,7 @@ get_accuraterip_checksum_of_singletrack() {
 		return 1
 	fi
 	
-	if [ "$accuraterip_version" != '1' ] && [ "$accuraterip_version" != '2' ] ; then
-		log_and_stderr "Invalid AccurateRip version: $accuraterip_version!"
-		return 1
-	fi
-	
-	local regex="^Track( {1,2})($tracknumber)( {2})accurately ripped \\(confidence ([[:digit:]]+)\\)  \\[([0-9A-Fa-f]+)\\]  \\(AR v$accuraterip_version\\)(.*)\$"
+	local regex="^Track( {1,2})($tracknumber)( {2})accurately ripped \\(confidence ([[:digit:]]+)\\)  \\[([0-9A-Fa-f]{8})\\](.*)\$"
 	
 	iconv --from-code utf-16 --to-code utf-8 "$INPUT_LOG_ABSOLUTE" | grep -E "$regex" | sed -r s/"$regex"/\\5/
 }
@@ -482,7 +478,7 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 		fi
 		
 		local expected_checksum
-		if ! expected_checksum="$(get_accuraterip_checksum_of_singletrack "$tracknumber" "$accuraterip_version")" ; then
+		if ! expected_checksum="$(get_accuraterip_checksum_of_singletrack "$tracknumber")" ; then
 			die 'get_accuraterip_checksum_of_singletrack failed!'
 		fi
 		
