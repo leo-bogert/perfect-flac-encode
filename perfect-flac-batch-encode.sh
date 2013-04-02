@@ -10,10 +10,13 @@ OUTPUT_DIR_ABSOLUTE=''
 
 encode() {
 	album="$(basename "$1")"
-	stdout "Encoding: $album"
 	
 	set_working_directory_or_die "$1"
 	for wav in *.wav ; do
+		stdout ""
+		stdout ""
+		stdout "Encoding: $wav"
+
 		local disc
 		disc="$(basename "$wav" ".wav")"
 
@@ -25,9 +28,6 @@ encode() {
 
 encode_all() {
 	for album in "$INPUT_DIR_ABSOLUTE"/* ; do
-		stdout ""
-		stdout ""
-
 		if ! [ -d "$album" ] ; then
 			stderr "Skipping non-directory: $album"
 			continue
