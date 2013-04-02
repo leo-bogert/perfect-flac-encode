@@ -169,7 +169,7 @@ create_directories_or_die() {
 			die "Dir exists already: $dir"
 		fi
 		
-		if ! mkdir -p "$dir" ; then
+		if ! mkdir -p -- "$dir" ; then
 			die "Making output directory \"$dir\" failed!"
 		fi
 	done
