@@ -50,9 +50,6 @@ main() {
 
 	stderr "WARNING: perfect-flac-batch-encode is not designed to be as robust as perfect-flac-encode. Use it at your own risk!"
 
-	if [ -e "$OUTPUT_DIR_ABSOLUTE" ] ; then
-		die "Output dir exists already!"
-	fi
 	mkdir -p -- "$OUTPUT_DIR_ABSOLUTE"
 
 	encode_all
