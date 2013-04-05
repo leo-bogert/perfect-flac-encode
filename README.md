@@ -49,7 +49,7 @@ To obtain its dependancies, do the following:
 	* cuetools
 	* flac
 	* shntool
-* Obtain the ["accuraterip-checksum" binary](https://github.com/leo-bogert/accuraterip-checksum/downloads) (or compile it on your own) and put it into a directory which is in $PATH. You need version 1.2 at least.
+* Obtain the ["accuraterip-checksum" source code](https://github.com/leo-bogert/accuraterip-checksum) and compile it. Put the binary into a directory which is in $PATH. You need version 1.4 at least.
 * Obtain the ["eac-crc" script](https://github.com/leo-bogert/eac-crc) and put it into a directory which is in $PATH. You need version 1.2 at least Don't forget to install its required packages.
 
 
