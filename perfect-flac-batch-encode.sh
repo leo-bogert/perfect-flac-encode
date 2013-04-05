@@ -49,9 +49,6 @@ main() {
 	obtain_two_parameters_as_inputdir_output_dir "$@"
 
 	stderr "WARNING: perfect-flac-batch-encode is not designed to be as robust as perfect-flac-encode. Use it at your own risk!"
-    stdout "Input directory: $INPUT_DIR_ABSOLUTE"
-    stdout "Output directory: $OUTPUT_DIR_ABSOLUTE"
-    stdout ""
 
 	if [ -e "$OUTPUT_DIR_ABSOLUTE" ] ; then
 		die "Output dir exists already!"
