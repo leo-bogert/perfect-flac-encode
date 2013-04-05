@@ -54,7 +54,9 @@ main() {
 
 	encode_all
 
-	echo "SUCCESS."
+	secho ''
+	secho ''
+	secho 'perfect-flac-batch-encode SUCCESS.'
 	exit 0 # SUCCESS
 }
 
