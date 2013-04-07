@@ -726,12 +726,9 @@ pretag_singletrack_flac_from_cue_or_die()
 	
 	# album UPC/EAN. Debbuging showed that cueprint's %U is broken so we use our function.	
 	if ! fields['CATALOGNUMBER_LITERAL']="$(cue_get_catalog)" ; then
-		die 'cue_get_catalog failed!'
-	fi
-
-	# We use our own homebrew regexp for obtaining the CATALOG from the CUE so we should be careful
-	if [ "${fields['CATALOGNUMBER_LITERAL']}" = '' ]; then
-		die 'Obtaining CATALOG failed!'
+		# EAC sometimes DOES produce cuesheets which do not contain a CATALOG.
+		#die 'cue_get_catalog failed!'
+		unset 'fields[CATALOGNUMBER_LITERAL]'
 	fi
 
 	fields['ENCODEDBY_LITERAL']="$FULL_VERSION"							# own version :)
