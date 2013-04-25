@@ -857,7 +857,7 @@ move_output_to_target_dir_or_die() {
 copy_cue_and_log_to_target_dir_or_die() {
 	log 'Copying CUE and LOG to output directory...'
 	
-	if ! cp --archive --no-clobber -- "$INPUT_CUE_ABSOLUTE" "$OUTPUT_DIR_ABSOLUTE" ; then
+	if ! cp --archive --no-clobber -- "$INPUT_CUE_ABSOLUTE" "$OUTPUT_DIR_ABSOLUTE/Exact Audio Copy.cue" ; then
 		die 'Copying CUE to output directory failed!'
 	fi
 	
@@ -886,10 +886,10 @@ print_readme() {
 	$e '' &&
 	$e 'Explanation of the purpose of the files you got:' &&
 	$e '------------------------------------------------' &&
-	$e "\"$INPUT_CUE_LOG_WAV_BASENAME.cue\"" &&
+	$e '"Exact Audio Copy.cue"' &&
 	$e "This file contains the layout of the original disc. It will be the file which you load with your CD burning software if you want to burn a backup of the disc. Please remember: Before burning it you have to decompress the audio with perfect-flac-decode. If you don't do this, burning the 'cue' will not work." &&
 	$e '' &&
-	$e "\"$INPUT_CUE_LOG_WAV_BASENAME.sha256\"" &&
+	$e '"Exact Audio Copy.sha256"' &&
 	$e 'This contains a so-called checksum of the original, uncompressed disc image. If you want to burn the disc to a CD, you will have to decompress the FLAC files to a WAV image with perfect-flac-decode. The checksum file allows perfect-flac-decode to validate that the decompression did not produce any errors.' &&
 	$e '' &&
 	$e '"Exact Audio Copy.log"' &&
@@ -981,7 +981,7 @@ main() {
 	
 	OUTPUT_OWN_LOG_ABSOLUTE="$OUTPUT_DIR_ABSOLUTE/Perfect-FLAC-Encode.log"
 
-	OUTPUT_SHA256_ABSOLUTE="$OUTPUT_DIR_ABSOLUTE/$INPUT_CUE_LOG_WAV_BASENAME.sha256"
+	OUTPUT_SHA256_ABSOLUTE="$OUTPUT_DIR_ABSOLUTE/Exact Audio Copy.sha256"
 	
 	INPUT_CUE_ABSOLUTE="$INPUT_DIR_ABSOLUTE/$INPUT_CUE_LOG_WAV_BASENAME.cue"
 	INPUT_LOG_ABSOLUTE="$INPUT_DIR_ABSOLUTE/$INPUT_CUE_LOG_WAV_BASENAME.log"

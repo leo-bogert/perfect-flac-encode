@@ -74,10 +74,10 @@ Upon success, the script will create a subdirectory in the output directory whic
 This directory will contain:
 
 * Per-track FLACs called "(tracknumber) - (track title).flac". The tracknumber and title are taken from the CUE. 
-* A copy of the original "(release name).cue" (with timestamps, permissions, etc. preserved).
-* A "perfect-flac-encode.log" which contains detailled information about the encoding and verification process.
-* A copy of the original "(release name).log" - renamed to "Exact Audio Copy.log" because we have two log files. Timestamps, permissions, etc. are preserved.
-* A file "(release name).sha256" with the checksum of the original input WAV image (see the "Description" section for the purpose of this)
+* A copy of the original "(release name).cue". It is renamed to "Exact Audio Copy.cue" so you do not have to fix the name after running the album through MusicBrainz Picard. Timestamps, permissions, etc. are preserved.
+* A "Perfect-FLAC-Encode.log" which contains detailled information about the encoding and verification process.
+* A copy of the original "(release name).log" - renamed to "Exact Audio Copy.log". Timestamps, permissions, etc. are preserved.
+* A file "Exact Audio Copy.sha256" with the checksum of the original input WAV image (see the "Description" section for the purpose of this)
 * A "README.txt". It tries to explain in layman's terms how the rip was created, which software was used, that the rip should be high quality, which files are in the directory, and how to restore an identical CD.
 
 Upon success, all temporary directories will be deleted, so the output directory will be the only output.
