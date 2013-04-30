@@ -346,8 +346,6 @@ split_wav_image_to_singletracks_or_die() {
 	# -t fmt Name output files in user‐specified format based on CUE sheet fields. %t Track title, %n Track number
 	# -- = indicates that everything following it is a filename
 	
-	# TODO: shntool generates a "00 - pregap.wav" for HTOA. Decide what to do about this and check MusicBrainz for what they prefer. Options are: Keep as track 0? Merge with track 1? Shift all tracks by 1?
-	
 	# Ideas behind parameter decisions:
 	# - We use quiet mode because otherwise shntool will print the full paths of the input/output files and we don't want those in the log file
 	# - We do NOT let shntool encode the FLAC files on its own. While testing it has shown that the error messages of FLAC are not printed. Further, because we want this script to be robust, we only use the core features of each tool and not use fancy stuff which they were not primarily designed for.
@@ -442,11 +440,6 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 	if [ -f "$hidden_track" ] ; then
 		log 'Hidden track one audio found.'
 		local hidden_track_excluded_message=' (excluding hidden track)'
-		
-		# TODO: evaluate what musicbrainz says about joined hidden track vs hidden track as track0
-		#shntool join "$inputdir_wav/00 - pregap.wav" "$inputdir_wav/01"*.wav
-		#mv -- 'joined.wav' "$inputdir_wav/01"*.wav
-		#rm --preserve-root -f -- '00 - pregap.wav'
 	else
 		log 'Hidden track one audio not found.'
 		local hidden_track_excluded_message=''
