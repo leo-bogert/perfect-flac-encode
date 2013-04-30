@@ -343,7 +343,7 @@ split_wav_image_to_singletracks_or_die() {
 	# -f file Specifies a file from which to read split point data.  If not given, then split points are read from the terminal.
 	# -m str Specifies  a  character  manipulation  string for filenames generated from CUE sheets.  
 	# -n fmt Specifies the file count output format.  The default is %02d, which gives two‐digit zero‐padded numbers (01, 02, 03, ...).
-	# -t fmt Name output files in user‐specified format based on CUE sheet fields. %t Track title, %n Track number
+	# -t fmt Name output files in user‐specified format based on CUE sheet fields. %n = Track number
 	# -- = indicates that everything following it is a filename
 	
 	# Ideas behind parameter decisions:
@@ -352,8 +352,9 @@ split_wav_image_to_singletracks_or_die() {
 	# - We split the tracks into a subdirectory so when encoding the files we can just encode "*.wav", we don't need any mechanism for excluding the image WAV
 	# - We replace Windows' reserved filename characters with "_". We do this because we recommend MusicBrainz Picard for tagging and it does the same. List of reserved characters was taken from http://msdn.microsoft.com/en-us/library/windows/desktop/aa365247%28v=vs.85%29.aspx
 	# - We prefix the filename with the maximal amount of zeroes required to get proper sorting for the maximal possible trackcount on a CD which is 99. We do this because cuetag requires proper sort order of the input files and we just use "*.flac" for finding the input files
+	# - We do not put the track title into the filename. EAC will use the local charset for track titles instead of UTF-8 and it is difficult detect which charset it is. This would break bash processing of the filenames under certain conditions. Also, the metadata which EAC puts into the CUE is imprecise: It does not provide a proper way of selecting releases from MusicBrainz when using the FreeDB gateway. So the filenames would have to be changed when tagging with Picard anyway.
 	
-	if ! shntool split -q -d "${TEMP_DIRS_ABSOLUTE[WAV_SINGLETRACK_SUBDIR]}" -f "$INPUT_CUE_ABSOLUTE" -m '<_>_:_"_/_\_|_?_*_' -n '%02d' -t '%n - %t' -- "$INPUT_WAV_ABSOLUTE" ; then
+	if ! shntool split -q -d "${TEMP_DIRS_ABSOLUTE[WAV_SINGLETRACK_SUBDIR]}" -f "$INPUT_CUE_ABSOLUTE" -m '<_>_:_"_/_\_|_?_*_' -n '%02d' -t 'Track %n' -- "$INPUT_WAV_ABSOLUTE" ; then
 		die 'Splitting WAV image to singletracks failed!'
 	fi
 	
@@ -416,7 +417,7 @@ get_accuraterip_checksum_of_singletrack() {
 # $1 = filename with extension
 get_tracknumber_of_singletrack() {
 	local filename="$1"
-	local regex='^([[:digit:]]{2}) - (.+)([.])(.+)$'
+	local regex='^Track ([[:digit:]]{2})([.])(.+)$'
 	
 	secho "$filename" | grep -E "$regex" | sed -r s/"$regex"/\\1/
 }
