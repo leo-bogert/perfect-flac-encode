@@ -60,7 +60,8 @@ UNIT_TESTS['TEST_DAMAGE_TO_DECODED_FLAC_SINGLETRACKS']=0
 VERSION='BETA11'
 FULL_VERSION=''			# Full version string which also contains the versions of the used helper programs.
 INPUT_DIR_ABSOLUTE=''	# Directory where the input WAV/LOG/CUE can be found. Must not be written to by the script in any way.
-OUTPUT_DIR_ABSOLUTE=''	# Directory where the output (FLACs/EAC LOG/PFE LOG/CUE/README.txt) is created. The temporary directories will be created here as well.
+OUTPUT_DIR_ABSOLUTE=''	# Directory where the output (FLACs / README.txt / Proof of Quality subdir) is created. The temporary directories will be created here as well.
+OUTPUT_DIR_CUE_LOG_SHA_ABSOLUTE=''	# Subdirectory of the output directory where the CUE, LOGs and SHA are placed.
 OUTPUT_OWN_LOG_ABSOLUTE=''	# Full path of the perfect-flac-encode log file. It must be a file in $OUTPUT_DIR_ABSOLUTE.
 OUTPUT_SHA256_ABSOLUTE=''	# Full path of the output SHA256. It must be a file in $OUTPUT_DIR_ABSOLUTE
 INPUT_CUE_LOG_WAV_BASENAME=''	# Filename of input WAV/LOG/CUE without extension. It must be a file in the directory $INPUT_DIR_ABSOLUTE.
@@ -161,7 +162,7 @@ delete_temp_dirs() {
 }
 
 create_directories_or_die() {
-	local output_dir_and_temp_dirs=( "$OUTPUT_DIR_ABSOLUTE" "${TEMP_DIRS_ABSOLUTE[@]}" )
+	local output_dir_and_temp_dirs=( "$OUTPUT_DIR_ABSOLUTE" "$OUTPUT_DIR_CUE_LOG_SHA_ABSOLUTE" "${TEMP_DIRS_ABSOLUTE[@]}" )
 	
 	stdout 'Creating output and temp directories...'
 	for dir in "${output_dir_and_temp_dirs[@]}" ; do
@@ -851,11 +852,11 @@ move_output_to_target_dir_or_die() {
 copy_cue_and_log_to_target_dir_or_die() {
 	log 'Copying CUE and LOG to output directory...'
 	
-	if ! cp --archive --no-clobber -- "$INPUT_CUE_ABSOLUTE" "$OUTPUT_DIR_ABSOLUTE/Exact Audio Copy.cue" ; then
+	if ! cp --archive --no-clobber -- "$INPUT_CUE_ABSOLUTE" "$OUTPUT_DIR_CUE_LOG_SHA_ABSOLUTE/Exact Audio Copy.cue" ; then
 		die 'Copying CUE to output directory failed!'
 	fi
 	
-	if ! cp --archive --no-clobber -- "$INPUT_LOG_ABSOLUTE" "$OUTPUT_DIR_ABSOLUTE/Exact Audio Copy.log" ; then
+	if ! cp --archive --no-clobber -- "$INPUT_LOG_ABSOLUTE" "$OUTPUT_DIR_CUE_LOG_SHA_ABSOLUTE/Exact Audio Copy.log" ; then
 		die 'Copying LOG to output directory failed!'
 	fi
 }
@@ -880,6 +881,8 @@ print_readme() {
 	$e '' &&
 	$e 'Explanation of the purpose of the files you got:' &&
 	$e '------------------------------------------------' &&
+	$e 'The following files are in a subdirectory called "Proof of Quality":' &&
+	$e ''
 	$e '"Exact Audio Copy.cue"' &&
 	$e "This file contains the layout of the original disc. It will be the file which you load with your CD burning software if you want to burn a backup of the disc. Please remember: Before burning it you have to decompress the audio with perfect-flac-decode. If you don't do this, burning the 'cue' will not work." &&
 	$e '' &&
@@ -887,10 +890,10 @@ print_readme() {
 	$e 'This contains a so-called checksum of the original, uncompressed disc image. If you want to burn the disc to a CD, you will have to decompress the FLAC files to a WAV image with perfect-flac-decode. The checksum file allows perfect-flac-decode to validate that the decompression did not produce any errors.' &&
 	$e '' &&
 	$e '"Exact Audio Copy.log"' &&
-	$e "This file is a 'proof of quality'. It contains the output of Exact Audio Copy - the software which was used to extract the physical CD to a computer. It allows you to see the conditions of the copying and the version of Exact Audio Copy. You can check it to see that there were no errors. Further, if someone finds bugs in certain versions of Exact Audio Copy you will be able to check whether your audio files are affected by examining the version number." &&
+	$e "This file contains the output of Exact Audio Copy - the software which was used to extract the physical CD to a computer. It allows you to see the conditions of the copying and the version of Exact Audio Copy. You can check it to see that there were no errors. Further, if someone finds bugs in certain versions of Exact Audio Copy you will be able to check whether your audio files are affected by examining the version number." &&
 	$e '' &&
 	$e '"Perfect-FLAC-Encode.log"' &&
-	$e "This file is a 'proof of quality'. It contains the output of perfect-flac-encode and the version of it and the versions of all used helper programs. It allows you to see the conditions of the encoding process. You can check it to see that there were no errors. Further, if someone finds bugs in certain versions of perfect-flac-encode or the helper programs you will be able to check whether your audio files are affected by examining the version numbers." &&
+	$e "This file contains the output of perfect-flac-encode and the version of it and the versions of all used helper programs. It allows you to see the conditions of the encoding process. You can check it to see that there were no errors. Further, if someone finds bugs in certain versions of perfect-flac-encode or the helper programs you will be able to check whether your audio files are affected by examining the version numbers." &&
 	$e '' &&
 	$e '' &&
 	$e 'Websites:' &&
@@ -973,9 +976,9 @@ main() {
 		OUTPUT_DIR_ABSOLUTE="$original_working_dir/$output_dir/$INPUT_CUE_LOG_WAV_BASENAME"
 	fi
 	
-	OUTPUT_OWN_LOG_ABSOLUTE="$OUTPUT_DIR_ABSOLUTE/Perfect-FLAC-Encode.log"
-
-	OUTPUT_SHA256_ABSOLUTE="$OUTPUT_DIR_ABSOLUTE/Exact Audio Copy.sha256"
+	OUTPUT_DIR_CUE_LOG_SHA_ABSOLUTE="$OUTPUT_DIR_ABSOLUTE/Proof of Quality"
+	OUTPUT_OWN_LOG_ABSOLUTE="$OUTPUT_DIR_CUE_LOG_SHA_ABSOLUTE/Perfect-FLAC-Encode.log"
+	OUTPUT_SHA256_ABSOLUTE="$OUTPUT_DIR_CUE_LOG_SHA_ABSOLUTE/Exact Audio Copy.sha256"
 	
 	INPUT_CUE_ABSOLUTE="$INPUT_DIR_ABSOLUTE/$INPUT_CUE_LOG_WAV_BASENAME.cue"
 	INPUT_LOG_ABSOLUTE="$INPUT_DIR_ABSOLUTE/$INPUT_CUE_LOG_WAV_BASENAME.log"
