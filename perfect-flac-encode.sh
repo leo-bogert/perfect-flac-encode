@@ -887,7 +887,7 @@ print_readme() {
 	$e "This file contains the layout of the original disc. It will be the file which you load with your CD burning software if you want to burn a backup of the disc. Please remember: Before burning it you have to decompress the audio with perfect-flac-decode. If you don't do this, burning the 'cue' will not work." &&
 	$e '' &&
 	$e '"Exact Audio Copy.sha256"' &&
-	$e 'This contains a so-called checksum of the original, uncompressed disc image. If you want to burn the disc to a CD, you will have to decompress the FLAC files to a WAV image with perfect-flac-decode. The checksum file allows perfect-flac-decode to validate that the decompression did not produce any errors.' &&
+	$e 'This file contains a so-called checksum of the original, uncompressed disc image. If you want to burn the disc to a CD, you will have to decompress the FLAC files to a WAV image with perfect-flac-decode. The checksum file allows perfect-flac-decode to validate that the decompression did not produce any errors.' &&
 	$e '' &&
 	$e '"Exact Audio Copy.log"' &&
 	$e "This file contains the output of Exact Audio Copy - the software which was used to extract the physical CD to a computer. It allows you to see the conditions of the copying and the version of Exact Audio Copy. You can check it to see that there were no errors. Further, if someone finds bugs in certain versions of Exact Audio Copy you will be able to check whether your audio files are affected by examining the version number." &&
