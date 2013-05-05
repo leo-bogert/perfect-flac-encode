@@ -686,8 +686,31 @@ pretag_singletrack_flac_from_cue_or_die()
 	# The "pre" means that tagging from a CUE is NEVER sufficient. CUE does not provide enough tags!
 	#
 	# Conclusion:
-	# - The semantics of the CUE fields which EAC uses is taken from <TODO>
-	# - The mapping between CUE tag names and cueprint fields is taken from the manpage of cueprint and by checking with an EAC CUE which uses ALL tags EAC will ever use (TODO: find one and actually do this)
+	# - The semantics of the CUE fields which EAC uses was obtained by asking the developer about it per mail. He replied (in German):
+	# 		> Das CUE Sheet besteht normalerweise aus folgenden Teilen:
+	# 		> 
+	# 		> REM GENRE <Genre>
+	# 		> REM DATE <Year>
+	# 		> REM DISCID <freedbid>
+	# 		> REM COMMENT <EAC comment>
+	# 		> CATALOG <UPC>
+	# 		> PERFORMER <CD Artist>
+	# 		> TITLE <CD Title>
+	# 		> FILE <filename>
+	# 		> 
+	# 		> Danach für jeden Track
+	# 		> 
+	# 		>    TRACK <Tracknr> AUDIO  (theoretisch auch MODE<mode>/<num bytes per
+	# 		> sector>)
+	# 		>    TITLE <Track Title>
+	# 		>    PERFORMER <Track Artist>
+	# 		>    ISRC <ISRC>
+	# 		>    FLAGS DCP und/oder 4CH   (Digital copy permitted, 4 channels)
+	# 		> [  INDEX 00 <Absolute Zeit im Image File, letzter Eintrag ist nicht
+	# 		> 1/100 Sekunden sondern frames (75 frames pro Sekunde)>]
+	# 		>    INDEX 01 <Absolute Zeit im Image File (siehe oben)>
+	# 		> [ INDEX 02 <Absolute Zeit>]
+	# - The mapping between CUE tag names and cueprint fields was obtained by exprimenting with full cuesheets.
 	# - The target FLAC tag names are taken from http://musicbrainz.org/doc/MusicBrainz_Picard/Tags/Mapping
 	#
 	
@@ -708,11 +731,8 @@ pretag_singletrack_flac_from_cue_or_die()
 	# The following are the mappings from CUEPRINT to FLAC tags. The list was created by reading each entry of the above cueprint manpage and trying to find a tag which fits it in the musicbrainz tag mapping table http://musicbrainz.org/doc/MusicBrainz_Picard/Tags/Mapping
 	# bash variable name == FLAC tag names
 	# sorting of the variables is equal to cueprint manpage
-	# TODO: find out the exact list of CUE-tags which cueprint CANNOT read and decide what to do about them
-	# TODO: do a reverse check of the mapping list: read the musicbrainz tag mapping table and try to find a proper CUE-tag for each musicbrainz tag. ideally, as the CUE-tag-table, do not use the cueprint manpage but a list of all CUE tags which EAC will ever generate
 
 	# We only use the fields which are actually stored on the disc.
-	# TODO: find out whether this is actually everything which is stored on a CD
 
 	# NOTICE: Fields of the array whose name ends with "_LITERAL" will not be passed to cueprint but tagged literally instead. The "_LITERAL" will be removed form the tag name. We do this because it is not a good idea to pass arbitrary strings to cueprint as a format string, they might contain control characters.
 	local -A fields	# Attention: We have to explicitely declare the associative array or iteration over the keys will not work!
@@ -732,7 +752,6 @@ pretag_singletrack_flac_from_cue_or_die()
 
 	# track tags
 	fields['ISRC']='%i'			# track ISRC
-	fields['COMMENT']='%m'		# track message. TODO: is this stored on the CD?
 	fields['TRACKNUMBER']='%n'	# %n = track number
 		
 	for field in "${!fields[@]}"; do
