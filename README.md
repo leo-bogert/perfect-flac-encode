@@ -50,7 +50,7 @@ To obtain its dependancies, do the following:
 	* flac
 	* shntool
 * Obtain the ["accuraterip-checksum" source code](https://github.com/leo-bogert/accuraterip-checksum) and compile it. Put the binary into a directory which is in $PATH. You need version 1.4 at least.
-* Obtain the ["eac-crc" script](https://github.com/leo-bogert/eac-crc) and put it into a directory which is in $PATH. You need version 1.2 at least Don't forget to install its required packages.
+* Obtain the ["eac-crc" script](https://github.com/leo-bogert/eac-crc) and put it into a directory which is in $PATH. You need version 1.2 at least. Don't forget to install its required packages.
 
 
 # Syntax:
@@ -73,30 +73,31 @@ Please make sure you know the parameters and their names from the Syntax section
 Upon success, the script will create a subdirectory in the output directory which is named with the release name.
 This directory will contain:
 
-* Per-track FLACs called "(tracknumber) - (track title).flac". The tracknumber and title are taken from the CUE. 
-* A copy of the original "(release name).cue". It is renamed to "Exact Audio Copy.cue" so you do not have to fix the name after running the album through MusicBrainz Picard. Timestamps, permissions, etc. are preserved.
-* A "Perfect-FLAC-Encode.log" which contains detailled information about the encoding and verification process.
-* A copy of the original "(release name).log" - renamed to "Exact Audio Copy.log". Timestamps, permissions, etc. are preserved.
-* A file "Exact Audio Copy.sha256" with the checksum of the original input WAV image (see the "Description" section for the purpose of this)
+* Per-track FLACs called "Track (tracknumber).flac". The titles of the tracks are NOT taken from the CUE because EAC will use the local charset of your computer when creating a CUE so it is impossible to properly parse the text-content of it. And we suggest tagging the files with MusicBrainz Picard anyway - it is able to rename them after tagging.
 * A "README.txt". It tries to explain in layman's terms how the rip was created, which software was used, that the rip should be high quality, which files are in the directory, and how to restore an identical CD.
+* A subdirectory called "Proof of Quality" with the following files:
+	* A file "Exact Audio Copy.cue" which is a copy of the original "(release name).cue". It is renamed to so you do not have to fix the name after running the album through MusicBrainz Picard. Timestamps, permissions, etc. are preserved.
+	* A file "Exact Audio Copy.log" which is a copy of the original "(release name).log". Timestamps, permissions, etc. are preserved.
+	* A file "Exact Audio Copy.sha256" with the checksum of the original input WAV image (see the "Description" section for the purpose of this).
+	* A "Perfect-FLAC-Encode.log" which contains detailled information about the encoding and verification process.
 
 Upon success, all temporary directories will be deleted, so the output directory will be the only output.
 Upon failure, the output subdirectory and the temporary directories within will NOT be deleted. If you run the script again, it will detect the existence of the output subdirectory and ask you whether it should delete it.
 
 # Temporary Output (deleted upon success):
     Stage1_WAV_Singletracks_From_WAV_Image
-These splitfiles are created using shntool from the CUE. They are the input to FLAC
+These splitfiles are created using shntool from the CUE. They are the input to FLAC.
 	
     Stage2_WAV_Image_Joined_From_WAV_Singletracks
 For validating whether the splitfiles are correct, they are re-joined to a WAV image in this directory using shntool.
-The checkput of this image is compared to the checksum of your original image.
+The checksum of this image is compared to the checksum of your original image.
 
     Stage3_FLAC_Singletracks_Encoded_From_WAV_Singletracks
-This is the actual output of the script which you want to add to your library.
+This will be the actual output FLACs of the script upon success.
 
     Stage4_WAV_Singletracks_Decoded_From_FLAC_Singletracks
 To check whether the FLACs can be decoded correctly, they are decoded into this directory.
-The checksums are compared to the checksums of Stage1.
+The checksums are compared to the checksums of stage 1.
 
 # Author:
 [Leo Bogert](http://leo.bogert.de)
