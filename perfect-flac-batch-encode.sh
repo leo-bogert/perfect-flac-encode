@@ -21,7 +21,7 @@ encode() {
 		disc="$(basename "$wav" ".wav")"
 
 		if ! perfect-flac-encode.sh "$disc" "$1" "$OUTPUT_DIR_ABSOLUTE" ; then
-			stderr "Encoding failed for: $album"
+			stderr "ERROR: Encoding failed for: $album"
 			continue
 		fi
 		
@@ -46,7 +46,7 @@ encode() {
 				"$disc.wav")
 					;;
 				*)
-					stderr "Unknown file in input directory: $otherfile"
+					stderr "ERROR: Unknown file in input directory: $otherfile"
 					;;
 			esac
 		done
@@ -56,7 +56,7 @@ encode() {
 encode_all() {
 	for album in "$INPUT_DIR_ABSOLUTE"/* ; do
 		if ! [ -d "$album" ] ; then
-			stderr "Skipping non-directory: $album"
+			stderr "ERROR: Skipping non-directory: $album"
 			continue
 		fi
 		
@@ -65,7 +65,7 @@ encode_all() {
 		if (( ${#wavs[@]} > 0 )) ; then
 			encode "$album"
 		elif [ "$(find "$album" -iname '*.wav' -printf '1' -quit)" = '1' ] ; then
-			stderr "Found Wavs in subdirectories or with uppercase file extension, please move them to the parent directory and fix their file extension: $album"
+			stderr "ERROR: Found Wavs in subdirectories or with uppercase file extension, please move them to the parent directory and fix their file extension: $album"
 		else
 			stdout "No Wavs in: $album"
 		fi
