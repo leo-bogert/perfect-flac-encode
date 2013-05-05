@@ -23,6 +23,30 @@ encode() {
 		if ! perfect-flac-encode.sh "$disc" "$1" "$OUTPUT_DIR_ABSOLUTE" ; then
 			stderr "Encoding failed for: $album"
 		fi
+		
+		for otherfile in * ; do
+			case "$otherfile" in
+				Artwork)
+					stdout "Copying Artwork to output dir..."
+					cp -ai -- "$otherfile" "$OUTPUT_DIR_ABSOLUTE/$disc"
+					;;
+				TODO.txt)
+					stdout "Copying TODO.txt to output dir..."
+					cp -ai -- "$otherfile" "$OUTPUT_DIR_ABSOLUTE/$disc"
+					;;
+				TODO.txt~)
+					;;
+				"$disc.cue")
+					;;
+				"$disc.log")
+					;;
+				"$disc.wav")
+					;;
+				*)
+					stderr "Unknown file in input directory: $otherfile"
+					;;
+			esac
+		done
 	done
 }
 
