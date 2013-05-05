@@ -22,6 +22,7 @@ encode() {
 
 		if ! perfect-flac-encode.sh "$disc" "$1" "$OUTPUT_DIR_ABSOLUTE" ; then
 			stderr "Encoding failed for: $album"
+			continue
 		fi
 		
 		for otherfile in * ; do
