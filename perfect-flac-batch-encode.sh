@@ -29,13 +29,13 @@ encode() {
 			case "$otherfile" in
 				Artwork)
 					stdout "Copying Artwork to output dir..."
-					# Don't preserve ownership so this works on top of CIFS mounts
-					cp -ai --no-preserve=ownership -- "$otherfile" "$OUTPUT_DIR_ABSOLUTE/$disc"
+					# Don't preserve ownership so this works on top of CIFS mounts. Don't preserve mode because the existing mode might be insecure with the default ownership.
+					cp -ai --no-preserve=mode,ownership -- "$otherfile" "$OUTPUT_DIR_ABSOLUTE/$disc"
 					;;
 				TODO.txt)
 					stdout "Copying TODO.txt to output dir..."
-					# Don't preserve ownership so this works on top of CIFS mounts
-					cp -ai --no-preserve=ownership -- "$otherfile" "$OUTPUT_DIR_ABSOLUTE/$disc"
+					# Don't preserve ownership so this works on top of CIFS mounts. Don't preserve mode because the existing mode might be insecure with the default ownership.
+					cp -ai --no-preserve=mode,ownership -- "$otherfile" "$OUTPUT_DIR_ABSOLUTE/$disc"
 					;;
 				TODO.txt~)
 					;;
