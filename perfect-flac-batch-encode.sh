@@ -63,7 +63,7 @@ encode_all() {
 		if (( ${#wavs[@]} > 0 )) ; then
 			encode "$album"
 		elif [ "$(find "$album" -iname '*.wav' -printf '1' -quit)" = '1' ] ; then
-			die "Found Wavs in subdirectories or with uppercase file extension, please move them to the parent directory and fix their file extension: $album"
+			stderr "Found Wavs in subdirectories or with uppercase file extension, please move them to the parent directory and fix their file extension: $album"
 		else
 			stdout "No Wavs in: $album"
 		fi
