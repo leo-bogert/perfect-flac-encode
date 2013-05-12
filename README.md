@@ -29,6 +29,7 @@ For guaranteeing this, it does the following checks and aborts if any of them fa
 
 The secondary goal is providing a perfect backup of the original disc. For serving this purpose, it is ensured that it is technically possible to burn a disc of which every bit is identical to the original one. This is guaranteed by:
 
+* Copying a specification of the configuration of EAC to the output directory.
 * Copying the original CUE/LOG to the output directory. The CUE is needed for burning the disc. The LOG serves as a proof of quality.
 * Logging its own processing to a separate log file in the output. It will show proof that all the 9 steps mentioned above worked properly.
 * A .sha256 file is generated which contains the SHA256-checksum of the original WAV image. For being able to burn a bit-identical CD, the user will have to decode the FLACs to WAVs and re-join the WAVs to an image. For making sure that this produced an image which is identical to the original one, the SHA256-checksum can be used. Notice that the CRC from the EAC LOG is not suitable for this because it is a "custom" CRC which is not computed upon the full WAV file. The EAC CRC does guarantee integrity of the audio data but is not easy to verify with standard tools.
@@ -51,16 +52,19 @@ To obtain its dependancies, do the following:
 	* shntool
 * Obtain the ["accuraterip-checksum" source code](https://github.com/leo-bogert/accuraterip-checksum) and compile it. Put the binary into a directory which is in $PATH. You need version 1.4 at least.
 * Obtain the ["eac-crc" script](https://github.com/leo-bogert/eac-crc) and put it into a directory which is in $PATH. You need version 1.2 at least. Don't forget to install its required packages.
+* Obtain the ["settings-exact-audio-copy" repository](https://github.com/leo-bogert/settings-exact-audio-copy). Configure Exact Audio Copy according to the file "exact-audio-copy-configuration.txt". If you do not configure EAC according to these instructions, it is STRONGLY recommended that you specify your own configuration in the "exact-audio-copy-configuration.txt". If in the future someone finds out that a certain setting causes bad quality, you can check whether the affected setting was used for this copy. I also strongly recommend that you configure EAC according to the specification from the given repository instead of inventing your own one. A lot of effort was spent on making sure that the settings are optimal for best quality. It is also notable that the default settings of EAC are not very good.
 
+# Input:
+As input, you must provide a set of 4 files with the extensions CUE/LOG/TXT/WAV (in lowercase) and the same basename. The CUE/LOG/WAV must be the output of the EAC "Test & copy image" mode. The TXT file shall contain a specification of how your EAC was configured when doing the rip. Typically, the "exact-audio-copy-configuration.txt" which was mentioned under "Installation" should be copied to be the TXT file in the input for each rip.
 
 # Syntax:
 EAC commandline should be
 
-    perfect-flac-encode.sh "(base filename of cue/log/wav)" "(path where the cue/log/wav are)" "(output directory)" 
+    perfect-flac-encode.sh "(base filename of cue/log/txt/wav)" "(path where the cue/log/txt/wav are)" "(output directory)" 
 
-Parameter 1 is called the "release name". It must be the basename of the CUE/LOG/WAV - this is the filename without file extension.
+Parameter 1 is called the "release name". It must be the basename of the CUE/LOG/TXT/WAV - this is the filename without file extension.
 
-Parameter 2 is called the "input directory". It is the directory where the input CUE/LOG/WAV are.
+Parameter 2 is called the "input directory". It is the directory where the input CUE/LOG/TXT/WAV are.
 
 Parameter 3 is called the "output directory". A subdirectory with the release name as directory name will be created within it. All output will be put into this subdirectory.
 
@@ -76,6 +80,7 @@ This directory will contain:
 * Per-track FLACs called "Track (tracknumber).flac". The titles of the tracks are NOT taken from the CUE because EAC will use the local charset of your computer when creating a CUE so it is impossible to properly parse the text-content of it. And we suggest tagging the files with MusicBrainz Picard anyway - it is able to rename them after tagging.
 * A "README.txt". It tries to explain in layman's terms how the rip was created, which software was used, that the rip should be high quality, which files are in the directory, and how to restore an identical CD.
 * A subdirectory called "Proof of Quality" with the following files:
+	* A file "Exact Audio Copy Settings.txt" which is a copy of the original "(release name).txt". It shall contain a full specification of how you configured EAC when doing the ripping. If in the future someone finds out that a certain setting causes bad quality, you can check whether the affected setting was used for this copy.
 	* A file "Exact Audio Copy.cue" which is a copy of the original "(release name).cue". It is renamed to so you do not have to fix the name after running the album through MusicBrainz Picard. Timestamps, permissions, etc. are preserved.
 	* A file "Exact Audio Copy.log" which is a copy of the original "(release name).log". Timestamps, permissions, etc. are preserved.
 	* A file "Exact Audio Copy.sha256" with the checksum of the original input WAV image (see the "Description" section for the purpose of this).

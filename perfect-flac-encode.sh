@@ -59,14 +59,15 @@ UNIT_TESTS['TEST_DAMAGE_TO_DECODED_FLAC_SINGLETRACKS']=0
 ################################################################################
 VERSION='BETA11'
 FULL_VERSION=''			# Full version string which also contains the versions of the used helper programs.
-INPUT_DIR_ABSOLUTE=''	# Directory where the input WAV/LOG/CUE can be found. Must not be written to by the script in any way.
+INPUT_DIR_ABSOLUTE=''	# Directory where the input CUE/LOG/TXT/WAV can be found. Must not be written to by the script in any way.
 OUTPUT_DIR_ABSOLUTE=''	# Directory where the output (FLACs / README.txt / Proof of Quality subdir) is created. The temporary directories will be created here as well.
-OUTPUT_DIR_CUE_LOG_SHA_ABSOLUTE=''	# Subdirectory of the output directory where the CUE, LOGs and SHA are placed.
+OUTPUT_DIR_PROOF_OF_QUALITY_ABSOLUTE=''	# Subdirectory of the output directory where the CUE, LOGs, SHA and the EAC settings specification are placed.
 OUTPUT_OWN_LOG_ABSOLUTE=''	# Full path of the perfect-flac-encode log file. It must be a file in $OUTPUT_DIR_ABSOLUTE.
 OUTPUT_SHA256_ABSOLUTE=''	# Full path of the output SHA256. It must be a file in $OUTPUT_DIR_ABSOLUTE
 INPUT_CUE_LOG_WAV_BASENAME=''	# Filename of input WAV/LOG/CUE without extension. It must be a file in the directory $INPUT_DIR_ABSOLUTE.
 INPUT_CUE_ABSOLUTE=''	# Full path of input CUE. It must be a file in the directory $INPUT_DIR_ABSOLUTE.
 INPUT_LOG_ABSOLUTE=''	# Full path of input LOG. It must be a file in the directory $INPUT_DIR_ABSOLUTE.
+INPUT_TXT_ABSOLUTE=''	# Full path of input TXT. It must be a file in the directory $INPUT_DIR_ABSOLUTE.
 INPUT_WAV_ABSOLUTE=''	# Full path of input WAV. It must be a file in the directory $INPUT_DIR_ABSOLUTE.
 
 # Absolute paths to the temp directories. For documentation see above in the "Configuration" section.
@@ -162,7 +163,7 @@ delete_temp_dirs() {
 }
 
 create_directories_or_die() {
-	local output_dir_and_temp_dirs=( "$OUTPUT_DIR_ABSOLUTE" "$OUTPUT_DIR_CUE_LOG_SHA_ABSOLUTE" "${TEMP_DIRS_ABSOLUTE[@]}" )
+	local output_dir_and_temp_dirs=( "$OUTPUT_DIR_ABSOLUTE" "$OUTPUT_DIR_PROOF_OF_QUALITY_ABSOLUTE" "${TEMP_DIRS_ABSOLUTE[@]}" )
 	
 	stdout 'Creating output and temp directories...'
 	for dir in "${output_dir_and_temp_dirs[@]}" ; do
@@ -869,14 +870,18 @@ move_output_to_target_dir_or_die() {
 }
 
 copy_cue_and_log_to_target_dir_or_die() {
-	log 'Copying CUE and LOG to output directory...'
+	log 'Copying CUE, LOG and TXT to output directory...'
 	
-	if ! cp --archive --no-clobber -- "$INPUT_CUE_ABSOLUTE" "$OUTPUT_DIR_CUE_LOG_SHA_ABSOLUTE/Exact Audio Copy.cue" ; then
+	if ! cp --archive --no-clobber -- "$INPUT_CUE_ABSOLUTE" "$OUTPUT_DIR_PROOF_OF_QUALITY_ABSOLUTE/Exact Audio Copy.cue" ; then
 		die 'Copying CUE to output directory failed!'
 	fi
 	
-	if ! cp --archive --no-clobber -- "$INPUT_LOG_ABSOLUTE" "$OUTPUT_DIR_CUE_LOG_SHA_ABSOLUTE/Exact Audio Copy.log" ; then
+	if ! cp --archive --no-clobber -- "$INPUT_LOG_ABSOLUTE" "$OUTPUT_DIR_PROOF_OF_QUALITY_ABSOLUTE/Exact Audio Copy.log" ; then
 		die 'Copying LOG to output directory failed!'
+	fi
+	
+	if ! cp --archive --no-clobber -- "$INPUT_TXT_ABSOLUTE" "$OUTPUT_DIR_PROOF_OF_QUALITY_ABSOLUTE/Exact Audio Copy Settings.txt" ; then
+		die 'Copying TXT to output directory failed!'
 	fi
 }
 
@@ -901,6 +906,9 @@ print_readme() {
 	$e 'Explanation of the purpose of the files you got:' &&
 	$e '------------------------------------------------' &&
 	$e 'The following files are in a subdirectory called "Proof of Quality":' &&
+	$e ''
+	$e '"Exact Audio Copy Settings.txt"' &&
+	$e 'For copying the audio CD to the computer, a special software called "Exact Audio Copy" was used. This file specifies how Exact Audio Copy was configured. Exact Audio Copy has many options which can influence the quality of the copying. Because of that, it is a good idea to store information about how it was configured. If in the future someone finds out that a certain setting causes bad quality, you can check whether the affected setting was used for this copy.'
 	$e ''
 	$e '"Exact Audio Copy.cue"' &&
 	$e "This file contains the layout of the original disc. It will be the file which you load with your CD burning software if you want to burn a backup of the disc. Please remember: Before burning it you have to decompress the audio with perfect-flac-decode. If you don't do this, burning the 'cue' will not work." &&
@@ -995,12 +1003,13 @@ main() {
 		OUTPUT_DIR_ABSOLUTE="$original_working_dir/$output_dir/$INPUT_CUE_LOG_WAV_BASENAME"
 	fi
 	
-	OUTPUT_DIR_CUE_LOG_SHA_ABSOLUTE="$OUTPUT_DIR_ABSOLUTE/Proof of Quality"
-	OUTPUT_OWN_LOG_ABSOLUTE="$OUTPUT_DIR_CUE_LOG_SHA_ABSOLUTE/Perfect-FLAC-Encode.log"
-	OUTPUT_SHA256_ABSOLUTE="$OUTPUT_DIR_CUE_LOG_SHA_ABSOLUTE/Exact Audio Copy.sha256"
+	OUTPUT_DIR_PROOF_OF_QUALITY_ABSOLUTE="$OUTPUT_DIR_ABSOLUTE/Proof of Quality"
+	OUTPUT_OWN_LOG_ABSOLUTE="$OUTPUT_DIR_PROOF_OF_QUALITY_ABSOLUTE/Perfect-FLAC-Encode.log"
+	OUTPUT_SHA256_ABSOLUTE="$OUTPUT_DIR_PROOF_OF_QUALITY_ABSOLUTE/Exact Audio Copy.sha256"
 	
 	INPUT_CUE_ABSOLUTE="$INPUT_DIR_ABSOLUTE/$INPUT_CUE_LOG_WAV_BASENAME.cue"
 	INPUT_LOG_ABSOLUTE="$INPUT_DIR_ABSOLUTE/$INPUT_CUE_LOG_WAV_BASENAME.log"
+	INPUT_TXT_ABSOLUTE="$INPUT_DIR_ABSOLUTE/$INPUT_CUE_LOG_WAV_BASENAME.txt"
 	INPUT_WAV_ABSOLUTE="$INPUT_DIR_ABSOLUTE/$INPUT_CUE_LOG_WAV_BASENAME.wav"
 	
 	for tempdir in "${!TEMP_DIRS[@]}" ; do

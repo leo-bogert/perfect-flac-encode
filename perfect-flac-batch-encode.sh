@@ -43,6 +43,8 @@ encode() {
 					;;
 				"$disc.log")
 					;;
+				"$disc.txt")
+					;;
 				"$disc.wav")
 					;;
 				*)
