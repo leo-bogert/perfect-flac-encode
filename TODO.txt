@@ -2,7 +2,6 @@ We use this file for storing our TODOs instead of the Github bugtracker because 
 We don't want to rely upon Github as a single point of failure.
 
 Critical TODOs:
-- Process all TODO/FIXME/XXX entries in the actual perfect-flac-encode.sh or move them to this file if they cannot be resolved yet.
 - Once we are in the release-candidate-phase, try ShellCheck: http://www.vidarholen.net/contents/shellcheck/
 - When using grep on EAC LOG files we convert the input charset to UTF-8. The grep manpage is not clear about which input charset it expects. The REAMDE.md should tell the user that systems which are not configured for UTF-8 as default might cause problems.
 
