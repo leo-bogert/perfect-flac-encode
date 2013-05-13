@@ -3,9 +3,9 @@ We don't want to rely upon Github as a single point of failure.
 
 Critical TODOs:
 - Once we are in the release-candidate-phase, try ShellCheck: http://www.vidarholen.net/contents/shellcheck/
-- When using grep on EAC LOG files we convert the input charset to UTF-8. The grep manpage is not clear about which input charset it expects. The REAMDE.md should tell the user that systems which are not configured for UTF-8 as default might cause problems.
 
 Non-critical TODOs:
+- When using grep on EAC LOG files we convert the input charset to UTF-8. The grep manpage is not clear about which input charset it expects. The REAMDE.md should tell the user that systems which are not configured for UTF-8 as default might cause problems.
 - We should use EBU-R128 instead of standard Replaygain, but as of Kubuntu12.04 there seems to be no package which can do it.
 - The unit test TEST_DAMAGE_TO_FLAC_SINGLETRACKS truncates the file instead of appending garbage because flac --test won't detect trailing garbage. While this works for our purposes, we should file a bug report at the FLAC bugtracker so they can fix it.
 - We add versions of all used programs to the ENCODEDBY tag and the log. As of 2012-12-23, cueprint does not support printing its version number. So we instead add the package version of cuetools. Once the cueprint binary has a parameter to print the version, we should use that instead.
