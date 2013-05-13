@@ -57,7 +57,7 @@ UNIT_TESTS['TEST_DAMAGE_TO_DECODED_FLAC_SINGLETRACKS']=0
 ################################################################################
 # Global variables (naming convention: all globals are uppercase)
 ################################################################################
-VERSION='BETA11'
+VERSION='1'
 FULL_VERSION=''			# Full version string which also contains the versions of the used helper programs.
 INPUT_DIR_ABSOLUTE=''	# Directory where the input CUE/LOG/TXT/WAV can be found. Must not be written to by the script in any way.
 OUTPUT_DIR_ABSOLUTE=''	# Directory where the output (FLACs / README.txt / Proof of Quality subdir) is created. The temporary directories will be created here as well.
@@ -664,7 +664,7 @@ get_version_string() {
 		die 'Obtaining shntool version failed! Please check whether it is installed.'
 	fi
 	
-	secho "perfect-flac-encode $VERSION with $accurateripchecksum_version, $cuetools_version, $eaccrc_version, $flac_version, $shntool_version" 
+	secho "perfect-flac-encode version $VERSION with $accurateripchecksum_version, $cuetools_version, $eaccrc_version, $flac_version, $shntool_version" 
 }
 # This function was inspired by the cuetag script of cuetools, taken from https://github.com/svend/cuetools
 # It's license is GPL so this function is GPL as well. 
@@ -1030,7 +1030,6 @@ main() {
 	# The output directory exists, we are inside of it, logging works. Now we can actually deal with the audio part.
 	
 	log_and_stdout "$FULL_VERSION running ... "
-	log_and_stderr 'BETA VERSION - NOT for productive use!'
 	log_and_stdout "Album: $original_cue_log_wav_basename"
 	
 	check_whether_input_is_accurately_ripped_or_die
