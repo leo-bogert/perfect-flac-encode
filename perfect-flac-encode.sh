@@ -336,6 +336,38 @@ test_eac_crc_or_die() {
 	log 'EAC CRC of input WAV image is OK.'
 }
 
+# Uses "shntool len" to get the length
+# $1 = full path of track
+get_frame_count_of_singletrack() {
+    #       length         expanded size                 cdr         WAVE        problems       fmt         ratio         filename
+	#       54:04.55       572371004         B           ---         --          -----          wav         1.0000        Paul Weller - 1994 - Wild Wood.wav
+	# ^ \s*    \S*    \s*     \S*     \s*   \S*   \s*   (\S*)  \s*  (\S*)  \s*   (\S*)   \s*    \S*    \s*    \S*    \s*    (.*)$
+	
+	local regex='^\s*([0-9]+):([0-9]{2})[.]([0-9]{2})\s*\S*\s*\S*\s*\S*\s*\S*\s*\S*\s*\S*\s*\S*\s*(.*)$'
+	local len_output # defining & assigning it at once would overwrite $?
+	
+	if ! len_output="$(shntool len -c -t "$1" | grep -E "$regex")" ; then
+		die 'Regexp for getting the "shntool len" output failed!'
+	fi
+	
+	local minutes
+	local seconds
+	local frames
+
+	if	! minutes="$(secho "$len_output" | sed -r s/"$regex"/\\1/)" ||
+		! seconds="$(secho "$len_output" | sed -r s/"$regex"/\\2/)" ||
+		! frames="$(secho "$len_output" | sed -r s/"$regex"/\\3/)" ||
+		[ -z "$minutes" ] || [ -z "$seconds" ] || [ -z "$frames" ] || 
+		[[ "$minutes" = *[!0-9]* ]] ||
+		[[ "$seconds" = *[!0-9]* ]] ||
+		[[ "$frames" = *[!0-9]* ]] ||
+		[ "$frames" -gt 74 ] ; then
+		stderr 'Regexp for parsing the "shntool len" output failed!'
+	fi
+
+	stdout $(( $(( $(( $(( $minutes * 60 )) + $seconds )) * 75 )) + $frames ))
+}
+
 split_wav_image_to_singletracks_or_die() {
 	log 'Splitting WAV image to singletrack WAVs...'
 	
@@ -441,7 +473,9 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 	fi
 	
 	if [ -f "$hidden_track" ] ; then
-		log 'Hidden track one audio found.'
+		local hidden_track_length
+		hidden_track_length="$(get_frame_count_of_singletrack "$hidden_track")"
+		log_and_stdout "Hidden track one audio found. Length: $hidden_track_length frames"
 		local hidden_track_excluded_message=' (excluding hidden track)'
 	else
 		log 'Hidden track one audio not found.'
