@@ -433,7 +433,7 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 	
 	local inputdir_wav="${TEMP_DIRS_ABSOLUTE[WAV_SINGLETRACK_SUBDIR]}"
 	local wav_singletracks=( "$inputdir_wav"/*.wav )
-	local hidden_track="$inputdir_wav/00 - pregap.wav"
+	local hidden_track="$inputdir_wav/Track 00.wav"
 	local totaltracks
 
 	if ! totaltracks="$(get_total_tracks_without_hiddentrack_from_cue)" ; then
