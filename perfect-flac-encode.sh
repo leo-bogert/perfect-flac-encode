@@ -475,12 +475,8 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 	fi
 	
 	if [ -f "$hidden_track" ] ; then
-		local hidden_track_length
-		hidden_track_length="$(get_frame_count_of_singletrack "$hidden_track")"
-		log_and_stdout "Hidden track one audio found. Length: $hidden_track_length frames"
 		local hidden_track_excluded_message=' (excluding hidden track)'
 	else
-		log 'Hidden track one audio not found.'
 		local hidden_track_excluded_message=''
 	fi
 	
@@ -535,6 +531,43 @@ test_accuraterip_checksums_of_split_wav_singletracks_or_die() {
 	
 	if [ "$do_exit" = '1' ] ; then
 		die 'AccurateRip checksum mismatch for at least one track!'
+	fi
+}
+
+maybe_join_hiddentrack_into_track_one_or_die() {
+	log 'Checking whether hidden track 0 should be merged with track 1 due to being very short...'
+	
+	local inputdir_wav="${TEMP_DIRS_ABSOLUTE[WAV_SINGLETRACK_SUBDIR]}"
+	local hidden_track="$inputdir_wav/Track 00.wav"
+	
+	if [ -f "$hidden_track" ] ; then
+		local hidden_track_length
+		if ! hidden_track_length="$(get_frame_count_of_singletrack "$hidden_track")" ; then
+			die 'Getting length of HTOA failed!'
+		fi
+
+		log_and_stdout "Hidden track one audio found. Length: $hidden_track_length frames"
+		
+		if [ "$hidden_track_length" -gt 75 ] ; then
+			log_and_stdout 'Hidden track is longer than 1 second, keeping it as a separate track.'
+		else
+			log_and_stdout 'Hidden track is shorter than or equal to 1 second long, merging it with track 1...'
+
+			if ! shntool join -q -d "$inputdir_wav" -- "$hidden_track" "$inputdir_wav/Track 01.wav" ; then
+				die 'Merging HTOA failed!'
+			fi
+
+			if ! mv -- "$inputdir_wav/joined.wav" "$inputdir_wav/Track 01.wav" ; then
+				die 'Overwriting track 1 with merged track failed!'
+			fi
+
+			if ! rm --preserve-root -f -- "$hidden_track" ; then
+				die 'Deleting original HTOA failed!'
+			fi
+		fi
+	else
+		log 'Hidden track one audio not found.'
+		local hidden_track_excluded_message=''
 	fi
 }
 
@@ -1074,6 +1107,7 @@ main() {
 	test_eac_crc_or_die
 	split_wav_image_to_singletracks_or_die
 	test_accuraterip_checksums_of_split_wav_singletracks_or_die
+	maybe_join_hiddentrack_into_track_one_or_die
 	generate_checksum_of_original_wav_image_or_die
 	test_checksum_of_rejoined_wav_image_or_die
 	encode_wav_singletracks_to_flac_or_die
