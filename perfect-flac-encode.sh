@@ -362,7 +362,9 @@ get_frame_count_of_singletrack() {
 		[[ "$seconds" = *[!0-9]* ]] ||
 		[[ "$frames" = *[!0-9]* ]] ||
 		[ "$frames" -gt 74 ] ; then
-		stderr 'Regexp for parsing the "shntool len" output failed!'
+
+			stderr 'Regexp for parsing the "shntool len" output failed!'
+			return 1
 	fi
 
 	stdout $(( $(( $(( $(( $minutes * 60 )) + $seconds )) * 75 )) + $frames ))
