@@ -551,7 +551,7 @@ maybe_join_hiddentrack_into_track_one_or_die() {
 		if [ "$hidden_track_length" -gt 75 ] ; then
 			log_and_stdout 'Hidden track is longer than 1 second, keeping it as a separate track.'
 		else
-			log_and_stdout 'Hidden track is shorter than or equal to 1 second long, merging it with track 1...'
+			log_and_stdout 'Hidden track is not longer than 1 second, merging it with track 1...'
 
 			if ! shntool join -q -d "$inputdir_wav" -- "$hidden_track" "$inputdir_wav/Track 01.wav" ; then
 				die 'Merging HTOA failed!'
