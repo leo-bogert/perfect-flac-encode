@@ -57,7 +57,7 @@ UNIT_TESTS['TEST_DAMAGE_TO_DECODED_FLAC_SINGLETRACKS']=0
 ################################################################################
 # Global variables (naming convention: all globals are uppercase)
 ################################################################################
-VERSION='2 BETA03'
+VERSION='2 BETA04'
 FULL_VERSION=''			# Full version string which also contains the versions of the used helper programs.
 INPUT_DIR_ABSOLUTE=''	# Directory where the input CUE/LOG/TXT/WAV can be found. Must not be written to by the script in any way.
 OUTPUT_DIR_ABSOLUTE=''	# Directory where the output (FLACs / README.txt / Proof of Quality subdir) is created. The temporary directories will be created here as well.
@@ -571,6 +571,18 @@ maybe_join_hiddentrack_into_track_one_or_die() {
 	fi
 }
 
+generate_checksums_of_wav_singletracks_or_die() {
+	log 'Generating checksums of original WAV singletracks...'
+
+	# We do NOT use absolute paths when calling sha256sum to make sure that the checksum file contains relative paths.
+	# This is absolutely crucical because when validating the checksums we don't want to accidentiall check the sums of the input files instead of the output files.
+	set_working_directory_or_die "${TEMP_DIRS_ABSOLUTE[WAV_SINGLETRACK_SUBDIR]}"
+	if ! sha256sum --binary -- *.wav > 'checksums.sha256' ; then
+		die 'Generating input checksums failed!'
+	fi
+	set_working_directory_or_die
+}
+
 # This genrates a .sha256 file with the SHA256-checksum of the original WAV image. We do not use the EAC CRC from the log because it is non-standard and does not cover the full WAV.
 # Further, the sha256 will be part of the output directory: If the user ever needs to restore the original WAV image for restoring a physical copy of the CD, it can be used by perfect-flac-decode for checking whether decoding & re-joining the tracks worked properly.
 generate_checksum_of_original_wav_image_or_die() {
@@ -907,15 +919,6 @@ test_checksums_of_decoded_flac_singletracks_or_die() {
 		log_and_stderr 'Deliberately damaging a decoded WAV singletrack to test checksum verification...'
 		secho 'FAIL' >> "${wav_files[0]}"
 	fi
-
-	log 'Generating checksums of original WAV files...'
-	# We do NOT use absolute paths when calling sha256sum to make sure that the checksum file contains relative paths.
-	# This is absolutely crucical because when validating the checksums we don't want to accidentiall check the sums of the input files instead of the output files.
-	set_working_directory_or_die "$inputdir_wav"
-	if ! sha256sum --binary -- *.wav > 'checksums.sha256' ; then
-		die 'Generating input checksums failed!'
-	fi
-	set_working_directory_or_die
 	
 	log 'Validating checksums of decoded WAV singletracks ...'
 	set_working_directory_or_die "$outputdir"
@@ -1101,6 +1104,7 @@ main() {
 	log_and_stdout "$FULL_VERSION running ... "
 	log_and_stdout "Album: $original_cue_log_wav_basename"
 	
+	generate_checksum_of_original_wav_image_or_die
 	check_whether_input_is_accurately_ripped_or_die
 	check_shntool_wav_problem_diagnosis_or_die
 	test_whether_the_two_eac_crcs_match_or_die
@@ -1108,7 +1112,7 @@ main() {
 	split_wav_image_to_singletracks_or_die
 	test_accuraterip_checksums_of_split_wav_singletracks_or_die
 	maybe_join_hiddentrack_into_track_one_or_die
-	generate_checksum_of_original_wav_image_or_die
+	generate_checksums_of_wav_singletracks_or_die
 	test_checksum_of_rejoined_wav_image_or_die
 	encode_wav_singletracks_to_flac_or_die
 	pretag_singletrack_flacs_from_cue_or_die
