@@ -57,7 +57,7 @@ UNIT_TESTS['TEST_DAMAGE_TO_DECODED_FLAC_SINGLETRACKS']=0
 ################################################################################
 # Global variables (naming convention: all globals are uppercase)
 ################################################################################
-VERSION='2 BETA04'
+VERSION='2 BETA05'
 FULL_VERSION=''			# Full version string which also contains the versions of the used helper programs.
 INPUT_DIR_ABSOLUTE=''	# Directory where the input CUE/LOG/TXT/WAV can be found. Must not be written to by the script in any way.
 OUTPUT_DIR_ABSOLUTE=''	# Directory where the output (FLACs / README.txt / Proof of Quality subdir) is created. The temporary directories will be created here as well.
@@ -397,7 +397,7 @@ split_wav_image_to_singletracks_or_die() {
 	if [ "${UNIT_TESTS[TEST_DAMAGE_TO_SPLIT_WAV_SINGLETRACKS]}" -eq 1 ]; then 
 		log_and_stderr 'Deliberately damaging a singletrack to test the AccurateRip checksum verification ...'
 		
-		local wav_singletracks=( "${TEMP_DIRS_ABSOLUTE[WAV_SINGLETRACK_SUBDIR]}"/*.wav )
+		local wav_singletracks=( "${TEMP_DIRS_ABSOLUTE[WAV_SINGLETRACK_SUBDIR]}"/*01.wav )
 		local first_track_without_extension_absolute
 
 		if ! first_track_without_extension_absolute="${TEMP_DIRS_ABSOLUTE[WAV_SINGLETRACK_SUBDIR]}"/"$(basename "${wav_singletracks[0]}" '.wav')" ; then
