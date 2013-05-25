@@ -57,7 +57,7 @@ UNIT_TESTS['TEST_DAMAGE_TO_DECODED_FLAC_SINGLETRACKS']=0
 ################################################################################
 # Global variables (naming convention: all globals are uppercase)
 ################################################################################
-VERSION='2 BETA05'
+VERSION='2'
 FULL_VERSION=''			# Full version string which also contains the versions of the used helper programs.
 INPUT_DIR_ABSOLUTE=''	# Directory where the input CUE/LOG/TXT/WAV can be found. Must not be written to by the script in any way.
 OUTPUT_DIR_ABSOLUTE=''	# Directory where the output (FLACs / README.txt / Proof of Quality subdir) is created. The temporary directories will be created here as well.
